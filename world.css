@@ -2889,7 +2889,12 @@ body {
   font-variant-numeric: tabular-nums; line-height: 1;
 }
 .fw-ring-mid span { font-size: 12px; color: var(--sub); letter-spacing: -0.01em; }
-.fw-ring-key { display: flex; flex-direction: column; gap: 2.0px; min-width: 0; flex: 1 1 auto; }
+.fw-ring-key {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  /* Capped, so a count sits beside its world instead of drifting to the far edge of the
+     tile. A number that far from its label is a second lookup, not a label. */
+  flex: 0 1 auto; max-width: 236px; width: 100%;
+}
 .fw-ring-krow {
   display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
   font-size: 12px; color: var(--sub); white-space: nowrap;
@@ -3044,3 +3049,33 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
   font-size: 12px; font-weight: 700; color: var(--sys, var(--sub)); white-space: nowrap;
 }
 .fw-lead-who .fw-vmark { width: 14px; height: 14px; }
+
+
+/* The corpus tile: four figures and the shape they divide into.
+   ---------------------------------------------------------------------------------
+   The three totals run as a strip across the top - numeral over label, three abreast -
+   with the ring beneath. Stacked as rows they read as a list that happened to sit above
+   a chart; as a strip the tile is one statement. Numerals are the heroes, labels are
+   small and quiet, and every one of the four is set the same way. */
+.fw-open-stats.is-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 12px;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--grid);
+}
+.fw-open-stats.is-strip .fw-open-i {
+  display: flex; flex-direction: column; gap: 0; min-width: 0;
+}
+.fw-open-stats.is-strip .fw-open-i b {
+  font-size: clamp(20px, 1.5vw, 24px); font-weight: 800; color: var(--ink);
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.fw-open-stats.is-strip .fw-open-i span {
+  font-size: 12px; color: var(--muted); line-height: 1.2;
+}
+/* The ring's own total is the fourth figure, so it is set at the same size as the three
+   above it rather than shouting over them. */
+.fw-open-cell:has(.fw-open-stats.is-strip) .fw-ring-mid b { font-size: 20px; }
+.fw-open-cell:has(.fw-open-stats.is-strip) .fw-ring-wrap { margin-top: 0; }

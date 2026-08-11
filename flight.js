@@ -2091,15 +2091,23 @@ function mountFlight(root, config) {
         t.textContent = c.text;
         box.appendChild(t);
       }
-      (c.items || []).forEach((it) => {
-        const row = el('div', 'fw-open-i');
-        const a = el('b', '');
-        a.textContent = it[0];
-        const b = el('span', '');
-        b.textContent = it[1] || '';
-        row.append(a, b);
-        box.appendChild(row);
-      });
+      /* Figures. Where a tile also carries a ring, they run as a STRIP across the top -
+         numeral over label, three abreast - so the tile reads as one thing: four numbers
+         and the shape they divide into. Stacked as rows they were a list sitting above an
+         unrelated chart. */
+      if ((c.items || []).length) {
+        const strip = el('div', 'fw-open-stats' + (c.ring ? ' is-strip' : ''));
+        c.items.forEach((it) => {
+          const row = el('div', 'fw-open-i');
+          const a = el('b', '');
+          a.textContent = it[0];
+          const b = el('span', '');
+          b.textContent = it[1] || '';
+          row.append(a, b);
+          strip.appendChild(row);
+        });
+        box.appendChild(strip);
+      }
       if (c.chips) {
         const cw = el('div', 'fw-open-chips');
         c.chips.forEach((x) => {
