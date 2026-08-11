@@ -741,6 +741,10 @@
 /* The world plate is drawn on the stage, which on a full-width band is not there: it was
    printing under the copy that now spans the page. The band's own eyebrow names the stop. */
 .fw-shell-split[data-block="band"] .fw-mark { display: none; }
+/* A band has no film to align to, so it does not need the horizon the split layout hangs
+   from - that was leaving a fifth of the screen empty above every world's own name. The
+   copy column's own top padding is what sets it. */
+.fw-shell-split[data-block="band"] .fw-copy { padding-top: 96px; }
 .fw-shell-split[data-block="band"] .fw-panel {
   will-change: transform;
   left: 0;

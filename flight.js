@@ -1337,6 +1337,25 @@ function mountFlight(root, config) {
     // somebody chose. The interval is drawn, not just printed - a 0.533 with a half-width of
     // 0.133 and a 0.490 with a half-width of 0.039 are different claims, and a bare bar
     // chart shows them as the same kind of thing.
+    /* A world's own header: its globe, its name, and the one line that says what the
+       world isolates. On the half-width layout this lived on the stage as a plate; on a
+       band there is no stage, and the name was ending up under its own chart. */
+    if (s.plate) {
+      const hd = el('header', 'fw-plate');
+      if (s.plate.img) hd.appendChild(artImg(s.plate.img, '', 'fw-plate-globe'));
+      const tx = el('div', 'fw-plate-tx');
+      const h = el('h2', 'fw-plate-name');
+      h.textContent = s.plate.name;
+      tx.appendChild(h);
+      if (s.plate.line) {
+        const l = el('p', 'fw-plate-line');
+        l.textContent = s.plate.line;
+        tx.appendChild(l);
+      }
+      hd.appendChild(tx);
+      p.appendChild(hd);
+    }
+
     if (s.bars) {
       const B = s.bars;
       const rows = B.rows || [];

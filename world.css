@@ -3079,3 +3079,37 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
    above it rather than shouting over them. */
 .fw-open-cell:has(.fw-open-stats.is-strip) .fw-ring-mid b { font-size: 20px; }
 .fw-open-cell:has(.fw-open-stats.is-strip) .fw-ring-wrap { margin-top: 0; }
+
+
+/* A world's results, at full width.
+   ---------------------------------------------------------------------------------
+   Header, chart, filter, table - in that order, each the width of the page. The half
+   width layout put the table beside a film, which cut it at DNSMOS and left three
+   columns no reader could reach. */
+.fw-plate {
+  display: flex; align-items: center; gap: 16px;
+  padding-bottom: 12px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--grid);
+}
+.fw-plate-globe { width: clamp(56px, 6vw, 88px); height: auto; flex: none; }
+.fw-plate-tx { min-width: 0; }
+.fw-plate-name {
+  margin: 0; font-size: 32px; font-weight: 800; color: var(--ink);
+  letter-spacing: -0.02em; line-height: 1.05;
+}
+.fw-plate-line { margin: 4px 0 0; font-size: 17px; color: var(--sub); max-width: 72ch; }
+
+/* On a band the table has the page, so it stops needing its own scroller in the common
+   case. It keeps one for narrow windows, with a hint that it can be scrolled. */
+.fw-shell-split[data-block="band"] .fw-pillars-wrap {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.fw-shell-split[data-block="band"] .fw-pillars { min-width: 100%; }
+/* The chart above it gets the same width, and the longest system name stops being cut. */
+.fw-shell-split[data-block="band"] .fw-bar-name {
+  max-width: none; width: auto; white-space: nowrap; overflow: visible;
+}
+.fw-shell-split[data-block="band"] .fw-bar-row {
+  grid-template-columns: 190px minmax(0, 1fr) 104px;
+}

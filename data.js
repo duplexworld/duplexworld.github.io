@@ -225,9 +225,16 @@ const HIGH = PILLARS.flatMap((g) => g.cols).map(() => 'high');
 function world(id, name, line, rows, _caption, cam) {
   return {
     id, label: name, stage: 'film', still: null,
+    // A full-width band. Eleven columns with their intervals do not fit beside a film:
+    // the table was being cut at DNSMOS with three columns unreachable, the world's name
+    // sat under its own chart, and the bottom third of the screen was empty.
+    block: 'band',
     cam: cam || { x: 0.5, y: 0.47, z: 1.0 }, scroll: 5.0, linger: 0.42,
-    accent: 'var(--viod)',
+    accent: 'var(--pillar-agentic)',
     mark: { name, line },
+    // The world's own globe, at the head of its results rather than as a thumbnail in a
+    // rail that repeats all six on every stop.
+    plate: { name, line, img: 'img/' + id + '.webp' },
     // The world's Pass@1, READ OUT OF THE TABLE below it rather than typed again. Column 1
     // is Pass@1 in the pillar order, and the rows are already sorted by it. Deriving it is
     // the point: a chart and a table that disagree is the classic way a results page goes
