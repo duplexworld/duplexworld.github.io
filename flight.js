@@ -2115,6 +2115,27 @@ function mountFlight(root, config) {
          finding is a shape - five equal worlds and one smaller. Sorted largest first
          clockwise from twelve, with Pathfinding last because it is the one that differs.
          One hue: the slices are worlds, and on this page colour means a system. */
+      /* Which system holds each pillar. Three rows, each naming a pillar, its number and
+         the system that leads it - the three plots on this screen, said once in words. */
+      if (c.leads) {
+        const wrap = el('div', 'fw-leads');
+        c.leads.forEach(([pillar, metric, who]) => {
+          const row = el('div', 'fw-lead');
+          row.style.setProperty('--sys', sysColor(who));
+          const p1 = el('span', 'fw-lead-pillar');
+          p1.textContent = pillar;
+          const m1 = el('b', 'fw-lead-metric');
+          m1.textContent = metric;
+          const w1 = el('span', 'fw-lead-who');
+          w1.innerHTML = vendorMark(who);
+          const wn = el('span', '');
+          wn.textContent = who;
+          w1.appendChild(wn);
+          row.append(p1, m1, w1);
+          wrap.appendChild(row);
+        });
+        box.appendChild(wrap);
+      }
       if (c.ring) {
         const R = c.ring;
         const total = R.slices.reduce((a, s) => a + s[1], 0);
