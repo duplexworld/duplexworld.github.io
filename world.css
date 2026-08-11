@@ -54,10 +54,10 @@
      a time rather than derived. --t-ctrl is deliberately off-scale: controls read better
      slightly smaller than body. */
   --t-micro:   12px;                        /* eyebrows, tags, rail, hint */
-  --t-ctrl:    13.5px;                      /* buttons and links */
-  --t-body:    15px;
-  --t-lead:    19px;                        /* pair column titles */
-  --t-display: clamp(25px, 2.6vw, 38px);    /* 38 is the widest the longest title fits */
+  --t-ctrl:    14px;                      /* buttons and links */
+  --t-body:    17px;
+  --t-lead:    20px;                        /* pair column titles */
+  --t-display: clamp(32px, 2.6vw, 44px);    /* 38 is the widest the longest title fits */
   /* How much of the viewport the film occupies. The copy gets the rest, and because the
      two never overlap there is no scrim anywhere on this page.
 
@@ -103,7 +103,7 @@ body {
   z-index: 40;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   padding: 14px clamp(16px, 3vw, 34px);
   pointer-events: none;
 }
@@ -114,7 +114,7 @@ body {
    edge and then covered 40 per cent of the film. The secondary links stand down; both
    destinations are still reachable from the closing panel. */
 @media (max-width: 900px) {
-  .topbar { gap: 8px; padding: 10px 12px; }
+  .topbar { gap: 8px; padding: 8px 12px; }
   .topbar .linkbtn:not(:last-child) { display: none; }
   .wordmark .sub { display: none; }
 }
@@ -122,10 +122,10 @@ body {
 .wordmark {
   display: flex;
   align-items: baseline;
-  gap: 9px;
+  gap: 8px;
   font-weight: 700;
   letter-spacing: 0.015em;
-  font-size: 15px;
+  font-size: 14px;
 }
 .wordmark .dot {
   width: 9px; height: 9px; border-radius: 50%;
@@ -143,11 +143,11 @@ body {
 .topbar .spacer { flex: 1; }
 
 .linkbtn {
-  display: inline-flex; align-items: center; gap: 7px;
+  display: inline-flex; align-items: center; gap: 8px;
   font: inherit; font-size: var(--t-ctrl); font-weight: 600;
   color: var(--ink-soft);
   text-decoration: none;
-  padding: 7px 13px;
+  padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--glass);
@@ -314,7 +314,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 14px 7px 11px;
+  padding: 8px 16px 8px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.78);
@@ -358,9 +358,7 @@ body {
 /* ------------------------------------------------------------- world index */
 
 /* The six worlds, always present. Vertical on the right, where the stacked shell leaves a
-   clear margin: the film is a centred 16:9 box and the copy is bound to its width, so this
-   column never has to fight either of them. */
-.fw-globes {
+   clear margin: the film is a centred 16:9 box and the copy is bound to its width, so this column never has to fight either of them. */ .fw-globes{
   position: absolute;
   right: clamp(10px, 1.6vw, 26px);
   top: 50%;
@@ -375,10 +373,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 2.0px;
   background: none;
   border: 0;
-  padding: 4px 2px;
+  padding: 4px 2.0px;
   cursor: pointer;
   font: inherit;
   transition: transform .3s;
@@ -479,7 +477,7 @@ body {
    symmetry looks like an accident rather than a choice. */
 .fw-panel-hero .fw-body {
   margin-inline: auto;
-  font-size: 16.5px;
+  font-size: 17px;
   line-height: 1.52;
   max-width: min(68ch, 100%);
   color: var(--ink-soft);
@@ -494,10 +492,10 @@ body {
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .fw-title {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   font-size: var(--t-display);
   line-height: 1.06;
   letter-spacing: -0.024em;
@@ -513,12 +511,12 @@ body {
   max-width: 52ch;
 }
 .fw-note {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   font-size: 14px;
   line-height: 1.55;
   color: var(--ink-dim);
   border-left: 2px solid var(--line);
-  padding-left: 11px;
+  padding-left: 12px;
   max-width: 46ch;
 }
 
@@ -528,7 +526,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(20px, 3vw, 44px);
-  margin-top: 13px;
+  margin-top: 12px;
 }
 .fw-col-eyebrow {
   font-size: var(--t-micro);
@@ -536,10 +534,10 @@ body {
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 7px;
+  margin-bottom: 8px;
 }
 .fw-col-title {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: var(--t-lead);
   line-height: 1.22;
   letter-spacing: -0.012em;
@@ -550,9 +548,9 @@ body {
 .fw-col-model {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin: 0 0 8px;
-  padding: 3px 9px 3px 6px;
+  padding: 3.0px 8px 3.0px 8px;
   border: 1px solid var(--line);
   border-radius: 999px;
   font-size: 14px;
@@ -574,13 +572,13 @@ body {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px 10px;
-  margin: 0 0 9px;
+  gap: 8px 8px;
+  margin: 0 0 8px;
 }
 .fw-col-line .fw-col-model { margin: 0; }
-.fw-col-stat { display: flex; align-items: baseline; gap: 5px; }
+.fw-col-stat { display: flex; align-items: baseline; gap: 4px; }
 .fw-col-stat strong {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
@@ -596,7 +594,7 @@ body {
 
 .fw-col-body {
   margin: 0;
-  font-size: 14.5px;
+  font-size: 14px;
   line-height: 1.55;
   color: var(--ink-soft);
   /* Measured at 1920 this column ran to 84 characters a line with no cap at all, against
@@ -621,14 +619,14 @@ body {
 .fw-cases {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
   margin-top: 16px;
 }
 
 .fw-case {
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 11px 12px 12px;
+  padding: 12px 12px 12px;
   background: rgba(255, 255, 255, 0.62);
   /* Every card is in the DOM from the start and revealed by step, so nothing loads or
      reflows mid-scroll and the grid never jumps. */
@@ -658,7 +656,7 @@ body {
 
 .fw-case-head {
   display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
-  margin-bottom: 7px;
+  margin-bottom: 8px;
 }
 .fw-case-cond {
   font-size: 14px; font-weight: 700; letter-spacing: -0.005em; color: var(--ink);
@@ -670,19 +668,19 @@ body {
 .fw-case.is-ok .fw-case-verdict { color: var(--magenta); }
 
 .fw-case-model {
-  display: inline-flex; align-items: center; gap: 5px;
+  display: inline-flex; align-items: center; gap: 4px;
   font-size: 14px; font-weight: 600; color: var(--ink-soft);
-  margin-bottom: 9px;
+  margin-bottom: 8px;
 }
 .fw-case-model svg { width: 11px; height: 11px; flex: none; }
 
 /* A fixed two-up grid, not a wrapping flex row. Wrapping meant the second figure sat beside
    the first on one card and under it on the next, purely on label length, so three cards
    meant to be read against each other had their numbers on three different baselines. */
-.fw-case-nums { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
-.fw-case-num { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.fw-case-nums { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 8px; }
+.fw-case-num { display: flex; flex-direction: column; gap: 1.0px; min-width: 0; }
 .fw-case-num strong {
-  font-size: 15px; font-weight: 700; color: var(--ink);
+  font-size: 14px; font-weight: 700; color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 .fw-case-num span {
@@ -694,7 +692,7 @@ body {
    the mechanism beneath each failing excerpt for the same reason: a block count on its own
    says a run was bad, not what went wrong in it. */
 .fw-case-note {
-  margin: 9px 0 0;
+  margin: 8px 0 0;
   padding-top: 8px;
   border-top: 1px solid var(--line);
   font-size: 14px;
@@ -742,21 +740,21 @@ body {
 .fw-panel-metrics .fw-body { margin-inline: 0; max-width: 46ch; }
 /* The prose column is roughly half a hero panel, so the display size that balances a
    full-width statement sets four-word lines here. */
-.fw-panel-metrics .fw-title { font-size: clamp(23px, 1.9vw, 30px); }
+.fw-panel-metrics .fw-title { font-size: clamp(20px, 1.9vw, 32px); }
 .fw-panel-metrics .fw-tags,
 .fw-panel-metrics .fw-cta { justify-content: flex-start; }
 .fw-panel-metrics .fw-metrics { margin-top: 4px; }
 
 .fw-metrics {
   width: 100%;
-  margin-top: 15px;
+  margin-top: 16px;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
   font-size: 14px;
 }
 .fw-metrics caption {
   caption-side: bottom;
-  margin-top: 9px;
+  margin-top: 8px;
   font-size: 14px;
   line-height: 1.45;
   color: var(--ink-dim);
@@ -764,7 +762,7 @@ body {
 }
 .fw-metrics th,
 .fw-metrics td {
-  padding: 6px 4px;
+  padding: 8px 4px;
   border-bottom: 1px solid var(--line);
   text-align: right;
   white-space: nowrap;
@@ -788,7 +786,7 @@ body {
 .fw-metrics .fw-m-sysin {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 .fw-metrics td { color: var(--ink-soft); }
 .fw-metrics td.is-best { color: var(--ink); font-weight: 700; }
@@ -798,12 +796,12 @@ body {
 }
 /* -------------------------------------------------------------- tags / cta */
 
-.fw-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.fw-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .fw-cases-label + .fw-tags { margin-top: 8px; }
 .fw-tag {
   font-size: var(--t-micro); font-weight: 600; letter-spacing: 0.02em;
   color: var(--ink-soft);
-  padding: 5px 11px;
+  padding: 4px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.66);
@@ -814,20 +812,20 @@ body {
   color: var(--ink);
   border-color: rgba(11, 122, 86, 0.42);
   box-shadow: inset 3px 0 0 var(--magenta);
-  padding-left: 13px;
+  padding-left: 12px;
 }
 /* A run of eleven names is a list, not a row of buttons: set tighter so it reads as one
    object rather than eleven. */
-.fw-tags.is-labelled { gap: 6px; }
-.fw-tags.is-labelled .fw-tag { font-size: 14px; padding: 4px 10px; }
+.fw-tags.is-labelled { gap: 8px; }
+.fw-tags.is-labelled .fw-tag { font-size: 14px; padding: 4px 8px; }
 .fw-tags.is-labelled .fw-tag.is-marked { padding-left: 12px; }
-.fw-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+.fw-cta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .fw-btn {
   display: inline-flex; align-items: center; gap: 8px;
   font-size: var(--t-ctrl); font-weight: 600;
   text-decoration: none;
   color: var(--ink);
-  padding: 10px 17px;
+  padding: 8px 16px;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.82);
@@ -851,13 +849,13 @@ body {
   /* never allowed to reach the copy column */
   max-width: calc(50% - var(--film-w) / 2 - 24px);
   top: calc(var(--film-h) + clamp(16px, 2.6vh, 28px));
-  display: flex; flex-direction: column; gap: 2px;
+  display: flex; flex-direction: column; gap: 2.0px;
   z-index: 8;
 }
 .fw-dot {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 8px;
   background: none; border: 0; cursor: pointer;
-  padding: 6px 0;
+  padding: 8px 0;
   font: inherit;
   color: var(--ink-dim);
   transition: color .2s;
@@ -916,18 +914,18 @@ body {
     width: calc(var(--vw) - 30px);
     top: calc(var(--film-h) + 38px);
     align-items: start;
-    padding-top: 10px;
+    padding-top: 8px;
   }
   .fw-panel { align-self: start; }
-  .fw-title { font-size: clamp(23px, 6.4vw, 30px); }
-  .fw-pair { grid-template-columns: 1fr; gap: 14px; margin-top: 12px; }
-  .fw-pair .fw-col + .fw-col { border-top: 1px solid var(--line); padding-top: 13px; }
+  .fw-title { font-size: clamp(20px, 6.4vw, 32px); }
+  .fw-pair { grid-template-columns: 1fr; gap: 16px; margin-top: 12px; }
+  .fw-pair .fw-col + .fw-col { border-top: 1px solid var(--line); padding-top: 12px; }
   .fw-globes {
     left: auto; right: 10px;
     top: calc(var(--film-h) + 4px);
     transform: none;
     flex-direction: row;
-    gap: 5px;
+    gap: 4px;
   }
   .fw-globe { padding: 0; }
   .fw-globe img { width: clamp(24px, 6.6vw, 32px); }
@@ -1046,7 +1044,7 @@ body {
 }
 .fw-mark-globe { display: none; }         /* the film already shows the world */
 .fw-mark-name {
-  font-size: clamp(26px, 3.4vw, 46px);
+  font-size: clamp(20px, 3.4vw, 44px);
   font-weight: 700;
   letter-spacing: -0.018em;
   line-height: 1.04;
@@ -1061,7 +1059,7 @@ body {
   display: block;
   width: 34px;
   height: 3px;
-  margin-bottom: 9px;
+  margin-bottom: 8px;
   border-radius: 2px;
   background: var(--accent, var(--magenta));
 }
@@ -1079,11 +1077,11 @@ body {
 
 .fw-abstract {
   margin-top: 16px;
-  padding-top: 14px;
+  padding-top: 16px;
   border-top: 1px solid var(--line);
 }
 .fw-abstract-h {
-  margin: 0 0 7px;
+  margin: 0 0 8px;
   font-size: var(--t-micro);
   font-weight: 700;
   letter-spacing: 0.09em;
@@ -1091,8 +1089,8 @@ body {
   color: var(--ink-dim);
 }
 .fw-abstract-p {
-  margin: 0 0 9px;
-  font-size: 14.5px;
+  margin: 0 0 8px;
+  font-size: 14px;
   line-height: 1.62;
   color: var(--ink-soft);
   max-width: 68ch;
@@ -1140,7 +1138,7 @@ body {
    like a caption for them. */
 .fw-open-title {
   margin: 0 0 clamp(10px, 1.6vh, 20px);
-  font-size: clamp(27px, 2.9vw, 50px);
+  font-size: clamp(32px, 2.9vw, 44px);
   font-weight: 800;
   letter-spacing: -0.022em;
   line-height: 1.1;
@@ -1191,31 +1189,31 @@ body {
 /* EVERYTHING on this screen is set bold. Bold OR capitals, never both, so the labels are
    the only thing in caps and they are the only thing that is not bold-and-cased. */
 .fw-open-lab {
-  font-size: clamp(14px, 0.72vw, 14.5px);
+  font-size: clamp(14px, 0.72vw, 14px);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--grey);
-  margin-bottom: 7px;
+  margin-bottom: 8px;
 }
 .fw-open-text {
   margin: 0;
-  font-size: clamp(14px, 0.88vw, 15.5px);
+  font-size: clamp(14px, 0.88vw, 14px);
   font-weight: 600;
   line-height: 1.5;
   color: var(--text);
   overflow: hidden;
 }
-.fw-open-cell:has(.fw-open-fig) .fw-open-i { display: inline-flex; margin-right: 14px; }
-.fw-open-i { display: flex; gap: 7px; font-size: clamp(14px, 0.85vw, 15.0px); line-height: 1.5; }
+.fw-open-cell:has(.fw-open-fig) .fw-open-i { display: inline-flex; margin-right: 16px; }
+.fw-open-i { display: flex; gap: 8px; font-size: clamp(14px, 0.85vw, 14px); line-height: 1.5; }
 .fw-open-i b { color: var(--ink); font-weight: 800; flex: none; }
 .fw-open-i span { color: var(--soft); font-weight: 600; min-width: 0; }
-.fw-open-chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; }
+.fw-open-chips { display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; }
 .fw-open-chip {
-  font-size: clamp(14px, 0.72vw, 14.5px);
+  font-size: clamp(14px, 0.72vw, 14px);
   font-weight: 700;
   line-height: 1;
-  padding: 6px 10px;
+  padding: 8px 8px;
   border-radius: 100px;
   background: var(--bg-base);
   color: var(--text);
@@ -1228,12 +1226,12 @@ body {
   height: 100%;
   object-fit: contain;
   object-position: center bottom;
-  margin-top: 6px;
+  margin-top: 8px;
 }
-.fw-open-worlds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 10px; }
-.fw-open-w { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.fw-open-worlds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.0px 8px; }
+.fw-open-w { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .fw-open-wimg { width: clamp(22px, 2vw, 34px); height: auto; flex: none; }
-.fw-open-w span { font-size: clamp(14px, 0.85vw, 15.0px); font-weight: 700; color: var(--ink); }
+.fw-open-w span { font-size: clamp(14px, 0.85vw, 14px); font-weight: 700; color: var(--ink); }
 
 
 /* One colour per SYSTEM, not one per chart. A reader who learns the colour on the opening
@@ -1281,17 +1279,17 @@ body {
   overflow: hidden;
 }
 .fw-open-cell.is-plot .fw-open-lab { margin-bottom: 0; }
-.fw-open-cell.is-plot:has(.fw-open-head) .fw-open-hrows { gap: 1px; }
+.fw-open-cell.is-plot:has(.fw-open-head) .fw-open-hrows { gap: 1.0px; }
 .fw-open-cell.is-plot:has(.fw-open-head) .fw-open-htrack { height: 7px; }
-.fw-open-cell.is-plot:has(.fw-open-head) .fw-open-hrow { row-gap: 1px; }
+.fw-open-cell.is-plot:has(.fw-open-head) .fw-open-hrow { row-gap: 1.0px; }
 .fw-open-cols {
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 5px; align-items: end; flex: 1 1 auto; min-height: 0;
+  gap: 4px; align-items: end; flex: 1 1 auto; min-height: 0;
 }
 .fw-open-cb { display: grid; grid-template-rows: auto auto 1fr; min-width: 0; height: 100%; }
 .fw-open-cv {
-  font-size: clamp(14px, 0.78vw, 14.5px); font-weight: 800; color: var(--ink);
-  font-variant-numeric: tabular-nums; text-align: center; margin-bottom: 3px;
+  font-size: clamp(14px, 0.78vw, 14px); font-weight: 800; color: var(--ink);
+  font-variant-numeric: tabular-nums; text-align: center; margin-bottom: 3.0px;
 }
 .fw-open-bar {
   /* Sleeker: a column, not a block. The bar is the system's own colour, so the plot is
@@ -1301,22 +1299,22 @@ body {
   border-radius: 5px 5px 2px 2px;
   background: var(--sys, var(--tint));
 }
-.fw-open-names { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px;
+.fw-open-names { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px;
   /* Deep enough for a rotated 14px name. At the old height the labels were sheared off at
      the tile's bottom edge, so four of five systems read as "...altime-2.1". */
-  height: clamp(58px, 7.2vh, 74px); margin-top: 6px; overflow: visible; }
+  height: clamp(58px, 7.2vh, 74px); margin-top: 8px; overflow: visible; }
 .fw-open-nc { position: relative; min-width: 0; }
 .fw-open-nm {
   position: absolute; top: 4px; right: 4px;
-  display: flex; align-items: center; gap: 3px;
-  font-size: clamp(14px, 0.66vw, 14.5px); font-weight: 700; line-height: 1;
+  display: flex; align-items: center; gap: 3.0px;
+  font-size: clamp(14px, 0.66vw, 14px); font-weight: 700; line-height: 1;
   color: var(--soft); white-space: nowrap;
   transform: rotate(-45deg); transform-origin: right top;
 }
 .fw-open-nm svg, .fw-open-nm .fw-vmark { width: 14px; height: 14px; flex: none; display: block; }
 /* The mark sits ON the column, above the value, where it is read with the bar rather than
    in the rotated name row where it was 9px and effectively invisible. */
-.fw-open-mk { display: flex; justify-content: center; margin-bottom: 3px; }
+.fw-open-mk { display: flex; justify-content: center; margin-bottom: 3.0px; }
 .fw-open-mk .fw-vmark, .fw-open-mk svg { width: 16px; height: 16px; display: block; }
 
 
@@ -1337,7 +1335,7 @@ body {
   background: none;
   border: 0;
   border-radius: 100px;
-  padding: 6px 11px;
+  padding: 8px 12px;
   cursor: pointer;
   white-space: nowrap;
   transition: color .18s, background-color .18s;
@@ -1363,7 +1361,7 @@ body {
 .wordmark-logo {
   width: 22px; height: 22px; flex: none;
   object-fit: contain; object-position: center;
-  margin-right: 2px;
+  margin-right: 2.0px;
   vertical-align: -5px;
 }
 
@@ -1375,7 +1373,7 @@ body {
    The mark is the FILM's own first frame, not a second copy of the artwork, so nothing
    changes size or position when the flight starts moving at the next stop. */
 .fw-sum {
-  margin-top: 6px;
+  margin-top: 8px;
   display: grid;
   /* Three columns in the right half. Two put the seven tiles on four rows and the block
      ran 43px past the fold; three fits them on three - abstract across the top, the three
@@ -1393,7 +1391,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   padding: 8px;
   min-height: 0;
 }
@@ -1405,13 +1403,13 @@ body {
 
 /* Six worlds: the globe and the name. The paper explains each at length and this tile is
    not the place to do it again. */
-.fw-tile-worlds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 10px; }
-.fw-tw { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.fw-tile-worlds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.0px 8px; }
+.fw-tw { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .fw-tw-img { width: 26px; height: 26px; object-fit: contain; flex: none; }
 .fw-tw span { font-size: 14px; font-weight: 600; color: var(--ink); }
 
 /* Spread per conversation type. */
-.fw-spread { display: flex; flex-direction: column; gap: 3px; }
+.fw-spread { display: flex; flex-direction: column; gap: 3.0px; }
 .fw-sp-row { display: grid; grid-template-columns: 13ch 1fr; align-items: center; gap: 8px; }
 .fw-sp-n { font-size: 14px; color: var(--ink-dim); white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; }
@@ -1436,7 +1434,7 @@ body {
 .fw-sum-abstract { grid-column: 1 / -1; }
 
 .fw-sum-abstract {
-  font-size: clamp(14px, 0.74vw, 14.5px);
+  font-size: clamp(14px, 0.74vw, 14px);
   line-height: 1.48;
   color: var(--ink-soft);
   text-wrap: pretty;
@@ -1444,9 +1442,9 @@ body {
      a line, roughly twice a readable measure, and the abstract is the longest single block
      on the page. */
   column-count: 2;
-  column-gap: 26px;
+  column-gap: 24px;
   column-rule: 1px solid var(--line);
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 14px;
   background: rgba(255, 255, 255, .55);
   border: 1px solid var(--line);
@@ -1459,7 +1457,7 @@ body {
   border-radius: 4px;
   /* The padding is pulled back out by the margin. Left in, it opened a visible gap on both
      sides of each linked run and the sentence read as "( Pass@1: 0.490 ,  turn-taking...". */
-  padding: 1px 3px;
+  padding: 1.0px 3.0px;
   margin: 0 -3px;
   cursor: default;
   transition: background-color .16s, color .16s;
@@ -1482,7 +1480,7 @@ body {
 .fw-tile-plot {
   margin: 0;
   min-width: 0;
-  padding: 11px 12px 9px;
+  padding: 12px 12px 8px;
   border-radius: 14px;
   background: rgba(255, 255, 255, .55);
   border: 1px solid var(--line);
@@ -1502,14 +1500,14 @@ body {
   margin-bottom: 8px;
 }
 .fw-tile-plot.is-lit .fw-tile-h { color: var(--tint); }
-.fw-tile-plot.is-note { padding-bottom: 13px; }
-.fw-tile-big { font-size: 14px; line-height: 1.35; color: var(--ink); margin-bottom: 7px; }
-.fw-tile-i { display: flex; gap: 6px; font-size: 14px; line-height: 1.35; margin-top: 1px; }
+.fw-tile-plot.is-note { padding-bottom: 12px; }
+.fw-tile-big { font-size: 14px; line-height: 1.35; color: var(--ink); margin-bottom: 8px; }
+.fw-tile-i { display: flex; gap: 8px; font-size: 14px; line-height: 1.35; margin-top: 1.0px; }
 .fw-tile-i b { color: var(--ink); font-weight: 650; flex: none; }
 .fw-tile-i span { color: var(--ink-dim); min-width: 0; }
 .fw-tile-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .fw-chip {
-  font-size: 14px; line-height: 1; padding: 4px 7px; border-radius: 100px;
+  font-size: 14px; line-height: 1; padding: 4px 8px; border-radius: 100px;
   background: rgba(14, 16, 41, .055); color: var(--ink-soft);
 }
 
@@ -1518,7 +1516,7 @@ body {
 .fw-cols {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
+  gap: 8px;
   height: clamp(56px, 7.6vh, 80px);
 }
 .fw-col-b {
@@ -1536,7 +1534,7 @@ body {
   color: var(--ink);
   font-variant-numeric: tabular-nums;
   text-align: center;
-  margin-bottom: 3px;
+  margin-bottom: 3.0px;
 }
 .fw-col-bar {
   align-self: end;
@@ -1561,7 +1559,7 @@ body {
   right: 2px;
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 3.0px;
   font-size: 14px;
   line-height: 1;
   color: var(--ink-dim);
@@ -1579,19 +1577,19 @@ body {
   height: clamp(36px, 4.8vh, 48px);
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
+  gap: 8px;
   margin-top: 4px;
 }
 .fw-name-cell { position: relative; min-width: 0; }
 
 /* The worked example: five runs, and the three numbers they produce. */
-.fw-work { margin: 14px 0 0; }
+.fw-work { margin: 16px 0 0; }
 .fw-work-h {
   font-size: 14px; font-weight: 700; letter-spacing: 0.085em; text-transform: uppercase;
-  color: var(--ink-dim); margin-bottom: 9px;
+  color: var(--ink-dim); margin-bottom: 8px;
 }
-.fw-work-rows { display: flex; flex-direction: column; gap: 5px; }
-.fw-work-row { display: grid; grid-template-columns: 5.5ch 1fr 12ch; align-items: center; gap: 10px; }
+.fw-work-rows { display: flex; flex-direction: column; gap: 4px; }
+.fw-work-row { display: grid; grid-template-columns: 5.5ch 1fr 12ch; align-items: center; gap: 8px; }
 .fw-work-n { font-size: 14px; color: var(--ink-dim); }
 .fw-work-t { position: relative; height: 16px; border-radius: 4px; background: rgba(14, 16, 41, .05); }
 .fw-work-b { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: rgba(14, 16, 41, .22); }
@@ -1609,10 +1607,10 @@ body {
 .fw-work-key { margin-top: 8px; font-size: 14px; color: var(--ink-dim); }
 .fw-work-out {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 9px; margin-top: 12px;
+  gap: 8px; margin-top: 12px;
 }
 .fw-work-cell {
-  padding: 10px 12px; border-radius: 12px;
+  padding: 8px 12px; border-radius: 12px;
   background: rgba(255,255,255,.55); border: 1px solid var(--line);
 }
 .fw-work-cell b {
@@ -1620,7 +1618,7 @@ body {
   color: var(--ink-dim); font-weight: 700;
 }
 .fw-work-cell strong {
-  display: block; font-size: 21px; font-weight: 700; color: var(--ink);
+  display: block; font-size: 20px; font-weight: 700; color: var(--ink);
   font-variant-numeric: tabular-nums; line-height: 1.2;
 }
 .fw-work-cell span { font-size: 14px; color: var(--ink-dim); }
@@ -1640,8 +1638,8 @@ body {
      ribbon. On six tracks, the first three span two each and the last two span three. */
   grid-template-columns: repeat(6, minmax(0, 1fr));
   grid-auto-rows: minmax(0, 1fr);
-  gap: 9px;
-  margin-top: 14px;
+  gap: 8px;
+  margin-top: 16px;
   height: clamp(300px, 54vh, 540px);
 }
 .fw-run:nth-child(-n+3) { grid-column: span 2; }
@@ -1663,11 +1661,11 @@ body {
 .fw-run:focus-visible { outline: 2px solid var(--magenta); outline-offset: 2px; }
 .fw-run-head {
   flex: 0 0 auto;
-  padding: 7px 9px 6px;
+  padding: 8px 8px 8px;
   border-bottom: 1px solid var(--line);
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 1.0px;
 }
 .fw-run-type { font-size: 14px; font-weight: 650; color: var(--ink); }
 .fw-run-where {
@@ -1686,7 +1684,7 @@ body {
   padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   justify-content: flex-end;
 }
 .fw-turn {
@@ -1696,7 +1694,7 @@ body {
   overflow: hidden;
   font-size: 14px;
   line-height: 1.38;
-  padding: 5px 7px;
+  padding: 4px 8px;
   border-radius: 9px;
   max-width: 94%;
   animation: fw-turn-in .28s ease-out both;
@@ -1711,7 +1709,7 @@ body {
 .fw-turn b {
   display: block;
   font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;
-  font-weight: 700; opacity: 1; margin-bottom: 2px;
+  font-weight: 700; opacity: 1; margin-bottom: 2.0px;
 }
 .fw-turn.is-user  { background: rgba(14, 16, 41, .07); color: var(--ink-soft);
   border-bottom-left-radius: 3px; align-self: flex-start; }
@@ -1723,10 +1721,10 @@ body {
    Grouped bars, and cards
    ========================================================================= */
 
-.fw-grp { margin: 14px 0 0; }
+.fw-grp { margin: 16px 0 0; }
 .fw-grp-label {
   font-size: 14px; font-weight: 700; letter-spacing: 0.085em; text-transform: uppercase;
-  color: var(--ink-dim); margin-bottom: 9px;
+  color: var(--ink-dim); margin-bottom: 8px;
 }
 .fw-grp-plot {
   display: grid;
@@ -1739,9 +1737,9 @@ body {
 .fw-grp-bars {
   display: flex;
   align-items: flex-end;
-  gap: 2px;
+  gap: 2.0px;
   height: 96px;
-  padding-bottom: 1px;
+  padding-bottom: 1.0px;
   border-bottom: 1px solid var(--line);
 }
 /* One hue per system, held across every cluster and every plot on the page. The whole
@@ -1757,7 +1755,7 @@ body {
 .fw-grp-bar[style*="--i:3"], .fw-grp-sw[style*="--i:3"] { background: var(--c3); }
 .fw-grp-bar[style*="--i:4"], .fw-grp-sw[style*="--i:4"] { background: var(--c4); }
 .fw-grp-name {
-  margin-top: 7px;
+  margin-top: 8px;
   font-size: 14px;
   line-height: 1.15;
   color: var(--ink-dim);
@@ -1765,17 +1763,17 @@ body {
   overflow-wrap: anywhere;
 }
 .fw-grp-key {
-  display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 11px;
+  display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 12px;
   font-size: 14px; color: var(--ink-dim);
 }
-.fw-grp-keyit { display: inline-flex; align-items: center; gap: 5px; }
+.fw-grp-keyit { display: inline-flex; align-items: center; gap: 4px; }
 .fw-grp-sw { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
 
-.fw-cards { display: grid; gap: 10px; margin-top: 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fw-cards { display: grid; gap: 8px; margin-top: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .fw-cards.is-c2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .fw-card {
   min-width: 0;
-  padding: 12px 13px 13px;
+  padding: 12px 12px 12px;
   border-radius: 14px;
   background: rgba(255, 255, 255, .55);
   border: 1px solid var(--line);
@@ -1787,14 +1785,14 @@ body {
   color: var(--ink);
 }
 .fw-card-l { margin: 0 0 8px; font-size: 14px; line-height: 1.45; color: var(--ink-dim); }
-.fw-card-i { display: flex; gap: 6px; font-size: 14px; line-height: 1.45; margin-top: 3px; }
+.fw-card-i { display: flex; gap: 8px; font-size: 14px; line-height: 1.45; margin-top: 3.0px; }
 .fw-card-i b { color: var(--ink); font-weight: 650; flex: none; min-width: 5.5ch; }
 .fw-card-i span { color: var(--ink-soft); }
 /* Two speakers, set the way a phone sets them. No avatars, no timestamps: the shape of the
    exchange is the content, and anything else is furniture. */
 .fw-chat {
-  font-size: 14px; line-height: 1.4; padding: 5px 8px; border-radius: 10px;
-  margin-top: 5px; max-width: 92%;
+  font-size: 14px; line-height: 1.4; padding: 4px 8px; border-radius: 10px;
+  margin-top: 4px; max-width: 92%;
 }
 .fw-chat.is-user { background: rgba(14, 16, 41, .07); color: var(--ink-soft);
   border-bottom-left-radius: 3px; }
@@ -1817,9 +1815,9 @@ body {
   letter-spacing: 0.075em;
   text-transform: uppercase;
   color: var(--ink-dim);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
-.fw-bars-list { display: flex; flex-direction: column; gap: 7px; }
+.fw-bars-list { display: flex; flex-direction: column; gap: 8px; }
 
 .fw-bar-row {
   position: relative;
@@ -1829,7 +1827,7 @@ body {
   grid-template-columns: minmax(0, 19ch) 1fr auto;
   align-items: center;
   gap: 12px;
-  padding: 3px 4px;
+  padding: 3.0px 4px;
   border-radius: 8px;
   cursor: default;
 }
@@ -1839,7 +1837,7 @@ body {
 .fw-bar-name {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
   font-size: 14px;
   font-weight: 600;
@@ -1910,7 +1908,7 @@ body {
   min-width: 8.5ch;
   justify-content: flex-end;
 }
-.fw-bar-val strong { font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.fw-bar-val strong { font-size: 14px; font-weight: 700; color: var(--ink); }
 /* 0.86em, not a fixed 11px. Fixed, it did not follow the table's own size steps, so at the
    widths where the value dropped to 10.5px the UNCERTAINTY was set larger than the estimate
    it qualifies. */
@@ -1921,7 +1919,7 @@ body {
   bottom: calc(100% + 5px);
   left: 16ch;
   z-index: 9;
-  padding: 7px 10px;
+  padding: 8px 8px;
   border-radius: 8px;
   background: var(--ink);
   color: #fff;
@@ -1942,8 +1940,8 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 19ch) 1fr auto;
   gap: 12px;
-  margin: 5px 0 0;
-  padding: 3px 4px 0;
+  margin: 4px 0 0;
+  padding: 3.0px 4px 0;
   font-size: 14px;                 /* so the 19ch above matches the row's 19ch */
   color: var(--ink-dim);
   font-variant-numeric: tabular-nums;
@@ -1958,7 +1956,7 @@ body {
 .fw-bars-axis .fw-axis-ticks > span:first-child { transform: translateX(-50%); }
 .fw-bars-axis .fw-axis-ticks > span:last-child { transform: translateX(50%); }
 .fw-bars-note {
-  margin: 9px 0 0;
+  margin: 8px 0 0;
   font-size: 14px;
   line-height: 1.5;
   color: var(--ink-dim);
@@ -1975,7 +1973,7 @@ body {
    ========================================================================= */
 
 .fw-pillars-wrap {
-  margin-top: 14px;
+  margin-top: 16px;
   /* Its own scroller. Eleven columns will not fit a phone at any type size worth reading,
      and a table that widens the BODY makes the whole page scroll sideways.
 
@@ -2019,10 +2017,10 @@ body {
 /* The name sits BESIDE its vendor mark, not under it. `.fw-m-sysin` was only given a flex
    row by the old metrics rule, so in the pillar table every system name wrapped to a second
    line under its glyph and each row was twice the height it needed. */
-.fw-m-sysin { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.fw-m-sysin { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .fw-pillars caption {
   caption-side: bottom;
-  margin-top: 9px;
+  margin-top: 8px;
   font-size: 14px;
   line-height: 1.5;
   color: var(--ink-dim);
@@ -2038,7 +2036,7 @@ body {
   letter-spacing: 0.085em;
   text-transform: uppercase;
   color: var(--ink-dim);
-  padding: 0 6px 4px;
+  padding: 0 8px 4px;
   text-align: center;
   /* The rule under the group name is what makes the span visible; without it three pillars
      read as one undifferentiated row of eleven. */
@@ -2050,7 +2048,7 @@ body {
   font-size: 14px;
   font-weight: 650;
   color: var(--ink-soft);
-  padding: 5px 6px;
+  padding: 4px 8px;
   text-align: right;
   white-space: nowrap;
   border-bottom: 1px solid var(--line);
@@ -2061,11 +2059,11 @@ body {
   font-weight: 600;
   font-size: 14px;
   color: var(--ink);
-  padding: 5px 12px 5px 0;
+  padding: 4px 12px 4px 0;
   white-space: nowrap;
 }
 .fw-pillars td {
-  padding: 5px 6px;
+  padding: 4px 8px;
   text-align: right;
   color: var(--ink-soft);
   white-space: nowrap;
@@ -2084,7 +2082,7 @@ body {
    are the reason the table is worth the width it costs: without them the Pathfinding block
    reads as five separated systems when three of its intervals overlap. Full-strength
    --ink-dim is 5.44:1, and the size step alone is enough to keep them subordinate. */
-.fw-pillars td .fw-pm { margin-left: 3px; }
+.fw-pillars td .fw-pm { margin-left: 3.0px; }
 
 /* Eleven columns of numbers plus a system name is about 980px at the base size. The column
    they land in is not one width - it is 34vw of the window at a world stop and rather less
@@ -2094,19 +2092,19 @@ body {
 @container pillars (max-width: 980px) {
   .fw-pillars { font-size: 14px; }
   .fw-pillars td, .fw-p-metrics th { padding: 4px 4px; }
-  .fw-pillars td .fw-pm { margin-left: 2px; }
+  .fw-pillars td .fw-pm { margin-left: 2.0px; }
 }
 @container pillars (max-width: 860px) {
   .fw-pillars { font-size: 14px; }
-  .fw-pillars th.fw-p-sys { font-size: 14px; padding-right: 7px; }
-  .fw-pillars td, .fw-p-metrics th { padding: 3px 3px; }
+  .fw-pillars th.fw-p-sys { font-size: 14px; padding-right: 8px; }
+  .fw-pillars td, .fw-p-metrics th { padding: 3.0px 3.0px; }
   .fw-pillars td .fw-pm { font-size: 14px; }
   .fw-p-metrics th { font-size: 14px; }
 }
 @container pillars (max-width: 740px) {
   .fw-pillars { font-size: 14px; }
-  .fw-pillars th.fw-p-sys { font-size: 14px; padding-right: 5px; }
-  .fw-pillars td, .fw-p-metrics th { padding: 3px 2px; }
+  .fw-pillars th.fw-p-sys { font-size: 14px; padding-right: 4px; }
+  .fw-pillars td, .fw-p-metrics th { padding: 3.0px 2.0px; }
   /* Past here the half-widths are what has to go: they are the widest thing in every cell
      and the least useful at a glance. The caption still says what they were, and the suite
      stop shows them at full size. */
@@ -2141,8 +2139,8 @@ body {
 
 .fw-maps {
   display: grid;
-  gap: 9px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
   /* --map-h is the ROW height, and it must be an explicit length rather than 1fr.
      The renderer measures its host and lays itself out to fit; inside an auto-height
      column a 1fr row has no height to resolve against, so the host grows, the renderer
@@ -2211,7 +2209,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 9px;
+  padding: 8px 8px;
   border-bottom: 1px solid var(--line);
   font-size: 14px;
   flex: 0 0 auto;
@@ -2229,7 +2227,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.045em;
   text-transform: uppercase;
-  padding: 2px 7px;
+  padding: 2.0px 8px;
   border-radius: 100px;
   border: 1px solid currentColor;
   white-space: nowrap;
@@ -2258,7 +2256,7 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
   flex: 0 0 auto;
-  padding: 5px 9px 6px;
+  padding: 4px 8px 8px;
   border-top: 1px solid var(--line);
   font-size: 14px;
   line-height: 1.38;
@@ -2301,7 +2299,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 12px;
-  padding: 11px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid #212a36;
   color: #e6edf5;
   flex: 0 0 auto;
@@ -2315,13 +2313,13 @@ body {
   border: 1px solid #212a36;
   background: transparent;
   color: #e6edf5;
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1;
   cursor: pointer;
 }
 .fw-walk-x:hover { border-color: #4285F4; }
 .fw-walk-x:focus-visible { outline: 2px solid #4285F4; outline-offset: 1px; }
-.fw-walk-body { flex: 1 1 auto; min-height: 0; display: flex; padding: 10px; }
+.fw-walk-body { flex: 1 1 auto; min-height: 0; display: flex; padding: 8px; }
 .fw-walk-body .wm-root { flex: 1 1 auto; min-width: 0; min-height: 0; }
 /* This page never fetches a recording - the walks are silent by design and setVoice is
    never called - so the renderer's Voice toggle is a control with nothing behind it. A
@@ -2380,31 +2378,32 @@ body {
 .fw-open-by {
   margin: 8px 0 0;
   display: flex; flex-wrap: wrap; align-items: baseline;
-  gap: 2px 14px;
+  gap: 2.0px 16px;
 }
 /* The author line owns its own row; everything after it flows. */
 .fw-open-authors { flex-basis: 100%; }
 .fw-open-authors {
   display: flex; flex-wrap: wrap; align-items: baseline;
-  gap: 0 5px;
-  font-size: clamp(15px, 1.05vw, 18px);
+  gap: 0 4px;
+  font-size: clamp(14px, 1.05vw, 17px);
   color: var(--ink);
 }
 .fw-open-author { white-space: nowrap; }
 .fw-open-author b { font-weight: 750; }
 .fw-open-author sup, .fw-open-aff sup {
-  font-size: 0.62em; font-weight: 700; color: var(--soft);
-  vertical-align: super; line-height: 0; margin-left: 1px;
+  /* An em here resolved to 10.5px, under the 12px floor. */
+  font-size: 12px; font-weight: 700; color: var(--soft);
+  vertical-align: super; line-height: 0; margin-left: 1.0px;
 }
 .fw-open-sep { color: var(--soft); margin-left: -4px; }
 .fw-open-aff {
-  font-size: clamp(14px, 0.82vw, 15px); font-weight: 600; color: var(--text);
+  font-size: clamp(14px, 0.82vw, 14px); font-weight: 600; color: var(--text);
 }
-.fw-open-aff sup { margin-right: 3px; margin-left: 0; }
+.fw-open-aff sup { margin-right: 3.0px; margin-left: 0; }
 .fw-open-afflink { color: var(--vio); text-decoration: none; border-bottom: 1px solid var(--violn); }
 .fw-open-afflink:hover { color: var(--viod); border-bottom-color: var(--viod); }
 .fw-open-mail {
-  font-size: clamp(14px, 0.8vw, 15px); color: var(--soft);
+  font-size: clamp(14px, 0.8vw, 14px); color: var(--soft);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 .fw-open-note { font-size: 14px; color: var(--grey); }
@@ -2430,11 +2429,11 @@ body {
   grid-template-areas: "name val" "track track";
   align-items: center;
   column-gap: 8px;
-  row-gap: 2px;
+  row-gap: 2.0px;
 }
 .fw-open-hname {
   grid-area: name;
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 8px;
   line-height: 1.15;
   font-size: 14px; font-weight: 700; color: var(--ink);
   white-space: nowrap;              /* never truncated: the row grows instead */
@@ -2447,7 +2446,7 @@ body {
   font-size: 14px; font-weight: 800; color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
-.fw-open-hpm { font-weight: 600; color: var(--muted); margin-left: 3px; font-size: 12px; }
+.fw-open-hpm { font-weight: 600; color: var(--muted); margin-left: 3.0px; font-size: 12px; }
 .fw-open-htrack {
   grid-area: track;
   position: relative;
@@ -2535,7 +2534,7 @@ body {
 .fw-mx-th.is-cut, .fw-mx-cell.is-cut, .fw-mx-colt.is-cut { margin-left: 12px; box-shadow: -12px 0 0 -11px var(--sub); }
 /* Pathfinding is the world that behaves differently, and the layout says so first. */
 .fw-mx-row.is-apart { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--grid); }
-.fw-mx-marg, .fw-mx-colt { display: flex; align-items: center; gap: 6px; }
+.fw-mx-marg, .fw-mx-colt { display: flex; align-items: center; gap: 8px; }
 .fw-mx-margbar {
   height: 8px; width: var(--w); border-radius: 2px;
   background: var(--muted); opacity: .25;
@@ -2545,7 +2544,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .fw-mx-foot { align-items: start; padding-top: 4px; border-top: 1px solid var(--grid); }
-.fw-mx-colt { flex-direction: column; gap: 2px; }
+.fw-mx-colt { flex-direction: column; gap: 2.0px; }
 .fw-mx-coltbar {
   width: 8px; height: calc(var(--h) * 0.24); min-height: 3px;
   border-radius: 2px; background: var(--muted); opacity: .25;
@@ -2625,7 +2624,7 @@ body {
 /* Below 700px a violin cannot be read, so the row degrades to the numbers it carries:
    the median as a dot and the interquartile range as a bar. */
 @media (max-width: 700px) {
-  .fw-vio-row { grid-template-columns: 92px minmax(0, 1fr); height: 44px; row-gap: 2px; }
+  .fw-vio-row { grid-template-columns: 92px minmax(0, 1fr); height: 44px; row-gap: 2.0px; }
   .fw-vio-plot { height: 24px; }
   .fw-vio-svg, .fw-vio-stub { display: none; }
   .fw-vio-med { height: 14px; width: 3px; background: var(--ink); border-radius: 2px; }
@@ -2665,7 +2664,7 @@ body {
   margin: 0; font-size: 17px; font-weight: 800; color: var(--tint-t, var(--tint));
   letter-spacing: -0.01em;
 }
-.fw-pil-l { margin: 2px 0 0; font-size: 14px; color: var(--sub); }
+.fw-pil-l { margin: 2.0px 0 0; font-size: 14px; color: var(--sub); }
 .fw-pil-m {
   background: var(--surface);
   border: 1px solid var(--grid);
@@ -2677,9 +2676,9 @@ body {
   font-size: 17px; font-weight: 800; color: var(--tint-t, var(--tint));
   font-variant-numeric: tabular-nums; line-height: 1.1;
 }
-.fw-pil-full { font-size: 14px; font-weight: 700; color: var(--ink); margin-top: 2px; }
-.fw-pil-says { margin: 6px 0 0; font-size: 14px; line-height: 1.45; color: var(--sub); }
-.fw-pil-range { margin-top: 6px; font-size: 12px; color: var(--muted); }
+.fw-pil-full { font-size: 14px; font-weight: 700; color: var(--ink); margin-top: 2.0px; }
+.fw-pil-says { margin: 8px 0 0; font-size: 14px; line-height: 1.45; color: var(--sub); }
+.fw-pil-range { margin-top: 8px; font-size: 12px; color: var(--muted); }
 
 /* The claim the whole suite exists to protect. */
 .fw-callout {
@@ -2787,12 +2786,12 @@ body {
 
 
 /* The three headline results, on the opening's bottom row. */
-.fw-open-head { display: flex; align-items: baseline; gap: 6px; margin: 0 0 2px; flex-wrap: wrap; }
+.fw-open-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 2.0px; flex-wrap: wrap; }
 .fw-open-headv {
   /* Compact on purpose: on the opening's short bottom row every 8px of headline costs a
      system row in the chart underneath, and a chart that shows four of five systems is
      worse than a smaller numeral. */
-  font-size: clamp(20px, 1.5vw, 24px); font-weight: 800; color: var(--ink);
+  font-size: clamp(20px, 1.5vw, 20px); font-weight: 800; color: var(--ink);
   font-variant-numeric: tabular-nums; line-height: 1;
 }
 .fw-open-headw {
@@ -2855,7 +2854,7 @@ body {
    at the foot of the card on a ground that separates it from the definition above. */
 .fw-shell-split[data-block="band"] .fw-chat {
   font-size: 14px; line-height: 1.4;
-  border-radius: 10px; padding: 8px 10px; margin-top: 4px;
+  border-radius: 10px; padding: 8px 8px; margin-top: 4px;
   max-width: 92%;
 }
 .fw-shell-split[data-block="band"] .fw-chat.is-user {
@@ -2890,7 +2889,7 @@ body {
   font-variant-numeric: tabular-nums; line-height: 1;
 }
 .fw-ring-mid span { font-size: 12px; color: var(--sub); letter-spacing: -0.01em; }
-.fw-ring-key { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.fw-ring-key { display: flex; flex-direction: column; gap: 2.0px; min-width: 0; flex: 1 1 auto; }
 .fw-ring-krow {
   display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
   font-size: 12px; color: var(--sub); white-space: nowrap;
@@ -2900,10 +2899,131 @@ body {
 
 .fw-ring-khead {
   font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 2px;
+  color: var(--muted); margin-bottom: 2.0px;
 }
 
 /* The wordmark is the way back to the story from the results and the recordings. */
 a.wordmark { text-decoration: none; color: inherit; }
 a.wordmark:hover .sub { color: var(--ink); }
 a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-offset: 3px; border-radius: 6px; }
+
+
+/* Sort controls and the pillar filter. Presentation only: nothing here recomputes a
+   number, it reorders rows and hides columns. */
+.fw-p-metric { padding: 0; }
+.fw-p-sortbtn {
+  width: 100%; border: 0; background: none; cursor: pointer;
+  font: inherit; color: inherit; padding: 4px 4px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+}
+.fw-p-sortbtn::after {
+  content: "";
+  width: 0; height: 0; opacity: 0;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+}
+.fw-p-metric[data-sort="desc"] .fw-p-sortbtn::after { opacity: 1; }
+.fw-p-metric[data-sort="asc"] .fw-p-sortbtn::after {
+  opacity: 1; border-top: 0; border-bottom: 4px solid currentColor;
+}
+.fw-p-sortbtn:hover { color: var(--ink); text-decoration: underline; }
+.fw-p-sortbtn:focus-visible { outline: 2px solid var(--pillar-agentic); outline-offset: -2px; }
+
+.fw-p-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.fw-p-filter-l {
+  font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted);
+}
+.fw-p-chip {
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  padding: 4px 12px; border-radius: 999px;
+  border: 1px solid var(--grid); background: var(--surface); color: var(--sub);
+}
+.fw-p-chip:hover { color: var(--ink); border-color: var(--muted); }
+.fw-p-chip.is-on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.fw-p-chip:focus-visible { outline: 2px solid var(--pillar-agentic); outline-offset: 2px; }
+
+
+/* The call's own speech activity strip: two lanes, the excerpt's window, and a playhead
+   that moves while the recording plays. The Pathfinding tiles get this from the walk
+   renderer; the enterprise calls had nothing, so the thing this benchmark measures was
+   invisible on five of the seven tiles. */
+.fw-tl {
+  position: relative;
+  height: 28px; flex: none;
+  margin: 0 8px 4px;
+  border-radius: 4px;
+  background: var(--canvas);
+  border: 1px solid var(--grid);
+  overflow: hidden;
+}
+.fw-tl-lane { position: absolute; left: 0; right: 0; height: 8px; }
+.fw-tl-lane.is-agent { top: 4px; }
+.fw-tl-lane.is-user { top: 16px; }
+.fw-tl-lane i {
+  position: absolute; top: 0; height: 100%;
+  border-radius: 2px;
+}
+.fw-tl-lane.is-agent i { background: var(--pillar-agentic); opacity: .85; }
+.fw-tl-lane.is-user i { background: var(--pillar-dynamics); opacity: .85; }
+/* Where the excerpt below sits inside the whole call. */
+.fw-tl-win {
+  position: absolute; top: 0; bottom: 0;
+  border-left: 1px solid var(--ink); border-right: 1px solid var(--ink);
+  background: rgba(23, 23, 31, .06);
+}
+.fw-tl-head {
+  position: absolute; top: 0; bottom: 0; width: 2px; left: 0;
+  background: var(--ink);
+  transform: translateX(-1px);
+}
+/* The turn being spoken. */
+.fw-turn.is-now {
+  background: color-mix(in oklab, var(--pillar-agentic) 12%, transparent);
+  border-radius: 8px;
+  outline: 1px solid color-mix(in oklab, var(--pillar-agentic) 30%, transparent);
+}
+
+
+/* Enlarge. A wide figure in a 1200px band is legible; on a laptop it is not comfortable.
+   The clone opens over the page so the live charts behind keep their state. */
+.fw-zoom-btn {
+  position: absolute; top: 0; right: 0;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  padding: 4px 12px; border-radius: 999px;
+  border: 1px solid var(--grid); background: var(--surface); color: var(--sub);
+}
+.fw-zoom-btn:hover { color: var(--ink); border-color: var(--muted); }
+.fw-zoom-btn:focus-visible { outline: 2px solid var(--pillar-agentic); outline-offset: 2px; }
+.fw-mx, .fw-sm, .fw-vio { position: relative; }
+
+.fw-zoom {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; flex-direction: column;
+  background: rgba(23, 23, 31, .55);
+  padding: 24px;
+}
+.fw-zoom-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: var(--surface);
+  border-radius: 12px 12px 0 0;
+  padding: 12px 16px;
+  font-size: 17px; color: var(--ink);
+}
+.fw-zoom-x {
+  border: 1px solid var(--grid); background: var(--surface); color: var(--ink);
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 14px;
+}
+.fw-zoom-x:focus-visible { outline: 2px solid var(--pillar-agentic); outline-offset: 2px; }
+.fw-zoom-body {
+  flex: 1 1 auto; min-height: 0; overflow: auto;
+  background: var(--surface);
+  border-radius: 0 0 12px 12px;
+  padding: 24px;
+}
+/* The clone has room, so it stops compressing: full column widths and taller rows. */
+.fw-zoom-body .is-zoomed .fw-zoom-btn { display: none; }
+.fw-zoom-body .fw-mx-grid { --cell: 44px; --wcol: 180px; }
+.fw-zoom-body .fw-vio-row { height: 96px; }
+.fw-zoom-body .fw-sm-wrap { gap: 24px; }
+@media (prefers-reduced-motion: reduce) { .fw-zoom { transition: none; } }

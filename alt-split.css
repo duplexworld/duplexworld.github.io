@@ -116,14 +116,14 @@
    itself - which on a scroll-driven page reads as the wheel having stopped working. These
    are the millimetres that keep it out of that state. */
 .fw-shell-split .fw-cases { gap: 8px; }
-.fw-shell-split .fw-case { padding: 9px 10px 10px; }
-.fw-shell-split .fw-case-model { margin-bottom: 7px; }
-.fw-shell-split .fw-case-note { margin-top: 7px; padding-top: 6px; }
+.fw-shell-split .fw-case { padding: 8px 8px 8px; }
+.fw-shell-split .fw-case-model { margin-bottom: 8px; }
+.fw-shell-split .fw-case-note { margin-top: 8px; padding-top: 8px; }
 .fw-shell-split .fw-panel-hero { text-align: left; max-width: none; margin-inline: 0; }
 .fw-shell-split .fw-panel-hero .fw-body { margin-inline: 0; }
 .fw-shell-split .fw-panel-hero .fw-tags,
 .fw-shell-split .fw-panel-hero .fw-cta { justify-content: flex-start; }
-.fw-shell-split .fw-title { font-size: clamp(24px, 2.1vw, 34px); }
+.fw-shell-split .fw-title { font-size: clamp(20px, 2.1vw, 32px); }
 /* Not `none`: uncapped this ran to 103 characters a line at 1920. */
 .fw-shell-split .fw-body { max-width: 64ch; }
 .fw-shell-split .fw-pair { grid-template-columns: 1fr 1fr; gap: clamp(18px, 2vw, 32px); }
@@ -164,7 +164,7 @@
 /* Unlabelled, these dots were a 9x21 hit target - under the 24x24 WCAG 2.2 minimum, and at
    1920 they read as dust in the gutter rather than as navigation. The padding is the target;
    the mark stays the same size. */
-.fw-shell-split .fw-dot { padding: 7px 8px; }
+.fw-shell-split .fw-dot { padding: 8px 8px; }
 .fw-shell-split .fw-dot-mark { width: 10px; height: 10px; }
 .fw-shell-split .fw-dot-label { display: none; }
 /* The autoplay control is gone: this is a page that is read by scrolling. */
@@ -180,16 +180,16 @@
 @media (max-height: 850px) and (min-width: 1041px) {
   .fw-shell-split { --horizon: 104px; }
   .fw-shell-split .fw-copy { padding-bottom: 16px; }
-  .fw-shell-split .fw-title { margin-bottom: 6px; }
-  .fw-shell-split .fw-pair { margin-top: 9px; }
+  .fw-shell-split .fw-title { margin-bottom: 8px; }
+  .fw-shell-split .fw-pair { margin-top: 8px; }
   .fw-shell-split .fw-col-body { font-size: 14px; line-height: 1.5; }
-  .fw-shell-split .fw-cases { gap: 7px; }
-  .fw-shell-split .fw-case { padding: 8px 9px 9px; }
-  .fw-shell-split .fw-case-nums { gap: 4px 10px; }
+  .fw-shell-split .fw-cases { gap: 8px; }
+  .fw-shell-split .fw-case { padding: 8px 8px 8px; }
+  .fw-shell-split .fw-case-nums { gap: 4px 8px; }
   .fw-shell-split .fw-case-num strong { font-size: 14px; }
-  .fw-shell-split .fw-case-note { font-size: 14px; line-height: 1.38; margin-top: 6px; padding-top: 5px; }
-  .fw-shell-split .fw-cases-label { margin-top: 10px; }
-  .fw-shell-split .fw-cases-label + .fw-cases { margin-top: 6px; }
+  .fw-shell-split .fw-case-note { font-size: 14px; line-height: 1.38; margin-top: 8px; padding-top: 4px; }
+  .fw-shell-split .fw-cases-label { margin-top: 8px; }
+  .fw-shell-split .fw-cases-label + .fw-cases { margin-top: 8px; }
 }
 
 /* ===========================================================================
@@ -242,8 +242,8 @@
 /* The title is the largest thing on the page and it shares a screen with an abstract and
    three plots, so it gives up a step. */
 .fw-shell-split[data-stop="0"] .fw-title {
-  font-size: clamp(21px, 1.72vw, 29px);
-  margin-bottom: 2px;
+  font-size: clamp(20px, 1.72vw, 32px);
+  margin-bottom: 2.0px;
 }
 /* The opening keeps the same split as every other stop: the mark on the left at the size
    it holds for the whole page, the tiles in the right column. The tiles scroll up and out;
@@ -337,12 +337,12 @@
    eleven columns will not fit 540px at any size worth reading, so the Naturalness pillar
    was cut off at every world. Stacked, the table gets the whole column and the pair still
    fills the height that one figure alone left three quarters empty. */
-.fw-shell-split .fw-panel:has(.fw-bars):has(.fw-pillars) .fw-bars { margin-top: 14px; }
-.fw-shell-split .fw-panel:has(.fw-bars):has(.fw-pillars) .fw-pillars-wrap { margin-top: 18px; }
+.fw-shell-split .fw-panel:has(.fw-bars):has(.fw-pillars) .fw-bars { margin-top: 16px; }
+.fw-shell-split .fw-panel:has(.fw-bars):has(.fw-pillars) .fw-pillars-wrap { margin-top: 16px; }
 /* The chart is the summary and the table is the detail, so the chart is set slightly
    tighter: it should read at a glance rather than compete with the table below it. */
 .fw-shell-split .fw-panel:has(.fw-bars):has(.fw-pillars) .fw-bar-track { height: 17px; }
-.fw-shell-split .fw-panel:has(.fw-bars):has(.fw-pillars) .fw-bars-list { gap: 5px; }
+.fw-shell-split .fw-panel:has(.fw-bars):has(.fw-pillars) .fw-bars-list { gap: 4px; }
 
 /* The film is the left half's tenant, not its owner: at a table stop it takes what is left
    rather than setting the width. */
@@ -361,11 +361,11 @@
    having stopped working. */
 .fw-shell-split .fw-pillars-wrap + .fw-note,
 .fw-shell-split .fw-panel:has(.fw-pillars) .fw-body { max-width: 74ch; }
-.fw-shell-split .fw-panel:has(.fw-pillars) .fw-title { margin-bottom: 5px; }
-.fw-shell-split .fw-pillars-wrap { margin-top: 11px; }
+.fw-shell-split .fw-panel:has(.fw-pillars) .fw-title { margin-bottom: 4px; }
+.fw-shell-split .fw-pillars-wrap { margin-top: 12px; }
 .fw-shell-split .fw-pillars td,
-.fw-shell-split .fw-pillars .fw-p-metrics th { padding: 4px 5px; }
-.fw-shell-split .fw-pillars th.fw-p-sys { padding: 4px 10px 4px 0; }
+.fw-shell-split .fw-pillars .fw-p-metrics th { padding: 4px 4px; }
+.fw-shell-split .fw-pillars th.fw-p-sys { padding: 4px 8px 4px 0; }
 
 /* Eleven columns of numbers want to be read as rows, so the system column stays put while
    the metrics scroll under it on a narrow screen. */
@@ -448,7 +448,7 @@
   .fw-shell-split .fw-run { grid-column: 1 !important; min-height: 210px; }
   .fw-shell-split .fw-cards { grid-template-columns: 1fr; }
   .fw-shell-split .fw-work-out { grid-template-columns: repeat(3, 1fr); }
-  .fw-shell-split .fw-work-row { grid-template-columns: 4.5ch 1fr 10ch; gap: 7px; }
+  .fw-shell-split .fw-work-row { grid-template-columns: 4.5ch 1fr 10ch; gap: 8px; }
   .fw-shell-split .fw-grp-name { font-size: 14px; }
   .fw-shell-split[data-block="summary"] .fw-copy,
   .fw-shell-split[data-block="runs"] .fw-copy { top: 26vh; }
@@ -460,11 +460,11 @@
   .fw-shell-split[data-block="runs"] .fw-art { left: 50%; top: 0; }
   /* The section bar is the page's navigation on a phone, so it stays - wrapped, scrolling
      sideways if it must, rather than hidden behind a menu the reader has to find. */
-  .topbar { flex-wrap: wrap; row-gap: 4px; padding-bottom: 6px; }
+  .topbar { flex-wrap: wrap; row-gap: 4px; padding-bottom: 8px; }
   .fw-nav { margin-left: 0; width: 100%; justify-content: flex-start; overflow-x: auto;
     flex-wrap: nowrap; scrollbar-width: none; }
   .fw-nav::-webkit-scrollbar { display: none; }
-  .fw-nav-item { font-size: 14px; padding: 5px 9px; }
+  .fw-nav-item { font-size: 14px; padding: 4px 8px; }
   /* The name plate shares the top strip with the world index on a phone, so it starts
      after it rather than under it. */
   .fw-shell-split[data-block="table"] .fw-mark {
@@ -491,7 +491,7 @@
     align-items: center;
   }
   .fw-shell-split[data-stage="mark"] .fw-mark-globe { width: clamp(52px, 15vw, 76px); }
-  .fw-shell-split[data-stage="mark"] .fw-mark-name { font-size: clamp(24px, 7vw, 34px); }
+  .fw-shell-split[data-stage="mark"] .fw-mark-name { font-size: clamp(20px, 7vw, 32px); }
   .fw-shell-split[data-stage="mark"] .fw-mark-line { font-size: 14px; max-width: none; }
   /* The index and the rail belong to the film's strip. On a text stop the film is not
      there, so they would print over the copy. */
@@ -592,8 +592,8 @@
 @media (max-width: 700px) {
   /* The header. The nav ran off the right edge with no way to reach the last item;
      it now scrolls sideways under the thumb, which is what a phone expects. */
-  .topbar { padding: 8px 0 6px; }
-  .wordmark { padding-left: 12px; font-size: 16px; }
+  .topbar { padding: 8px 0 8px; }
+  .wordmark { padding-left: 12px; font-size: 17px; }
   .wordmark .sub { display: none; }
   .fw-nav {
     overflow-x: auto;
@@ -603,7 +603,7 @@
     justify-content: flex-start;
   }
   .fw-nav::-webkit-scrollbar { display: none; }
-  .fw-nav-item { flex: none; font-size: 14px; padding: 6px 10px; }
+  .fw-nav-item { flex: none; font-size: 14px; padding: 8px 8px; }
 
   /* The opening is a SCROLL on a phone, not one screen. Nine tiles inside 844px is
      nine unreadable tiles; stacked, each one is legible and the reader swipes. */
@@ -611,16 +611,16 @@
     height: auto;
     max-height: none;
     overflow: visible;
-    padding: 84px 14px 26px;
+    padding: 84px 16px 24px;
   }
   .fw-open-grid {
     grid-template-columns: 1fr;
     grid-auto-rows: auto;
-    gap: 10px;
+    gap: 8px;
   }
   .fw-open-cell { min-height: 0; }
-  .fw-open-title { font-size: clamp(26px, 7.6vw, 34px); }
-  .fw-open-authors { font-size: 15px; }
+  .fw-open-title { font-size: clamp(20px, 7.6vw, 32px); }
+  .fw-open-authors { font-size: 14px; }
   /* The mark is the middle cell of a three by three that no longer exists. Stacked, it
      is just the biggest tile, so it keeps its own aspect rather than a grid row. */
   .fw-open-cell.is-mark { padding: 0; }
@@ -630,7 +630,7 @@
   /* The three plots. Rotated names need vertical room a stacked tile does not have to
      spare, so on a phone the plot lies down: name and value on one line, bar beside. */
   .fw-open-cols, .fw-open-names { grid-template-columns: 1fr; }
-  .fw-open-cols { gap: 7px; align-items: stretch; }
+  .fw-open-cols { gap: 8px; align-items: stretch; }
   .fw-open-cb {
     grid-template-rows: none;
     grid-template-columns: 22px 4.2em 1fr;
@@ -659,7 +659,7 @@
     left: 0;
     width: 100%;
     max-width: 100%;
-    padding: 0 14px;
+    padding: 0 16px;
     align-self: start;
   }
   .fw-shell-split .fw-video,
@@ -710,7 +710,7 @@
   .fw-shell-split .fw-mark { display: none; }
   .fw-shell-split .fw-title.fw-sr {
     position: static; width: auto; height: auto; clip: auto; clip-path: none;
-    margin: 0 0 6px; overflow: visible; white-space: normal;
+    margin: 0 0 8px; overflow: visible; white-space: normal;
   }
   .fw-phone-only { display: block; }
 
@@ -723,7 +723,7 @@
   .fw-cards { grid-template-columns: 1fr !important; }
   /* A five row chart with a truncated name is a chart of five unknowns. */
   .fw-bar-name { min-width: 0; max-width: none; white-space: normal; line-height: 1.2; }
-  .fw-bar-row { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .fw-bar-row { grid-template-columns: minmax(0, 1fr); gap: 3.0px; }
   .fw-bar-track { width: 100%; }
 }
 
@@ -776,7 +776,7 @@
 /* At 1366 the opening's three plot tiles are ~30px shorter than at 1560, which is exactly
    the fifth system's row. The rows tighten rather than the chart losing a system. */
 @media (max-width: 1440px) {
-  .fw-open-hrows { gap: 2px; margin-top: 2px; }
+  .fw-open-hrows { gap: 2.0px; margin-top: 2.0px; }
   .fw-open-htrack { height: 7px; }
   .fw-open-cell.is-plot .fw-open-lab { margin-bottom: 0; }
   .fw-open-pnote { margin-top: 4px; }
@@ -819,19 +819,24 @@
      that is exactly the height the bottom row needs for its fifth system, and a slightly
      smaller globe costs nothing next to a chart that shows four systems out of five. */
   .fw-open-grid { grid-template-rows: minmax(0, 1fr) minmax(0, 1.16fr) minmax(0, 1.04fr); }
-  .fw-open-cell { padding: 10px 12px; }
+  .fw-open-cell { padding: 8px 12px; }
   .fw-open-lab { margin-bottom: 4px; letter-spacing: 0.07em; }
   .fw-open-text { line-height: 1.42; }
-  .fw-open-hrows { gap: 2px; margin-top: 2px; }
+  .fw-open-hrows { gap: 2.0px; margin-top: 2.0px; }
   .fw-open-htrack { height: 7px; }
-  .fw-open-hrow { row-gap: 1px; }
+  .fw-open-hrow { row-gap: 1.0px; }
   .fw-open-i { line-height: 1.3; }
 }
 @media (max-height: 860px) {
-  .fw-open { padding-top: 54px; padding-bottom: 8px; }
+  .fw-open { padding-top: 56px; padding-bottom: 8px; }
   /* The ring, its six counts and the three figures above them are a few pixels over at
      1366x768: the last row, Pathfinding, was losing its baseline. */
   .fw-ring { max-height: 96px; }
+  /* The note keeps all of its words: clamping it truncated an explanation, and nothing on
+     this page is truncated. It gets the room instead - the label above it gives up its
+     letter-spacing row and the rows tighten by a pixel. */
+  .fw-open-pnote { margin-top: 0; line-height: 1.3; }
+  .fw-open-cell.is-plot .fw-open-lab { margin-bottom: 0; letter-spacing: .04em; }
   .fw-ring-wrap { gap: 8px; margin-top: 0; align-items: flex-start; }
   .fw-ring-krow { line-height: 1.25; }
   .fw-ring-khead { margin-bottom: 0; grid-column: 1 / -1; }
@@ -840,20 +845,20 @@
   .fw-ring-key {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 12px; row-gap: 1px;
+    column-gap: 12px; row-gap: 1.0px;
   }
-  /* The last three pixels at 1366x768, which were the fifth system's track. */
+  /* The last few pixels at 1366x768, which are the fifth system's track. */
   .fw-open:has(.fw-open-by) .fw-open-grid {
-    grid-template-rows: minmax(0, 0.96fr) minmax(0, 1.04fr) minmax(0, 1.08fr);
+    grid-template-rows: minmax(0, 0.94fr) minmax(0, 1.02fr) minmax(0, 1.12fr);
   }
-  .fw-open-title { margin-bottom: 6px; }
-  .fw-open-cell { padding: 8px 10px; border-radius: 12px; }
+  .fw-open-title { margin-bottom: 8px; }
+  .fw-open-cell { padding: 8px 8px; border-radius: 12px; }
   .fw-open-text { font-size: 14px; line-height: 1.38; }
-  .fw-open-lab { font-size: 14px; margin-bottom: 2px; }
+  .fw-open-lab { font-size: 14px; margin-bottom: 2.0px; }
   .fw-open-grid { gap: 8px; }
-  .fw-open-hrows { gap: 1px; margin-top: 0; }
+  .fw-open-hrows { gap: 1.0px; margin-top: 0; }
   .fw-open-htrack { height: 6px; }
-  .fw-open-chip { padding: 3px 8px; }
+  .fw-open-chip { padding: 3.0px 8px; }
   .fw-open-w span { font-size: 14px; }
   .fw-open-wimg { width: clamp(20px, 1.7vw, 26px); }
 }

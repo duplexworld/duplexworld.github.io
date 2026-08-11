@@ -788,6 +788,7 @@ function mountFlight(root, config) {
       fig.setAttribute('role', 'img');
       fig.setAttribute('aria-label', (s.lede || '')
         + ' Pass@1 for five systems across each conversation type, on one shared scale.');
+      addZoom(fig, 'Pass@1 by conversation type');
       p.appendChild(fig);
     }
 
@@ -1013,6 +1014,7 @@ function mountFlight(root, config) {
         cap.textContent = V.find || '';
         host.setAttribute('role', 'img');
         host.setAttribute('aria-label', (s.eyebrow || '') + '. ' + (V.find || ''));
+        addZoom(host, s.eyebrow || 'Conversation duration');
       }).catch(() => { cap.textContent = 'The duration data did not load.'; });
     }
 
@@ -1115,6 +1117,7 @@ function mountFlight(root, config) {
       // A screen reader gets the finding, not the word "table".
       fig.setAttribute('role', 'img');
       fig.setAttribute('aria-label', (s.eyebrow || '') + '. ' + (M.find || ''));
+      addZoom(fig, s.eyebrow || 'Composition');
       p.appendChild(fig);
     }
 
@@ -1264,7 +1267,14 @@ function mountFlight(root, config) {
               bar.style.setProperty('--pc', (100 * au.currentTime / au.duration).toFixed(1) + '%');
             }
             tm.textContent = clock(au.currentTime) + ' / ' + clock(au.duration);
+            // The transcript follows the recording rather than looping beside it: the
+            // playhead moves along the activity strip and the turn being spoken is lit.
+            const sync = fig.__sync;
+            if (sync) sync(au.currentTime);
           });
+          // A recording is the real clock; the looping excerpt is what stands in for it
+          // when nothing is playing. They must not run at the same time.
+          au.addEventListener('play', () => { if (fig.__stopLoop) fig.__stopLoop(); });
           au.addEventListener('loadedmetadata', () => { tm.textContent = '0:00 / ' + clock(au.duration); });
           bar.addEventListener('input', () => {
             if (au.duration) au.currentTime = au.duration * (Number(bar.value) / 1000);
@@ -1455,6 +1465,25 @@ function mountFlight(root, config) {
         th.textContent = g.name;
         gr.appendChild(th);
       });
+      /* Sortable, because seven static tables of eleven columns is a lookup exercise:
+         a reader who wants to know who leads DNSMOS in Travel should not have to scan 55
+         cells. Clicking a metric sorts by it; clicking again reverses. Presentation only -
+         no number moves, only the order of the rows. */
+      const sortBy = (j, dir) => {
+        const body = tb;
+        const rows = [...body.querySelectorAll('tr')];
+        rows.sort((a, b) => {
+          const va = j < 0 ? 0 : parseFloat(a.children[j + 1].textContent) || 0;
+          const vb = j < 0 ? 0 : parseFloat(b.children[j + 1].textContent) || 0;
+          return dir === 'asc' ? va - vb : vb - va;
+        });
+        rows.forEach((r) => body.appendChild(r));
+        tbl.querySelectorAll('th.fw-p-metric').forEach((h, k) => {
+          const on = k === j;
+          h.dataset.sort = on ? dir : '';
+          h.setAttribute('aria-sort', on ? (dir === 'asc' ? 'ascending' : 'descending') : 'none');
+        });
+      };
       const mr = el('tr', 'fw-p-metrics');
       const corner = el('th', 'fw-p-sys');
       corner.scope = 'col';
@@ -1462,10 +1491,24 @@ function mountFlight(root, config) {
       mr.appendChild(corner);
       let ci = 0;
       P.groups.forEach((g) => g.cols.forEach((c) => {
-        const th = el('th', '');
+        const th = el('th', 'fw-p-metric');
         th.scope = 'col';
-        th.textContent = c;
-        th.dataset.col = String(ci++);
+        th.dataset.col = String(ci);
+        const j = ci;
+        ci += 1;
+        // A real button inside the header, so it is reachable by keyboard and announces
+        // itself as something operable rather than as a heading that happens to react.
+        const sb = el('button', 'fw-p-sortbtn');
+        sb.type = 'button';
+        sb.textContent = c;
+        sb.setAttribute('aria-label', 'Sort by ' + c);
+        let dir = 'desc';
+        sb.addEventListener('click', () => {
+          dir = th.dataset.sort === 'desc' ? 'asc' : 'desc';
+          sortBy(j, dir);
+        });
+        th.appendChild(sb);
+        th.setAttribute('aria-sort', 'none');
         mr.appendChild(th);
       }));
       thead.append(gr, mr);
@@ -1511,7 +1554,50 @@ function mountFlight(root, config) {
       tbl.append(thead, tb);
       const scroller = el('div', 'fw-pillars-wrap');
       scroller.appendChild(tbl);
+
+      /* A pillar filter. Eleven columns is three questions asked at once, and a reader
+         who came for turn-taking is reading past eight columns to find it. Hiding a
+         pillar hides its columns; nothing is recomputed and no number changes. */
+      const bar = el('div', 'fw-p-filter');
+      const lab = el('span', 'fw-p-filter-l');
+      lab.textContent = 'Show';
+      bar.appendChild(lab);
+      const setPillar = (name) => {
+        let col = 0;
+        P.groups.forEach((g) => {
+          const on = !name || g.name === name;
+          const from = col, to = col + g.cols.length;
+          col = to;
+          tbl.querySelectorAll('tr').forEach((tr) => {
+            const cells = [...tr.children];
+            const off = cells[0] && /fw-p-corner|fw-p-sys/.test(cells[0].className) ? 1 : 1;
+            for (let k = from; k < to; k++) {
+              const cell = cells[k + off];
+              if (cell) cell.hidden = !on;
+            }
+          });
+          tbl.querySelectorAll('th.fw-p-group').forEach((h) => {
+            if (h.textContent === g.name) h.hidden = !on;
+          });
+        });
+        bar.querySelectorAll('button').forEach((b) => {
+          const on = (b.dataset.pillar || '') === (name || '');
+          b.classList.toggle('is-on', on);
+          b.setAttribute('aria-pressed', String(on));
+        });
+      };
+      [['', 'All pillars']].concat(P.groups.map((g) => [g.name, g.name]))
+        .forEach(([key, label]) => {
+          const b = el('button', 'fw-p-chip');
+          b.type = 'button';
+          b.dataset.pillar = key;
+          b.textContent = label;
+          b.addEventListener('click', () => setPillar(key));
+          bar.appendChild(b);
+        });
+      p.appendChild(bar);
       p.appendChild(scroller);
+      setPillar('');
     }
 
     // The recorded walks, live. Not screenshots and not a video: each panel is the same
@@ -2314,6 +2400,72 @@ function mountFlight(root, config) {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
 
+  /* Enlarge a figure.
+     ---------------------------------------------------------------------------------
+     The wide figures - the composition matrix, the duration violins, the small multiples -
+     are legible in a band but not comfortable on a laptop: eleven columns and six violins
+     want more width than a 1200px container. Clicking one clones it into a full-screen
+     panel. A clone rather than a move, so the page behind is untouched and the live
+     charts keep their state.
+
+     Escape closes, focus is trapped, and focus returns to whatever opened it - the same
+     contract the walk overlay already honours. */
+  let zoomEl = null, zoomOpener = null;
+  function closeZoom() {
+    if (!zoomEl) return;
+    zoomEl.remove();
+    zoomEl = null;
+    document.removeEventListener('keydown', onZoomKey, true);
+    if (zoomOpener && zoomOpener.focus) zoomOpener.focus();
+    zoomOpener = null;
+  }
+  function onZoomKey(e) {
+    if (!zoomEl) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeZoom(); return; }
+    if (e.key !== 'Tab') return;
+    const f2 = zoomEl.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])');
+    if (!f2.length) return;
+    const first = f2[0], last = f2[f2.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+  function openZoom(fig, title) {
+    closeZoom();
+    zoomOpener = document.activeElement;
+    zoomEl = el('div', 'fw-zoom');
+    zoomEl.setAttribute('role', 'dialog');
+    zoomEl.setAttribute('aria-modal', 'true');
+    zoomEl.setAttribute('aria-label', title || 'Enlarged figure');
+    const head = el('div', 'fw-zoom-head');
+    const h = el('b', '');
+    h.textContent = title || '';
+    const x = el('button', 'fw-zoom-x');
+    x.type = 'button';
+    x.setAttribute('aria-label', 'Close');
+    x.innerHTML = '&#10005;';
+    x.addEventListener('click', closeZoom);
+    head.append(h, x);
+    const body = el('div', 'fw-zoom-body');
+    const clone = fig.cloneNode(true);
+    clone.classList.add('is-zoomed');
+    body.appendChild(clone);
+    zoomEl.append(head, body);
+    zoomEl.addEventListener('click', (e) => { if (e.target === zoomEl) closeZoom(); });
+    document.body.appendChild(zoomEl);
+    document.addEventListener('keydown', onZoomKey, true);
+    x.focus();
+  }
+  // Every wide figure gets an enlarge control, added after the section is built.
+  function addZoom(fig, title) {
+    if (!fig) return;
+    const b = el('button', 'fw-zoom-btn');
+    b.type = 'button';
+    b.textContent = 'Enlarge';
+    b.setAttribute('aria-label', 'Enlarge: ' + (title || 'figure'));
+    b.addEventListener('click', (e) => { e.stopPropagation(); openZoom(fig, title); });
+    fig.appendChild(b);
+  }
+
   function openWalk(cell) {
     if (typeof window.renderGeoDemo !== 'function') return;
     // Read BEFORE closing: closeWalk restores focus to the previous opener, so reading it
@@ -2421,8 +2573,75 @@ function mountFlight(root, config) {
           const from = Number(fig.dataset.from), to = Number(fig.dataset.to);
           const turns = d.utterances.slice(from, to + 1);
           box.innerHTML = '';
+          /* The two-lane activity strip, from the call's own lane data.
+             ---------------------------------------------------------------------------
+             The Pathfinding tiles get this from the walk renderer; the enterprise calls
+             had nothing, so the one thing this benchmark is about - who held the channel
+             and where the two overlapped - was invisible on five of seven tiles. Drawn
+             from `lanes`, which is already in the payload. */
+          const L = d.lanes || null;
+          if (L && (L.agent || L.user)) {
+            const dur = Math.max(
+              ...(L.agent || []).map((x) => x[1]),
+              ...(L.user || []).map((x) => x[1]), 1);
+            const strip = el('div', 'fw-tl');
+            strip.setAttribute('aria-hidden', 'true');   // the transcript says it in words
+            [['agent', L.agent || []], ['user', L.user || []]].forEach(([who, spans]) => {
+              const lane = el('div', 'fw-tl-lane is-' + who);
+              spans.forEach(([a, b]) => {
+                const seg = el('i', '');
+                seg.style.left = (100 * a / dur).toFixed(3) + '%';
+                seg.style.width = Math.max(0.35, 100 * (b - a) / dur).toFixed(3) + '%';
+                lane.appendChild(seg);
+              });
+              strip.appendChild(lane);
+            });
+            // Where the excerpt below sits inside the whole call.
+            const win = el('div', 'fw-tl-win');
+            const w0 = turns[0] ? turns[0].s : 0;
+            const w1 = turns[turns.length - 1] ? turns[turns.length - 1].e : dur;
+            win.style.left = (100 * w0 / dur).toFixed(3) + '%';
+            win.style.width = Math.max(0.6, 100 * (w1 - w0) / dur).toFixed(3) + '%';
+            strip.appendChild(win);
+            const head = el('div', 'fw-tl-head');
+            strip.appendChild(head);
+            fig.__tlHead = head;
+            fig.__tlDur = dur;
+            box.appendChild(strip);
+          }
           const list = el('div', 'fw-turns');
           box.appendChild(list);
+          /* Two modes, never at once. Nothing playing: the excerpt loops, which is what
+             makes a still tile legible. Playing: every turn in the window is laid out at
+             once and the one being spoken is lit, so the reader follows the audio. */
+          fig.__sync = (now) => {
+            if (!fig.__laid) {
+              list.innerHTML = '';
+              turns.forEach((t2) => {
+                const b = el('div', 'fw-turn is-' + (t2.who === 'agent' ? 'agent' : 'user'));
+                const who = el('b', '');
+                who.textContent = t2.who === 'agent' ? 'Agent' : 'Caller';
+                const tx = el('span', '');
+                tx.textContent = String(t2.text).replace(/###STOP###/g, '')
+                  .replace(/\u2014|\u2013/g, ' - ').replace(/\s+-\s+/g, ' - ').trim();
+                b.append(who, tx);
+                b.dataset.s = String(t2.s);
+                b.dataset.e = String(t2.e);
+                list.appendChild(b);
+              });
+              fig.__laid = true;
+            }
+            let live = null;
+            [...list.children].forEach((b) => {
+              const on = now >= Number(b.dataset.s) && now <= Number(b.dataset.e);
+              b.classList.toggle('is-now', on);
+              if (on) live = b;
+            });
+            if (live) live.scrollIntoView({ block: 'nearest' });
+            if (fig.__tlHead && fig.__tlDur) {
+              fig.__tlHead.style.left = (100 * Math.min(1, now / fig.__tlDur)).toFixed(3) + '%';
+            }
+          };
           let k = 0;
           const step = () => {
             const t = turns[k % turns.length];
@@ -2445,8 +2664,15 @@ function mountFlight(root, config) {
             const nxt = turns[k % turns.length];
             const gap = (k % turns.length === 0) ? 2600
               : Math.max(1400, Math.min(4200, ((nxt.s - t.s) || 4) * 1000 / 6 + 1200));
-            callTimers.push(setTimeout(step, gap));
+            fig.__loopTimer = setTimeout(step, gap);
+            callTimers.push(fig.__loopTimer);
           };
+          // Handed to the player so pressing play stops the loop rather than fighting it.
+          fig.__stopLoop = () => {
+            if (fig.__loopTimer) { clearTimeout(fig.__loopTimer); fig.__loopTimer = null; }
+            fig.__looping = false;
+          };
+          fig.__looping = true;
           step();
         });
       });
