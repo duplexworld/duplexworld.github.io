@@ -797,3 +797,41 @@
 @media (max-width: 700px) {
   .fw-vio-capline b { display: none; }
 }
+
+
+/* THE OPENING ON A SHORT SCREEN
+   ---------------------------------------------------------------------------------
+   The opening is exactly one viewport and it clips, so a tile that cannot hold its
+   content does not push the page - it silently cuts the text. Measured: the abstract lost
+   29px (a line and a half of a sentence) at 1366x768 and 17px at 1280x800, and the DNSMOS
+   chart lost its fifth system at every height below 1080.
+
+   Rather than cut the words, the type and the spacing step down with the viewport. Two
+   thresholds, because a 982px MacBook needs a little and a 768px laptop needs a lot. */
+@media (max-height: 1000px) {
+  .fw-open { padding-top: clamp(58px, 7vh, 88px); }
+  /* The middle row holds the mark and takes 1.45 of the three shares. On a short screen
+     that is exactly the height the bottom row needs for its fifth system, and a slightly
+     smaller globe costs nothing next to a chart that shows four systems out of five. */
+  .fw-open-grid { grid-template-rows: minmax(0, 1fr) minmax(0, 1.16fr) minmax(0, 1.04fr); }
+  .fw-open-cell { padding: 10px 12px; }
+  .fw-open-lab { margin-bottom: 4px; letter-spacing: 0.07em; }
+  .fw-open-text { line-height: 1.42; }
+  .fw-open-hrows { gap: 2px; margin-top: 2px; }
+  .fw-open-htrack { height: 7px; }
+  .fw-open-hrow { row-gap: 1px; }
+  .fw-open-i { line-height: 1.3; }
+}
+@media (max-height: 860px) {
+  .fw-open { padding-top: 54px; padding-bottom: 12px; }
+  .fw-open-title { margin-bottom: 6px; }
+  .fw-open-cell { padding: 8px 10px; border-radius: 12px; }
+  .fw-open-text { font-size: 14px; line-height: 1.38; }
+  .fw-open-lab { font-size: 14px; margin-bottom: 2px; }
+  .fw-open-grid { gap: 8px; }
+  .fw-open-hrows { gap: 1px; margin-top: 0; }
+  .fw-open-htrack { height: 6px; }
+  .fw-open-chip { padding: 3px 8px; }
+  .fw-open-w span { font-size: 14px; }
+  .fw-open-wimg { width: clamp(20px, 1.7vw, 26px); }
+}
