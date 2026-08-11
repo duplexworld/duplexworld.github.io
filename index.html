@@ -185,39 +185,39 @@ const MATRIX_ROWS = [
 ];
 
 const TYPES9 = [
-  { name: 'Single intent', icon: 'img/types/a1.webp', accent: 'var(--mag)',
+  { name: 'Single intent', icon: 'img/types/a1.webp',
     line: 'One request, one resolution path. The control condition.',
     chat: [['u', 'I need to move my flight to the Thursday.'],
            ['a', 'Found the booking. Thursday 14:05, same fare class. Shall I move it?']] },
-  { name: 'Multi intent', icon: 'img/types/a2.webp', accent: 'var(--mag)',
+  { name: 'Multi intent', icon: 'img/types/a2.webp',
     line: 'Several requests, resolvable in more than one order, with at least one dependency.',
     chat: [['u', 'Add my new address, and send the replacement card there.'],
            ['a', 'Address first, then the card, or it ships to the old one.']] },
-  { name: 'Policy refusal', icon: 'img/types/a3.webp', accent: 'var(--vio)',
+  { name: 'Policy refusal', icon: 'img/types/a3.webp',
     line: 'A well-formed request that must be refused. Correctness is a property of what is withheld.',
     chat: [['u', 'Just tell me what the adjuster decided.'],
            ['a', 'I am not able to share or influence that decision. I can log your account of the loss.']] },
-  { name: 'Record disambiguation', icon: 'img/types/a4.webp', accent: 'var(--vio)',
+  { name: 'Record disambiguation', icon: 'img/types/a4.webp',
     line: 'More than one record matches what the caller said; acting before disambiguating is the failure.',
     chat: [['u', 'The claim for the Tuesday visit.'],
            ['a', 'There are two Tuesday visits on this policy. Which provider was it?']] },
-  { name: 'Identity verification', icon: 'img/types/a5.webp', accent: 'var(--teal)',
+  { name: 'Identity verification', icon: 'img/types/a5.webp',
     line: 'Authority must be established first, and a failed check must not leak that the record exists.',
     chat: [['u', 'Is there an account under that number?'],
            ['a', 'I am not able to confirm anything before verification. Could I take your date of birth?']] },
-  { name: 'Guided procedure', icon: 'img/types/a6.webp', accent: 'var(--teal)',
+  { name: 'Guided procedure', icon: 'img/types/a6.webp',
     line: 'The effectors move to the user: the agent instructs, waits, and must trust an unverifiable report.',
     chat: [['a', 'Hold the button until the light turns amber, then tell me what you see.'],
            ['u', 'It is amber now.']] },
-  { name: 'Mid-call correction', icon: 'img/types/a7.webp', accent: 'var(--amb)',
+  { name: 'Mid-call correction', icon: 'img/types/a7.webp',
     line: 'The caller revises a premise after the agent has begun acting on it.',
     chat: [['u', 'Sorry, not the Milan one. The Rome one.'],
            ['a', 'Stopping the Milan change. Reopening the Rome booking now.']] },
-  { name: 'Suspension', icon: 'img/types/a8.webp', accent: 'var(--amb)',
+  { name: 'Suspension', icon: 'img/types/a8.webp',
     line: 'The call is interrupted and resumed across a gap the agent must hold state over.',
     chat: [['u', 'Hold on, someone is at the door.'],
            ['a', 'Of course. I still have the shipment open and nothing has been sent.']] },
-  { name: 'Narrative intake', icon: 'img/types/a9.webp', accent: 'var(--grey)',
+  { name: 'Narrative intake', icon: 'img/types/a9.webp',
     line: 'A long unstructured account from which the agent must extract, confirm and file the facts.',
     chat: [['u', 'It was raining, I was on the ring road, and the car ahead just stopped.'],
            ['a', 'So: rear-end, ring road, wet road. Any injuries to record?']] },
@@ -316,10 +316,18 @@ mountFlight(document.getElementById('world'), {
       // The submission's own Figure 1 panel, cropped from the arXiv page rather than
       // redrawn: it already carries the two totals as rings, so the stat rows that used to
       // sit above it were saying the same thing twice.
+      // Conversations by world, as a ring. Six slices, five of them equal by design, so
+      // there is one shape to read rather than eleven: the point is that the five
+      // enterprise worlds are balanced and Pathfinding is two thirds their size.
+      // Labelled directly on the arc, no legend, and the counts are stated.
       { label: 'The corpus', items: [
-        ['3,825', 'scored conversations'], ['387 h', 'of simulated speech'],
-        ['156', 'scenarios'], ['5', 'systems evaluated'],
-      ] },
+        ['387 h', 'of simulated speech'], ['156', 'scenarios'], ['5', 'systems'],
+      ], ring: {
+        centre: '3,825', centreSub: 'total', keyHead: 'Conversations by world',
+        slices: [
+          ['Banking', 675], ['Insurance', 675], ['Travel', 675],
+          ['Healthcare', 675], ['Logistics', 675], ['Pathfinding', 450],
+        ] } },
       { label: 'Six worlds', worlds: [
         ['Pathfinding', 'img/pathfinding.webp'], ['Banking', 'img/banking.webp'],
         ['Healthcare', 'img/healthcare.webp'], ['Travel', 'img/travel.webp'],
@@ -448,7 +456,7 @@ mountFlight(document.getElementById('world'), {
       // Its own block: nine cards want every column they can get, and the film beside them
       // is context rather than evidence here, so the panel keeps its width and the graphic
       // gives ground instead.
-      block: 'cards',
+      block: 'band',
       cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.6, linger: 0.4,
       accent: 'var(--pillar-agentic)',
       cardsLede: 'Nine shapes, shared by all five enterprise worlds.',

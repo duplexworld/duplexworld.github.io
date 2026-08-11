@@ -2811,3 +2811,94 @@ body {
   font-size: 14px; font-weight: 700; text-decoration: none;
 }
 .fw-skip:focus { transform: translateY(0); outline: 2px solid var(--pillar-agentic); outline-offset: 2px; }
+
+
+/* THE NINE SHAPES
+   ---------------------------------------------------------------------------------
+   Nine equal cards, which is what makes a 3x3 read as a taxonomy rather than a collage.
+   No per-card accent: the colour was assigned by position in the list and meant nothing,
+   and on this page a colour means a system. The paper's own mark carries the identity. */
+.fw-shell-split[data-block="band"] .fw-cards {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-auto-rows: 1fr;
+  gap: 16px !important;
+  align-items: stretch;
+}
+.fw-shell-split[data-block="band"] .fw-card {
+  background: var(--surface);
+  border: 1px solid var(--grid);
+  border-top: 1px solid var(--grid);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+/* Bold or capitals, never both. */
+.fw-shell-split[data-block="band"] .fw-card-h {
+  text-transform: none;
+  letter-spacing: -0.005em;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+.fw-shell-split[data-block="band"] .fw-card-ic {
+  width: 28px; height: 28px; margin-bottom: 8px;
+}
+.fw-shell-split[data-block="band"] .fw-card-l {
+  margin: 0 0 12px;
+  font-size: 14px; line-height: 1.45; color: var(--sub);
+}
+/* The exchange is the evidence: it shows the shape rather than describing it, so it sits
+   at the foot of the card on a ground that separates it from the definition above. */
+.fw-shell-split[data-block="band"] .fw-chat {
+  font-size: 14px; line-height: 1.4;
+  border-radius: 10px; padding: 8px 10px; margin-top: 4px;
+  max-width: 92%;
+}
+.fw-shell-split[data-block="band"] .fw-chat.is-user {
+  background: var(--canvas); color: var(--ink); align-self: flex-start;
+  border: 1px solid var(--grid);
+}
+.fw-shell-split[data-block="band"] .fw-chat.is-agent {
+  background: color-mix(in oklab, var(--pillar-agentic) 9%, transparent);
+  color: var(--ink); align-self: flex-end;
+  border: 1px solid color-mix(in oklab, var(--pillar-agentic) 22%, transparent);
+}
+
+
+/* Conversations by world, as a ring. One hue, no legend, counts stated beside the arc. */
+.fw-ring-wrap {
+  display: flex; align-items: center; gap: 12px;
+  flex: 1 1 auto; min-height: 0; margin-top: 4px;
+}
+.fw-ring { position: relative; flex: 0 0 auto; aspect-ratio: 1; height: 100%; max-height: 132px; }
+.fw-ring-svg { width: 100%; height: 100%; display: block; }
+/* The five enterprise worlds share one ink; Pathfinding, which differs in size and in
+   kind, is the lighter arc. Colour here would collide with the system palette. */
+.fw-ring-seg { stroke: var(--ink); opacity: .82; }
+.fw-ring-seg:nth-of-type(even) { opacity: .62; }
+.fw-ring-seg.is-last { stroke: var(--muted); opacity: 1; }
+.fw-ring-mid {
+  position: absolute; inset: 0; display: grid; place-content: center; text-align: center;
+  pointer-events: none;
+}
+.fw-ring-mid b {
+  display: block; font-size: 20px; font-weight: 800; color: var(--ink);
+  font-variant-numeric: tabular-nums; line-height: 1;
+}
+.fw-ring-mid span { font-size: 12px; color: var(--sub); letter-spacing: -0.01em; }
+.fw-ring-key { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.fw-ring-krow {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  font-size: 12px; color: var(--sub); white-space: nowrap;
+}
+.fw-ring-krow b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.fw-ring-kname { overflow: hidden; text-overflow: ellipsis; }
+
+.fw-ring-khead {
+  font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 2px;
+}

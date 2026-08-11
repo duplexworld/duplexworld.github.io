@@ -829,6 +829,19 @@
 }
 @media (max-height: 860px) {
   .fw-open { padding-top: 54px; padding-bottom: 8px; }
+  /* The ring, its six counts and the three figures above them are a few pixels over at
+     1366x768: the last row, Pathfinding, was losing its baseline. */
+  .fw-ring { max-height: 96px; }
+  .fw-ring-wrap { gap: 8px; margin-top: 0; align-items: flex-start; }
+  .fw-ring-krow { line-height: 1.25; }
+  .fw-ring-khead { margin-bottom: 0; grid-column: 1 / -1; }
+  /* Six rows in a column is one row taller than this tile on a short screen, so the
+     counts run in two columns. Same six numbers, half the height. */
+  .fw-ring-key {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px; row-gap: 1px;
+  }
   /* The last three pixels at 1366x768, which were the fifth system's track. */
   .fw-open:has(.fw-open-by) .fw-open-grid {
     grid-template-rows: minmax(0, 0.96fr) minmax(0, 1.04fr) minmax(0, 1.08fr);

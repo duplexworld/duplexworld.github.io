@@ -1937,6 +1937,67 @@ function mountFlight(root, config) {
         });
         box.appendChild(cw);
       }
+      /* Conversations by world, as a ring.
+         -----------------------------------------------------------------------------
+         Six slices and no legend: a legend would make this eleven lookups, and the whole
+         finding is a shape - five equal worlds and one smaller. Sorted largest first
+         clockwise from twelve, with Pathfinding last because it is the one that differs.
+         One hue: the slices are worlds, and on this page colour means a system. */
+      if (c.ring) {
+        const R = c.ring;
+        const total = R.slices.reduce((a, s) => a + s[1], 0);
+        const wrap = el('div', 'fw-ring');
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 100 100');
+        svg.setAttribute('class', 'fw-ring-svg');
+        const C = 50, r = 38, circ = 2 * Math.PI * r;
+        let acc = 0;
+        R.slices.forEach(([nm, v], k) => {
+          const seg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          seg.setAttribute('cx', C); seg.setAttribute('cy', C); seg.setAttribute('r', r);
+          seg.setAttribute('fill', 'none');
+          seg.setAttribute('stroke-width', 13);
+          // A hairline gap so six slices read as six, without a second colour.
+          const len = circ * v / total;
+          seg.setAttribute('stroke-dasharray', Math.max(0, len - 1.2) + ' ' + (circ - len + 1.2));
+          seg.setAttribute('stroke-dashoffset', -circ * acc / total);
+          seg.setAttribute('transform', 'rotate(-90 50 50)');
+          seg.setAttribute('class', 'fw-ring-seg' + (k === R.slices.length - 1 ? ' is-last' : ''));
+          const ti = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+          ti.textContent = nm + ': ' + v + ' conversations, '
+            + (100 * v / total).toFixed(1) + '% of the corpus';
+          seg.appendChild(ti);
+          svg.appendChild(seg);
+          acc += v;
+        });
+        wrap.appendChild(svg);
+        const mid = el('div', 'fw-ring-mid');
+        const mv = el('b', '');
+        mv.textContent = R.centre;
+        const ms = el('span', '');
+        ms.textContent = R.centreSub || '';
+        mid.append(mv, ms);
+        wrap.appendChild(mid);
+        // Direct labels, laid around the ring rather than in a legend.
+        const key = el('div', 'fw-ring-key');
+        if (R.keyHead) {
+          const kh = el('div', 'fw-ring-khead');
+          kh.textContent = R.keyHead;
+          key.appendChild(kh);
+        }
+        R.slices.forEach(([nm, v]) => {
+          const row = el('div', 'fw-ring-krow');
+          const n = el('span', 'fw-ring-kname');
+          n.textContent = nm;
+          const q = el('b', '');
+          q.textContent = String(v);
+          row.append(n, q);
+          key.appendChild(row);
+        });
+        const holder = el('div', 'fw-ring-wrap');
+        holder.append(wrap, key);
+        box.appendChild(holder);
+      }
       if (c.figure) {
         const im = artImg(c.figure, c.figureAlt || '', 'fw-open-fig');
         box.appendChild(im);
