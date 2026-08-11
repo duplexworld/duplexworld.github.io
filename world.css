@@ -2902,3 +2902,8 @@ body {
   font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
   color: var(--muted); margin-bottom: 2px;
 }
+
+/* The wordmark is the way back to the story from the results and the recordings. */
+a.wordmark { text-decoration: none; color: inherit; }
+a.wordmark:hover .sub { color: var(--ink); }
+a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-offset: 3px; border-radius: 6px; }

@@ -1788,7 +1788,20 @@ function mountFlight(root, config) {
      already has, so clicking one flies there exactly as a rail dot did, and the entry that
      lights is whichever section CONTAINS the live stop rather than whichever was clicked -
      so it stays right when the reader scrolls instead of clicking. */
+  /* The bar spans three pages now, so an entry is either a scroll on THIS page or a link
+     to another one. A link is a real anchor, not a button with a click handler: it has to
+     open in a new tab on middle click, show its target in the status bar, and work with
+     JavaScript broken - all of which a button silently does not do. */
   const navItems = (config.nav || []).map((n) => {
+    if (n.href) {
+      const a = el('a', 'fw-nav-item');
+      a.href = n.href;
+      a.textContent = n.label;
+      a.__from = -1;
+      a.__to = -1;
+      if (n.here) a.setAttribute('aria-current', 'page');
+      return a;
+    }
     const from = S.findIndex((x) => x.id === n.at);
     const to = n.to ? S.findIndex((x) => x.id === n.to) : from;
     const b = el('button', 'fw-nav-item');
@@ -2124,8 +2137,13 @@ function mountFlight(root, config) {
 
   function mapsReady() {
     if (mapsFetch) return mapsFetch;
+    // Every walk this page can show, from BOTH sources. The list used to come only from
+    // the walks stop, so on a page that has recordings but no walks stop - which is what
+    // the samples page is - the two Pathfinding tiles asked for payloads nobody had
+    // fetched and sat on "loading" forever.
     const keys = [];
     mapStops.forEach((ms) => (ms.cfg.cells || []).forEach((c) => keys.push(c.key)));
+    runStops.forEach((rs) => (rs.cfg || []).forEach((r) => { if (r.map) keys.push(r.map); }));
     // The single-file export inlines the walks here, because a file:// page cannot fetch a
     // sibling - it is a CORS failure, not a 404 - so without this the tiles would sit on
     // their placeholders forever in exactly the copy that gets emailed around.
@@ -2933,7 +2951,7 @@ function mountFlight(root, config) {
       if (root.dataset.past !== String(past)) {
         root.dataset.past = String(past);
         navItems.forEach((b) => {
-          const on = past && liveStop >= b.__from && liveStop <= b.__to;
+          const on = b.__from >= 0 && past && liveStop >= b.__from && liveStop <= b.__to;
           b.classList.toggle('is-on', on);
           b.setAttribute('aria-current', on ? 'true' : 'false');
         });
