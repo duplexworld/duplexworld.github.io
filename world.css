@@ -2378,9 +2378,12 @@ body {
    renders it, because nothing injects the global it reads. Set tight and quiet - it is
    front matter, not a heading, and the title above it is already doing the shouting. */
 .fw-open-by {
-  margin: 10px 0 0;
-  display: flex; flex-direction: column; gap: 3px;
+  margin: 8px 0 0;
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 2px 14px;
 }
+/* The author line owns its own row; everything after it flows. */
+.fw-open-authors { flex-basis: 100%; }
 .fw-open-authors {
   display: flex; flex-wrap: wrap; align-items: baseline;
   gap: 0 5px;

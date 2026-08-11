@@ -810,6 +810,11 @@
    thresholds, because a 982px MacBook needs a little and a 768px laptop needs a lot. */
 @media (max-height: 1000px) {
   .fw-open { padding-top: clamp(58px, 7vh, 88px); }
+  /* The byline is five stacked lines - two affiliations, an email and two notes - and on
+     a short screen those lines come straight out of the charts below. Flowed inline they
+     are one or two lines and say exactly the same thing. This only exists in the public
+     build; the anonymous one has no byline at all. */
+  .fw-open-note, .fw-open-mail, .fw-open-aff { font-size: 12px; }
   /* The middle row holds the mark and takes 1.45 of the three shares. On a short screen
      that is exactly the height the bottom row needs for its fifth system, and a slightly
      smaller globe costs nothing next to a chart that shows four systems out of five. */
@@ -823,7 +828,11 @@
   .fw-open-i { line-height: 1.3; }
 }
 @media (max-height: 860px) {
-  .fw-open { padding-top: 54px; padding-bottom: 12px; }
+  .fw-open { padding-top: 54px; padding-bottom: 8px; }
+  /* The last three pixels at 1366x768, which were the fifth system's track. */
+  .fw-open:has(.fw-open-by) .fw-open-grid {
+    grid-template-rows: minmax(0, 0.96fr) minmax(0, 1.04fr) minmax(0, 1.08fr);
+  }
   .fw-open-title { margin-bottom: 6px; }
   .fw-open-cell { padding: 8px 10px; border-radius: 12px; }
   .fw-open-text { font-size: 14px; line-height: 1.38; }
@@ -834,4 +843,11 @@
   .fw-open-chip { padding: 3px 8px; }
   .fw-open-w span { font-size: 14px; }
   .fw-open-wimg { width: clamp(20px, 1.7vw, 26px); }
+}
+
+
+/* A byline is two more lines above the matrix, so the rows rebalance when one is present.
+   Only the public build has one; the anonymous build keeps the original shares. */
+.fw-open:has(.fw-open-by) .fw-open-grid {
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 1.06fr);
 }
