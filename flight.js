@@ -37,7 +37,7 @@
    ========================================================================= */
 
 function mountFlight(root, config) {
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const S = config.sections || [];
   const N = S.length;
   const HERO = config.hero;
@@ -147,6 +147,20 @@ function mountFlight(root, config) {
   // the error handler that would otherwise load this backdrop can never fire - keyed off
   // the raw `config.video` instead, the left half of the page stayed empty for the whole
   // flight with nothing but a console warning to say why.
+  // Read live, not once: a reader who turns the setting on mid-visit was previously
+  // ignored until they reloaded.
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onMotion = () => {
+      reduce = mq.matches;
+      document.querySelectorAll('video.fw-art').forEach((v) => {
+        if (reduce) { v.pause(); v.removeAttribute('autoplay'); } else { v.play().catch(() => {}); }
+      });
+      layout();
+    };
+    if (mq.addEventListener) mq.addEventListener('change', onMotion);
+    else if (mq.addListener) mq.addListener(onMotion);
+  }
   heroWanted = !VID;
   // With a film on the page the hero still is never shown, and an <img> carrying no src is
   // a broken image to the document: naturalWidth 0, which is what the export's own asset
@@ -271,7 +285,10 @@ function mountFlight(root, config) {
     if (/\.(mp4|webm)$/i.test(sec.art)) {
       const v = document.createElement('video');
       v.className = 'fw-art is-clip';
-      v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
+      v.muted = true; v.loop = true; v.playsInline = true;
+      // Motion is motion, even when it is decoration: under prefers-reduced-motion the
+      // clip holds its first frame instead of looping.
+      v.autoplay = !reduce;
       v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
       v.setAttribute('aria-hidden', 'true');
       v.preload = 'auto';
@@ -344,8 +361,12 @@ function mountFlight(root, config) {
     // screen; without this, five results blocks shipped an empty <h2> and had no heading at
     // all in the accessibility tree.
     const h = el(s.layout === 'hero' && i === 0 ? 'h1' : 'h2', 'fw-title');
-    h.textContent = s.title || (s.mark && s.mark.name) || '';
-    if (!s.title && s.mark && s.mark.name) h.classList.add('fw-sr');
+    // A section with no title and no world plate still needs a heading, or its h3s sit
+    // under a blank h2. The eyebrow is the heading in those sections - it is what a
+    // sighted reader reads as one - so it becomes the heading text and is hidden
+    // visually to avoid printing it twice.
+    h.textContent = s.title || (s.mark && s.mark.name) || s.eyebrow || s.label || '';
+    if (!s.title && (s.mark && s.mark.name || s.eyebrow || s.label)) h.classList.add('fw-sr');
     const body = el('p', 'fw-body');
     body.textContent = s.body || '';
     p.append(eyebrow, h, body);
@@ -612,6 +633,11 @@ function mountFlight(root, config) {
     if (s.worked) {
       const W = s.worked;
       const fig = el('figure', 'fw-work');
+      fig.setAttribute('role', 'img');
+      fig.setAttribute('aria-label', 'One Pathfinding scenario run five times: four of five '
+        + 'arrive, three of five stay inside the efficiency limit, and all three of three '
+        + 'succeed in one draw out of ten. The same runs give goal state 0.800, Pass@1 '
+        + '0.600 and Pass-cubed 0.100.');
       if (W.label) {
         const h = el('figcaption', 'fw-work-h');
         h.textContent = W.label;
@@ -1239,6 +1265,14 @@ function mountFlight(root, config) {
       // tick. The axis grows to hold the widest interval instead.
       const MAX = Math.max(Number.isFinite(B.max) ? B.max : 0, Math.ceil(reach * 20) / 20);
       const fig = el('figure', 'fw-bars');
+      // Stated on the figure, because a figcaption alone leaves the accessible name empty
+      // in Chrome: a screen reader got "figure" and no finding at all.
+      fig.setAttribute('role', 'img');
+      fig.setAttribute('aria-label',
+        (B.metric || 'Pass@1') + ' for five systems'
+        + (B.label ? ', ' + B.label : '') + '. '
+        + rows.map((r) => (r.system || r.name) + ' ' + r.v.toFixed(3)
+            + (r.pm ? ' plus or minus ' + r.pm.toFixed(3) : '')).join('; ') + '.');
       if (B.label) {
         const cap = el('figcaption', 'fw-bars-label');
         cap.textContent = B.label;
@@ -1325,6 +1359,14 @@ function mountFlight(root, config) {
       const P = s.pillars;
       const cols = P.groups.flatMap((g) => g.cols);
       const tbl = el('table', 'fw-pillars' + (P.reveal ? ' is-staged' : ''));
+      // A results table with no caption announces as an unnamed table. This says which
+      // world it reports and how it is read, before the reader enters 55 cells.
+      const cap = el('caption', 'fw-p-cap');
+      cap.textContent = (s.mark && s.mark.name ? s.mark.name + ': ' : '')
+        + 'five systems across eleven metrics in three pillars, '
+        + 'each with its 95% interval. Higher is better throughout.';
+      cap.classList.add('fw-sr');
+      tbl.appendChild(cap);
       if (P.caption) {
         const cp = el('caption', '');
         cp.textContent = P.caption;

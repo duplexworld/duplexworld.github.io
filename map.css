@@ -289,3 +289,14 @@ body.wm-page-light {
    right edge of the page. Same class name, different component: reset both. */
 .wm-rail { min-width:0; max-width:100%; flex-wrap:nowrap; gap:0; }
 .pmap .wm-root { flex:1 1 auto; min-width:0; min-height:0; }
+
+
+/* Focus. This sheet is extracted from the walk renderer's own styles, which carried none,
+   so every control in the overlay fell back to the browser's default ring: visible, but
+   inconsistent with the 2px ring the rest of the page uses. */
+.wm-root :focus-visible {
+  outline: 2px solid var(--ink, #17171f);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.wm-tile:focus-visible, .wm-locate:focus-visible { outline-offset: 3px; }

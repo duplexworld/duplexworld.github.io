@@ -127,7 +127,8 @@ window.renderGeoDemo = function ({ GEO, host, voice, compact }) {
         <button data-el="sPrev" class="wm-tile" title="Previous step">&#8592;</button>
         <button data-el="sPlay" class="wm-tile">Pause</button>
         <button data-el="sNext" class="wm-tile" title="Next step">&#8594;</button>
-        <input data-el="sRange" type="range" min="0" value="0" class="wm-range">
+        <input data-el="sRange" type="range" min="0" value="0" class="wm-range"
+             aria-label="Step through the walk">
         <span data-el="sLabel" class="wm-chip"></span>
         <button data-el="sVoice" class="wm-tile"
                 title="Play the real call and drive the map from it">Voice</button>

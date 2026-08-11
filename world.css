@@ -2797,3 +2797,14 @@ body {
   font-size: 12px; font-weight: 700; color: var(--sys, var(--sub)); white-space: nowrap;
 }
 .fw-open-headw .fw-vmark { width: 14px; height: 14px; }
+
+
+/* Visible only when it has focus, which is the whole point of it. */
+.fw-skip {
+  position: fixed; top: 8px; left: 8px; z-index: 100;
+  transform: translateY(-200%);
+  background: var(--ink); color: #fff;
+  padding: 8px 16px; border-radius: 8px;
+  font-size: 14px; font-weight: 700; text-decoration: none;
+}
+.fw-skip:focus { transform: translateY(0); outline: 2px solid var(--pillar-agentic); outline-offset: 2px; }

@@ -790,3 +790,10 @@
 @media (max-height: 820px) {
   .fw-open-head { display: none; }
 }
+
+
+/* At 390 the cap rule sits at the right edge of a ~200px plot, so its label cannot fit
+   beside it in either direction. On a phone the caption states the cap instead. */
+@media (max-width: 700px) {
+  .fw-vio-capline b { display: none; }
+}
