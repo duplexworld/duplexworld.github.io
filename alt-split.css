@@ -781,3 +781,12 @@
   .fw-open-cell.is-plot .fw-open-lab { margin-bottom: 0; }
   .fw-open-pnote { margin-top: 4px; }
 }
+
+
+/* The opening is exactly one viewport. On a short screen (a 768-tall laptop) the three
+   plot tiles cannot hold a headline AND five systems, and a chart missing a system is a
+   worse trade than a missing headline - the chart states the same number on its top row.
+   The shared caption below the row still carries the thesis. */
+@media (max-height: 820px) {
+  .fw-open-head { display: none; }
+}

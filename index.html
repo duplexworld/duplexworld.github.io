@@ -326,16 +326,21 @@ mountFlight(document.getElementById('world'), {
         'Identity verification', 'Guided procedure', 'Mid-call correction',
         'Suspension', 'Narrative intake', 'Rerouting', 'All-day assistance',
       ] },
-      { label: 'Pass@1', plot: { accent: 'var(--pillar-agentic)', dp: 3, max: 0.55, rows: [
+      { label: 'Pass@1', head: { v: '0.490', who: 'Voice Think Fast' },
+        plot: { accent: 'var(--pillar-agentic)', dp: 3, max: 0.55, rows: [
         ['Voice Think Fast', 0.490, 0.039], ['GPT-Realtime-2.1', 0.433, 0.035],
         ['Gemini-3.1-Flash-Live', 0.398, 0.039], ['GPT-Realtime-2.1-mini', 0.188, 0.028],
         ['Nova 2 Sonic', 0.011, 0.007]],
         note: '0.011: the system that holds the floor without completing tasks.' } },
-      { label: 'Turn-taking', plot: { accent: 'var(--pillar-dynamics)', dp: 3, max: 0.72, rows: [
+      { label: 'Turn-taking', head: { v: '0.653', who: 'GPT-Realtime-2.1' },
+        plot: { accent: 'var(--pillar-dynamics)', dp: 3, max: 0.72, rows: [
         ['GPT-Realtime-2.1', 0.653, 0.018], ['Voice Think Fast', 0.635, 0.015],
         ['Nova 2 Sonic', 0.566, 0.021], ['GPT-Realtime-2.1-mini', 0.521, 0.025],
         ['Gemini-3.1-Flash-Live', 0.388, 0.012]] } },
-      { label: 'DNSMOS', plot: { accent: 'var(--pillar-natural)', dp: 2, base: 3.0, max: 3.45, rows: [
+      { label: 'DNSMOS', head: { v: '3.378', who: 'Gemini-3.1-Flash-Live' },
+        plot: { accent: 'var(--pillar-natural)', dp: 2,
+          note: 'This axis starts at 3.0, not 0: DNSMOS is a 1-to-5 opinion score and the '
+              + 'five systems sit inside a quarter of a point of each other.', base: 3.0, max: 3.45, rows: [
         ['Gemini-3.1-Flash-Live', 3.378, 0.008], ['GPT-Realtime-2.1', 3.350, 0.004],
         ['GPT-Realtime-2.1-mini', 3.334, 0.009], ['Nova 2 Sonic', 3.172, 0.015],
         ['Voice Think Fast', 3.127, 0.007]] } },
@@ -374,7 +379,10 @@ mountFlight(document.getElementById('world'), {
     // Each stop sits 72% of the way into its clip: far enough in that the camera has
     // arrived, not so far that it has begun leaving. The one exception is stop 4, which
     // sits in conn_0 because Pathfinding's own dive is already spoken for by the walks.
-    stops: [2.00, 4.00, 5.20, 6.40, 7.50, 12.00, 29.00, 45.00, 61.00, 77.00, 93.00, 103.50],
+    // One per section, in section order. A length mismatch is not a soft failure:
+    // videoOK_config rejects the config and the film is dropped for the whole page.
+    stops: [2.00, 4.00, 4.60, 5.20, 6.40, 7.50, 8.20, 12.00, 29.00, 45.00, 61.00,
+            77.00, 93.00, 103.50],
   },
   // Every world, always on screen, each pointing at its own results stop - which is also
   // the moment the film is inside that world, so clicking one is a real flight to it.
@@ -382,18 +390,28 @@ mountFlight(document.getElementById('world'), {
     // Indices, so they drift the moment a stop is inserted: every one of these was two
     // out after the recorded-runs stop went in, and clicking "Banking" landed on a chart.
     // verify_paper.py now asserts each globe reaches the section whose id it names.
-    { label: 'Pathfinding', src: 'img/pathfinding.webp', stop: 5 },
-    { label: 'Banking',     src: 'img/banking.webp',     stop: 6 },
-    { label: 'Healthcare',  src: 'img/healthcare.webp',  stop: 7 },
-    { label: 'Travel',      src: 'img/travel.webp',      stop: 8 },
-    { label: 'Insurance',   src: 'img/insurance.webp',   stop: 9 },
-    { label: 'Logistics',   src: 'img/logistics.webp',   stop: 10 },
+    { label: 'Pathfinding', src: 'img/pathfinding.webp', stop: 6 },
+    { label: 'Banking',     src: 'img/banking.webp',     stop: 8 },
+    { label: 'Healthcare',  src: 'img/healthcare.webp',  stop: 9 },
+    { label: 'Travel',      src: 'img/travel.webp',      stop: 10 },
+    { label: 'Insurance',   src: 'img/insurance.webp',   stop: 11 },
+    { label: 'Logistics',   src: 'img/logistics.webp',   stop: 12 },
   ],
   hint: 'scroll',
   sections: [
     // ---------------------------------------------------------------- the walks
     {
       id: 'walks', label: 'Pathfinding types', block: 'band', stage: 'film', still: null,
+      lede: 'The agent holds the map. The walker holds the street. Neither can see what '
+          + 'the other sees.',
+      navCards: [
+        { name: 'Single intent',
+          line: 'Five blocks, two turns, nothing closed. The control condition.' },
+        { name: 'Rerouting',
+          line: 'Four closures the copilot\u2019s map does not show. Exactly one detour survives.' },
+        { name: 'All-day assistance',
+          line: 'A second destination, revealed only on arrival at the first.' },
+      ],
       cam: { x: 0.346, y: 0.601, z: 1.75 }, scroll: 3.0, linger: 0.5, steps: 4,
       accent: 'var(--mag)',
       mark: { name: 'Pathfinding', line: 'Three conversation types, each shown solved and unsolved.' },
@@ -440,29 +458,15 @@ mountFlight(document.getElementById('world'), {
       accent: 'var(--pillar-agentic)',
       eyebrow: '144 campaigned scenarios, by world and conversation type',
       matrix: { types: MATRIX_TYPES, rows: MATRIX_ROWS, split: 9,
+        // What one cell is worth in conversations: five systems, three runs each, and
+        // Pathfinding is run in both channels.
+        systems: 5, runs: 3, channels: { Pathfinding: 2 },
         spans: ['Nine shared enterprise types', 'Pathfinding-only'],
         find: 'Every enterprise world instantiates the same nine interaction shapes, three '
             + 'scenarios each. Pathfinding shares one and adds two that only navigation '
             + 'elicits.',
         foot: 'Plus twelve authored Pathfinding variants that are released but not run '
             + '(156 authored scenarios in total).' },
-    },
-    {
-      id: 'durations', label: 'Duration', stage: 'film', still: null,
-      block: 'band',
-      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.4, linger: 0.4,
-      accent: 'var(--pillar-dynamics)',
-      eyebrow: 'How long a conversation runs, by world',
-      // Every figure below is computed from the 3,825 conversation records in
-      // figure1_durations/conversation_durations.csv by gen_violins.py, not transcribed:
-      // the corpus mean is 6.07 minutes (14.9 is Pathfinding's own mean), 232 of
-      // Pathfinding's 450 runs end at the cap, and 356 enterprise conversations end on
-      // the wall-clock timeout.
-      violins: { src: 'violins.json',
-        find: 'Median 6.1 minutes across the corpus, but Pathfinding runs to a twenty '
-            + 'minute cap and 232 of its 450 conversations end there rather than at a '
-            + 'destination. The five enterprise worlds sit between three and eight '
-            + 'minutes, and 356 of their conversations end on the wall-clock timeout.' },
     },
     // ---------------------------------------------------------------- five recorded runs
     // One run per shape, drawn from the scored corpus. The two Pathfinding ones play the
@@ -662,6 +666,23 @@ mountFlight(document.getElementById('world'), {
       pillars: { rowHead: 'System', groups: PILLARS, best: HIGH, rows: T3_PATHFINDING },
     },
     // ---------------------------------------------------------------- the six worlds
+    {
+      id: 'durations', label: 'Duration', stage: 'film', still: null,
+      block: 'band',
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.4, linger: 0.4,
+      accent: 'var(--pillar-dynamics)',
+      eyebrow: 'How long a conversation runs, by world',
+      // Every figure below is computed from the 3,825 conversation records in
+      // figure1_durations/conversation_durations.csv by gen_violins.py, not transcribed:
+      // the corpus mean is 6.07 minutes (14.9 is Pathfinding's own mean), 232 of
+      // Pathfinding's 450 runs end at the cap, and 356 enterprise conversations end on
+      // the wall-clock timeout.
+      violins: { src: 'violins.json',
+        find: 'Half of all conversations finish inside 4.8 minutes, but Pathfinding runs to a twenty '
+            + 'minute cap and 232 of its 450 conversations end there rather than at a '
+            + 'destination. The five enterprise worlds sit between three and eight '
+            + 'minutes, and 356 of their conversations end on the wall-clock timeout.' },
+    },
     world('banking', 'Banking',
       'Financial-crime statute, with authority stepped up per operation risk tier.',
       T3_BANKING,

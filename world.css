@@ -26,7 +26,9 @@
   --ink2:      #1C1F45;
   --text:      #21233F;
   --soft:      #55586F;
-  --grey:      #767892;
+  --grey:      #6d6f87;
+  /* Defined here so no element depends on a JS fallback for its colour. */
+  --accent:    #0B7A56;   /* 4.56:1 on the page ground; was 4.00 */
   /* Accents are now the paper's three PILLAR hues and nothing else. The magenta and
      violet that used to sit here were decoration: they encoded nothing, appeared nowhere
      in the paper, and collided with the vendor marks drawn on top of them. Every rule
@@ -128,7 +130,7 @@ body {
 .wordmark .dot {
   width: 9px; height: 9px; border-radius: 50%;
   background: var(--magenta);
-  box-shadow: 0 0 0 4px rgba(184, 18, 90, 0.16);
+  box-shadow: 0 0 0 4px rgba(11, 122, 86, 0.16);
   align-self: center;
 }
 .wordmark .sub {
@@ -151,7 +153,7 @@ body {
   background: var(--glass);
   transition: color .18s, border-color .18s, background .18s;
 }
-.linkbtn:hover { color: var(--ink); border-color: rgba(184, 18, 90, .5); background: #fff; }
+.linkbtn:hover { color: var(--ink); border-color: rgba(11, 122, 86, .5); background: #fff; }
 .linkbtn:focus-visible { outline: 2px solid var(--magenta); outline-offset: 2px; }
 
 /* ------------------------------------------------------------------- stage */
@@ -174,7 +176,7 @@ body {
   pointer-events: none;
   background:
     radial-gradient(58% 48% at 22% 18%, rgba(99, 47, 128, 0.10), transparent 62%),
-    radial-gradient(52% 44% at 82% 74%, rgba(184, 18, 90, 0.08), transparent 60%);
+    radial-gradient(52% 44% at 82% 74%, rgba(11, 122, 86, 0.08), transparent 60%);
 }
 
 .fw-hero {
@@ -810,7 +812,7 @@ body {
    the note names the same two by name. */
 .fw-tag.is-marked {
   color: var(--ink);
-  border-color: rgba(184, 18, 90, 0.42);
+  border-color: rgba(11, 122, 86, 0.42);
   box-shadow: inset 3px 0 0 var(--magenta);
   padding-left: 13px;
 }
@@ -873,7 +875,7 @@ body {
   white-space: nowrap;
 }
 .fw-dot:hover { color: var(--ink-soft); }
-.fw-dot:hover .fw-dot-label { opacity: .85; }
+.fw-dot:hover .fw-dot-label { opacity: 1; }
 .fw-dot.is-on { color: var(--ink); }
 .fw-dot.is-on .fw-dot-mark { background: var(--magenta); opacity: 1; transform: scale(1.5); }
 .fw-dot.is-on .fw-dot-label { opacity: 1; }
@@ -1253,8 +1255,13 @@ body {
   --pillar-agentic:  #0B7A56;
   --pillar-dynamics: #4285F4;
   --pillar-natural:  #F28C00;
+  /* The same three hues, darkened until they clear 4.5:1 as TEXT on both grounds.
+     A fill can be vivid; a 12px label in the same colour cannot. */
+  --pillar-agentic-t:  #0B7A56;
+  --pillar-dynamics-t: #376fcc;
+  --pillar-natural-t:  #a66000;
 
-  --ink: #17171f;  --sub: #4c4c58;  --muted: #8a8a96;
+  --ink: #17171f;  --sub: #4c4c58;  --muted: #6f6f79;
   --grid: #ececf1; --surface: #ffffff; --canvas: #f6f6f9;
 
   /* The old names, kept so every existing rule resolves, but pointed at the paper's
@@ -1273,7 +1280,10 @@ body {
   padding-bottom: 8px;
   overflow: hidden;
 }
-.fw-open-cell.is-plot .fw-open-lab { margin-bottom: 2px; }
+.fw-open-cell.is-plot .fw-open-lab { margin-bottom: 0; }
+.fw-open-cell.is-plot:has(.fw-open-head) .fw-open-hrows { gap: 1px; }
+.fw-open-cell.is-plot:has(.fw-open-head) .fw-open-htrack { height: 7px; }
+.fw-open-cell.is-plot:has(.fw-open-head) .fw-open-hrow { row-gap: 1px; }
 .fw-open-cols {
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 5px; align-items: end; flex: 1 1 auto; min-height: 0;
@@ -1415,7 +1425,7 @@ body {
   border-radius: 2px; background: rgba(14, 16, 41, .16);
 }
 .fw-sp-d {
-  --c0: var(--magd); --c1: var(--vio); --c2: #2a7f9e; --c3: #b87a2a; --c4: #6b7280;
+  --c0: var(--magd); --c1: var(--vio); --c2: #0B7A56; --c3: #b87a2a; --c4: #6b7280;
   position: absolute; top: 50%; width: 6px; height: 6px; border-radius: 50%;
   transform: translate(-50%, -50%); background: var(--c0);
 }
@@ -1649,7 +1659,7 @@ body {
 .fw-run.is-ok  { border-top: 3px solid var(--teal); }
 .fw-run.is-bad { border-top: 3px solid var(--red); }
 .fw-run[data-kind="map"] { cursor: pointer; transition: border-color .14s, transform .14s; }
-.fw-run[data-kind="map"]:hover { border-color: rgba(184, 18, 90, .45); transform: translateY(-1px); }
+.fw-run[data-kind="map"]:hover { border-color: rgba(11, 122, 86, .45); transform: translateY(-1px); }
 .fw-run:focus-visible { outline: 2px solid var(--magenta); outline-offset: 2px; }
 .fw-run-head {
   flex: 0 0 auto;
@@ -1737,7 +1747,7 @@ body {
 /* One hue per system, held across every cluster and every plot on the page. The whole
    point of a grouped chart is that you can follow one system across the groups. */
 .fw-grp-bar, .fw-grp-sw {
-  --c0: var(--magd); --c1: var(--vio); --c2: #2a7f9e; --c3: #b87a2a; --c4: #6b7280;
+  --c0: var(--magd); --c1: var(--vio); --c2: #0B7A56; --c3: #b87a2a; --c4: #6b7280;
   background: var(--c0);
 }
 .fw-grp-bar { flex: 1 1 0; min-width: 0; height: calc(var(--h) * var(--grow, 1));
@@ -2067,7 +2077,7 @@ body {
 .fw-pillars td b { font-weight: 500; color: var(--ink-soft); }
 /* Weight AND tint. A 250-unit weight step is legible at 11.5px and nearly invisible at the
    9px the narrowest columns fall back to; the tint survives every size. */
-.fw-pillars td.is-best { background: rgba(184, 18, 90, .085); }
+.fw-pillars td.is-best { background: rgba(11, 122, 86, .085); }
 .fw-pillars td.is-best b { font-weight: 750; color: var(--ink); }
 .fw-pillars tbody tr:last-child td { border-bottom: 0; }
 /* No opacity. At .72 these measured 3.15:1 against the table ground - under AA - and they
@@ -2176,7 +2186,7 @@ body {
    and unsolved were otherwise two visually identical containers. */
 .fw-map.is-ok  { border-top: 3px solid var(--teal); }
 .fw-map.is-bad { border-top: 3px solid var(--red); }
-.fw-map:hover { border-color: rgba(184, 18, 90, .45); transform: translateY(-1px); }
+.fw-map:hover { border-color: rgba(11, 122, 86, .45); transform: translateY(-1px); }
 .fw-map:focus-visible { outline: 2px solid var(--magenta); outline-offset: 2px; }
 /* Which tiles are up at each step. The top row builds left to right, then the whole failure
    row arrives at once - the point of the last step is the comparison, not a fourth walk.
@@ -2309,8 +2319,8 @@ body {
   line-height: 1;
   cursor: pointer;
 }
-.fw-walk-x:hover { border-color: #4aa8ff; }
-.fw-walk-x:focus-visible { outline: 2px solid #4aa8ff; outline-offset: 1px; }
+.fw-walk-x:hover { border-color: #4285F4; }
+.fw-walk-x:focus-visible { outline: 2px solid #4285F4; outline-offset: 1px; }
 .fw-walk-body { flex: 1 1 auto; min-height: 0; display: flex; padding: 10px; }
 .fw-walk-body .wm-root { flex: 1 1 auto; min-width: 0; min-height: 0; }
 /* This page never fetches a recording - the walks are silent by design and setVoice is
@@ -2331,9 +2341,27 @@ body {
      both motion, and a reader who asked for none should get the finished state at once. */
   /* `:not(.fw-p-sys)` has to be repeated or the staged header rule out-specifies this one
      and keeps its 0.45s fade. */
+  /* These are TRANSITIONS to switch off, not elements to remove. As written this rule
+     put display:none on .fw-copy - every word on the page - plus all six walks and every
+     results row, so a reader who asked for less motion was served a film and nothing
+     else. A reduced-motion visitor gets the finished state, not an empty page. */
   .fw-bar-tip, .fw-maps, .fw-map, .fw-pillars.is-staged .fw-p-metrics th,
   .fw-pillars.is-staged .fw-p-metrics th:not(.fw-p-sys),
-  .fw-pillars.is-staged tbody tr, .fw-copy, .fw-globes, .fw-rail[hidden] { display: none !important; }
+  .fw-pillars.is-staged tbody tr, .fw-copy, .fw-globes {
+    transition: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  /* The one thing here that really is hidden: a rail the page has closed. */
+  .fw-rail[hidden] { display: none !important; }
+  /* The staged reveals are motion, so a reader who asked for none gets the FINISHED
+     state: all six walks and every table row present at once, rather than a grid that
+     never advances past step 0 and shows nothing at all. */
+  .fw-map { opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; }
+  .fw-maps { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .fw-pillars.is-staged tbody tr, .fw-pillars.is-staged .fw-p-metrics th { opacity: 1 !important; }
+  /* Transforms are motion too, and these two survived the sweep. */
+  .fw-globe.is-on, .fw-shell-split .fw-video, .fw-shell-split .fw-art { transform: none !important; }
 .fw-rail { transition: none; }
   /* The bars are no longer a transition - they are a width computed from the panel's own
      visibility - so there is nothing here to switch off. Pinning them to full width instead
@@ -2631,7 +2659,7 @@ body {
   margin-bottom: 8px;
 }
 .fw-pil-h {
-  margin: 0; font-size: 17px; font-weight: 800; color: var(--tint);
+  margin: 0; font-size: 17px; font-weight: 800; color: var(--tint-t, var(--tint));
   letter-spacing: -0.01em;
 }
 .fw-pil-l { margin: 2px 0 0; font-size: 14px; color: var(--sub); }
@@ -2643,7 +2671,7 @@ body {
   margin-bottom: 8px;
 }
 .fw-pil-sym {
-  font-size: 17px; font-weight: 800; color: var(--tint);
+  font-size: 17px; font-weight: 800; color: var(--tint-t, var(--tint));
   font-variant-numeric: tabular-nums; line-height: 1.1;
 }
 .fw-pil-full { font-size: 14px; font-weight: 700; color: var(--ink); margin-top: 2px; }
@@ -2679,7 +2707,12 @@ body {
   background: var(--surface); color: var(--ink);
   cursor: pointer; padding: 0;
 }
-.fw-pl.is-on .fw-pl-btn { background: var(--sys, var(--ink)); border-color: var(--sys, var(--ink)); color: #fff; }
+.fw-pl.is-on .fw-pl-btn {
+  background: var(--sys, var(--ink)); border-color: var(--sys, var(--ink));
+  /* White on the mint system colour is 2.18:1 and on orange 2.3:1, so the pairing is
+     decided per system in sysInk() rather than assumed to be white. */
+  color: var(--on-sys, #fff);
+}
 .fw-pl-btn svg { width: 15px; height: 15px; fill: currentColor; }
 .fw-pl-btn:focus-visible { outline: 2px solid var(--sys, var(--ink)); outline-offset: 2px; }
 .fw-pl-bar {
@@ -2736,3 +2769,31 @@ body {
 }
 .fw-sm-note { margin-top: 16px; font-size: 12px; color: var(--muted); max-width: 76ch; }
 @media (max-width: 900px) { .fw-sm-wrap { grid-template-columns: 1fr; } }
+
+
+/* The three navigation shapes, stated beside the walks that demonstrate them. */
+.fw-navlede { margin: 0 0 16px; font-size: 20px; line-height: 1.45; color: var(--sub); max-width: 72ch; }
+.fw-navcards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.fw-navcard {
+  background: var(--surface); border: 1px solid var(--grid);
+  border-radius: 10px; padding: 16px; min-width: 0;
+}
+.fw-navcard-h { margin: 0; font-size: 17px; font-weight: 800; color: var(--ink); }
+.fw-navcard-l { margin: 8px 0 0; font-size: 14px; line-height: 1.45; color: var(--sub); }
+@media (max-width: 900px) { .fw-navcards { grid-template-columns: 1fr; } }
+
+
+/* The three headline results, on the opening's bottom row. */
+.fw-open-head { display: flex; align-items: baseline; gap: 6px; margin: 0 0 2px; flex-wrap: wrap; }
+.fw-open-headv {
+  /* Compact on purpose: on the opening's short bottom row every 8px of headline costs a
+     system row in the chart underneath, and a chart that shows four of five systems is
+     worse than a smaller numeral. */
+  font-size: clamp(20px, 1.5vw, 24px); font-weight: 800; color: var(--ink);
+  font-variant-numeric: tabular-nums; line-height: 1;
+}
+.fw-open-headw {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 700; color: var(--sys, var(--sub)); white-space: nowrap;
+}
+.fw-open-headw .fw-vmark { width: 14px; height: 14px; }

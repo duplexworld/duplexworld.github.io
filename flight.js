@@ -289,7 +289,7 @@ function mountFlight(root, config) {
   const marks = S.map((s) => {
     if (!s.mark) return null;
     const w = el('div', 'fw-mark');
-    w.style.setProperty('--accent', s.accent || '#b8125a');
+    w.style.setProperty('--accent', s.accent || 'var(--pillar-agentic)');
     // Only when there is one. An <img> with no src is still an image to the document: it
     // reports naturalWidth 0, which is indistinguishable from art that failed to decode,
     // and it is what the alt-text-across-the-stage guard elsewhere in this file exists to
@@ -337,7 +337,7 @@ function mountFlight(root, config) {
   const panels = S.map((s, i) => {
     const p = el('article', 'fw-panel' + (s.layout === 'hero' ? ' fw-panel-hero' : ''));
     if (s.id) p.id = s.id;
-    p.style.setProperty('--accent', s.accent || '#d61a63');
+    p.style.setProperty('--accent', s.accent || 'var(--pillar-agentic)');
     const eyebrow = el('div', 'fw-eyebrow');
     eyebrow.textContent = s.eyebrow || '';
     // A world stop's heading is its name plate, which lives on the other half of the
@@ -687,6 +687,27 @@ function mountFlight(root, config) {
        the maximum is set once for the whole figure. Systems are direct-labelled in the
        first panel only; after that the colour carries the identity, which is the entire
        reason a system keeps one hue across this page. */
+    /* The three shapes navigation elicits, said in words beside the walks that show them.
+       Six replayed maps demonstrate the behaviour but never name the design. */
+    if (s.navCards) {
+      if (s.lede) {
+        const le = el('p', 'fw-navlede');
+        le.textContent = s.lede;
+        p.appendChild(le);
+      }
+      const wrap = el('div', 'fw-navcards');
+      s.navCards.forEach((c) => {
+        const a = el('article', 'fw-navcard');
+        const h = el('h3', 'fw-navcard-h');
+        h.textContent = c.name;
+        const l = el('p', 'fw-navcard-l');
+        l.textContent = c.line;
+        a.append(h, l);
+        wrap.appendChild(a);
+      });
+      p.appendChild(wrap);
+    }
+
     if (s.multiples) {
       const M = s.multiples;
       const fig = el('figure', 'fw-sm');
@@ -749,6 +770,10 @@ function mountFlight(root, config) {
       s.pillarCols.forEach((g) => {
         const col = el('section', 'fw-pil-col');
         col.style.setProperty('--tint', g.tint || 'var(--ink)');
+        // The same hue, darkened to clear 4.5:1 as text. A fill can be vivid; a label
+        // in the same colour cannot.
+        const tt = String(g.tint || '').match(/--pillar-[a-z]+/);
+        col.style.setProperty('--tint-t', tt ? 'var(' + tt[0] + '-t)' : 'var(--ink)');
         const hd = el('header', 'fw-pil-head');
         const h = el('h3', 'fw-pil-h');
         h.textContent = g.name;
@@ -1011,8 +1036,15 @@ function mountFlight(root, config) {
             + (k === M.split ? ' is-cut' : ''));
           if (v) {
             c.textContent = String(v);
-            c.title = r.world + ' \u00b7 ' + M.types[k] + ' \u2014 ' + v
-              + ' scenarios, ' + v * 5 + ' conversations (' + v + ' scenarios \u00d7 5 runs)';
+            // Five systems, three runs each, and Pathfinding is run in two channels.
+            // The old text said "3 scenarios x 5 runs = 15", which summed to a 720
+            // conversation corpus against the 3,825 this page reports.
+            const chans = M.channels && M.channels[r.world] ? M.channels[r.world] : 1;
+            const convs = v * (M.systems || 5) * (M.runs || 3) * chans;
+            c.title = r.world + ' \u00b7 ' + M.types[k] + ': ' + v + ' scenarios, '
+              + convs + ' conversations (' + v + ' \u00d7 ' + (M.systems || 5)
+              + ' systems \u00d7 ' + (M.runs || 3) + ' runs'
+              + (chans > 1 ? ' \u00d7 ' + chans + ' channels' : '') + ')';
           } else {
             c.setAttribute('aria-hidden', 'true');
           }
@@ -1096,6 +1128,7 @@ function mountFlight(root, config) {
         if (r.audio) {
           const pl = el('div', 'fw-pl');
           pl.style.setProperty('--sys', sysColor(r.model || ''));
+          pl.style.setProperty('--on-sys', sysInk(r.model || ''));
           const au = document.createElement('audio');
           au.preload = 'none';                       // fetched only when somebody presses play
           // Two sources, because one format does not reach every browser: Safari does not
@@ -1201,7 +1234,10 @@ function mountFlight(root, config) {
       // The axis has to clear the widest whisker, not the tallest bar, or the top interval
       // is drawn running off the end of its own track.
       const reach = Math.max(...rows.map((r) => r.v + (r.pm || 0)), 0.0001);
-      const MAX = Number.isFinite(B.max) ? B.max : Math.ceil(reach * 10) / 10;
+      // An explicit max is a floor, never a ceiling: a whisker that runs past it was being
+      // clipped to the axis and drawn as though the interval ended exactly on the last
+      // tick. The axis grows to hold the widest interval instead.
+      const MAX = Math.max(Number.isFinite(B.max) ? B.max : 0, Math.ceil(reach * 20) / 20);
       const fig = el('figure', 'fw-bars');
       if (B.label) {
         const cap = el('figcaption', 'fw-bars-label');
@@ -1875,6 +1911,22 @@ function mountFlight(root, config) {
         });
         box.appendChild(ww);
       }
+      /* The headline: the number, and which system holds it. Three of these across the
+         bottom row are the paper's thesis - a different system leads each pillar - and
+         without the name the reader has to read three charts to find that out. */
+      if (c.head) {
+        const hd = el('div', 'fw-open-head');
+        const v = el('div', 'fw-open-headv');
+        v.textContent = c.head.v;
+        const w = el('div', 'fw-open-headw');
+        w.innerHTML = vendorMark(c.head.who);
+        const nm = el('span', '');
+        nm.textContent = c.head.who;
+        w.appendChild(nm);
+        w.style.setProperty('--sys', sysColor(c.head.who));
+        hd.append(v, w);
+        box.appendChild(hd);
+      }
       if (c.plot) {
         const P = c.plot;
         box.classList.add('is-plot');
@@ -2231,6 +2283,14 @@ function mountFlight(root, config) {
 
   function runsOnStopChange(stop) {
     if (!runStops.length) return;
+    // A recording must not outlive the section that offered it: the panel goes inert and
+    // hidden, so the pause button the reader would reach for is no longer on screen.
+    const here = runStops.some((rs) => Math.abs(rs.i - stop) <= 1);
+    if (!here) {
+      document.querySelectorAll('.fw-run audio, .fw-pl audio').forEach((a) => {
+        if (!a.paused) a.pause();
+      });
+    }
     const near = runStops.find((rs) => Math.abs(rs.i - stop) <= 1);
     unmountRuns(near ? near.i : -1);
     if (near) mountRuns(near.i);
@@ -3221,6 +3281,13 @@ const VENDOR_ICON = [
 
 /* One colour per system, matched on the same loose names vendorMark() matches on, so a
    display name from the paper and an API identifier from a payload both resolve. */
+/* Which text colour survives on a system's own colour. Mint and orange are light enough
+   that white on them is about 2.2:1; ink on them is over 8:1. */
+function sysInk(name) {
+  const m = String(name).toLowerCase();
+  return (/mini/.test(m) && !/gemini/.test(m)) || /nova|sonic/.test(m) ? '#17171f' : '#ffffff';
+}
+
 function sysColor(name) {
   const m = String(name).toLowerCase();
   // Gemini is tested BEFORE mini, because "Gemini" contains "mini" and the naive order
