@@ -300,3 +300,14 @@ body.wm-page-light {
   border-radius: 4px;
 }
 .wm-tile:focus-visible, .wm-locate:focus-visible { outline-offset: 3px; }
+
+
+/* Compact hides the timeline, the rail and the call transport, because a looping walk in a
+   tile has no use for them. Voice mode does: it is the whole reason the tile has a play
+   button. When both classes are on, voice wins - it is the more specific state. */
+.wm-root.wm-compact.wm-voice .wm-tl { display: flex !important; }
+.wm-root.wm-compact.wm-voice .wm-rail { display: block !important; }
+.wm-root.wm-compact.wm-voice .wm-call { display: flex !important; }
+.wm-root.wm-compact.wm-voice .wm-tl[hidden],
+.wm-root.wm-compact.wm-voice .wm-rail[hidden],
+.wm-root.wm-compact.wm-voice .wm-call[hidden] { display: none !important; }

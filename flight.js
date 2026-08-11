@@ -1151,12 +1151,19 @@ function mountFlight(root, config) {
            this page has no use for. One button, one bar in the system's own colour, and the
            clock. The bar is a real <input type=range> so it is keyboard operable and reads
            as a slider to assistive technology. */
-        if (r.audio) {
+        // A Pathfinding tile carries a voice payload rather than a bare audio file: its
+        // playback is owned by the walk renderer, which drives the map from the recording.
+        if (r.audio || (r.map && r.voice)) {
           const pl = el('div', 'fw-pl');
           pl.style.setProperty('--sys', sysColor(r.model || ''));
           pl.style.setProperty('--on-sys', sysInk(r.model || ''));
+          // Built only when there IS a file. A Pathfinding tile carries a voice payload
+          // instead, and its playback belongs to the walk renderer; constructing an
+          // <audio> for it threw on an undefined source before the branch below could
+          // ever run, which took the whole page down with it.
           const au = document.createElement('audio');
           au.preload = 'none';                       // fetched only when somebody presses play
+          if (r.audio) {
           // Two sources, because one format does not reach every browser: Safari does not
           // play Ogg-Opus at all, and a single .opus source fails there with a bare
           // "source not supported" and no visible reason. AAC is offered first for that
@@ -1169,6 +1176,7 @@ function mountFlight(root, config) {
             so.type = ty;
             au.appendChild(so);
           });
+          }
           const btn = el('button', 'fw-pl-btn');
           btn.type = 'button';
           btn.setAttribute('aria-label', 'Play ' + (r.type || '') + ', ' + (r.world || ''));
@@ -1185,6 +1193,58 @@ function mountFlight(root, config) {
             const m = Math.floor(s2 / 60);
             return m + ':' + String(Math.floor(s2 % 60)).padStart(2, '0');
           };
+          /* A Pathfinding tile with a recording does not use this <audio> at all.
+             ------------------------------------------------------------------------
+             The walk renderer has its own voice mode: it swaps the looping walk for the
+             REAL call clock and opens the two-lane speech activity timeline - who held
+             the channel, where they talked over each other, every tool call and every
+             audio effect the harness applied. That timeline is the thing this benchmark
+             is about, and it already exists; the play button just has to ask for it. */
+          if (r.map && r.voice) {
+            pl.addEventListener('click', (e) => e.stopPropagation());
+            let vloaded = null;
+            btn.addEventListener('click', (e) => {
+              // The tile itself opens the full-size walk on click. Without this the play
+              // button opened that overlay instead of starting the recording.
+              e.stopPropagation();
+              const inst = mapLive[r.map];
+              if (!inst) return;
+              const start = () => {
+                inst.setVoiceMode(true);
+                const a = fig.querySelector('.wm-root audio');
+                if (!a) return;
+                // Its own transport, not the element: voice mode drives the map from the
+                // recording's clock, and calling play() behind its back leaves the two
+                // out of step - the audio ran while the map sat still.
+                const transport = fig.querySelector('[data-el="cPlay"]');
+                if (a.paused) {
+                  document.querySelectorAll('audio').forEach((o) => { if (o !== a) o.pause(); });
+                }
+                if (transport) transport.click();
+                else if (a.paused) a.play().catch(() => {});
+                const sync = () => {
+                  btn.innerHTML = a.paused ? PLAY_SVG : PAUSE_SVG;
+                  pl.classList.toggle('is-on', !a.paused);
+                };
+                a.addEventListener('play', sync);
+                a.addEventListener('pause', sync);
+                setTimeout(sync, 120);
+              };
+              if (vloaded) { start(); return; }
+              // Fetched on demand: the call is megabytes and most readers never ask.
+              fetch((MAPS.base || '../') + r.voice)
+                .then((res) => (res.ok ? res.json() : Promise.reject(new Error('HTTP ' + res.status))))
+                .then((v) => { vloaded = v; inst.setVoice(v); start(); })
+                .catch((e) => {
+                  console.warn('flight: voice for "' + r.map + '" did not load:', e.message);
+                  tm.textContent = 'recording unavailable';
+                });
+            });
+            pl.append(btn, tm);
+            // No scrubber here: the call transport lives on the map, under the timeline.
+            tm.textContent = 'Play with the speech activity timeline';
+            fig.appendChild(pl);
+          } else {
           btn.addEventListener('click', () => {
             if (au.paused) {
               // One clip at a time. A second one starting over the first is the fastest
@@ -1211,18 +1271,31 @@ function mountFlight(root, config) {
           });
           pl.append(btn, bar, tm, au);
           fig.appendChild(pl);
+          }
         }
-        if (r.map) {
+        if (r.map && !r.voice) {
+          // A tile WITH a recording is a player, not a link: its whole surface being a
+          // button meant every press of play also threw the full-size overlay over the
+          // timeline the press had just opened. Tiles without a recording keep the
+          // open-on-click behaviour, which is the only way into the full walk from here.
           fig.dataset.key = r.map;
           fig.tabIndex = 0;
           fig.setAttribute('role', 'button');
           fig.setAttribute('aria-label', (r.type || '') + ', ' + (r.world || '')
             + '. Opens full size, with a step control.');
-          const open = () => openWalk({ key: r.map, cond: r.type, note: r.world });
+          // The tile opens the full-size walk, but it also CONTAINS the player, and a
+          // click on play must not do both. Gated on where the click came from rather
+          // than on stopping propagation, which depends on listener order.
+          const open = (e) => {
+            if (e && e.target && e.target.closest && e.target.closest('.fw-pl')) return;
+            openWalk({ key: r.map, cond: r.type, note: r.world });
+          };
           fig.addEventListener('click', open);
           fig.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
           });
+        } else if (r.map) {
+          fig.dataset.key = r.map;
         } else {
           fig.dataset.call = r.call;
           fig.dataset.from = String(r.from);

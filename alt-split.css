@@ -864,3 +864,19 @@
 .fw-open:has(.fw-open-by) .fw-open-grid {
   grid-template-rows: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 1.06fr);
 }
+
+
+/* A Pathfinding tile in voice mode has three things to show, not one: the map, the two
+   lane speech activity strip and the transcript rail. The tile grows to fit them, because
+   the timeline is the reason the play button exists. */
+.fw-shell-split[data-block="band"] .fw-run[data-kind="map"]:has(.wm-voice) {
+  grid-column: 1 / -1;
+  min-height: 560px;
+}
+.fw-run .wm-root.wm-voice .wm-tl { min-height: 84px; flex: none; }
+.fw-run .wm-root.wm-voice .wm-rail { max-height: 200px; overflow-y: auto; flex: none; }
+/* The box that holds the map has to give the strip and the rail their own room, or the
+   map keeps all of it and the timeline opens at zero height below the fold. */
+.fw-run-box:has(.wm-voice) { min-height: 460px; }
+.fw-run-box:has(.wm-voice) .wm-body { flex: 1 1 auto; min-height: 180px; }
+.fw-run:has(.wm-voice) { min-height: 620px; }

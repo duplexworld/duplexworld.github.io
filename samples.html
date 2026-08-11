@@ -107,10 +107,21 @@ mountFlight(document.getElementById('world'), {
       // failures are the more informative half of this benchmark and a page that plays only
       // the successes is advertising, not evidence.
       runs: [
+        // Pathfinding. Pressing play on one of these does not just start audio: the walk
+        // renderer switches to the REAL call clock and opens its two-lane speech activity
+        // timeline - who held the channel, where the two talked over each other, every
+        // tool call and every audio effect the harness applied. That is the thing this
+        // benchmark exists to measure, so it is what the play button shows.
         { map: 'clean', outcome: 'ok', type: 'Single intent', world: 'Pathfinding',
-          model: 'Gemini-3.1-Flash-Live', audio: 'audio/clean.opus' },
+          model: 'Gemini-3.1-Flash-Live', voice: 'voice_clean.json' },
+        // The failed single intent is the run that never arrives, not the one that
+        // arrives inefficiently: `wander` ends on the same corner as the success, so on a
+        // map it reads as a second success.
+        { map: 'base_lost', outcome: 'bad', type: 'Single intent, failed',
+          world: 'Pathfinding', model: 'GPT-Realtime-2.1-mini',
+          voice: 'voice_base_lost.json' },
         { map: 'blocked_bad', outcome: 'bad', type: 'Rerouting, failed', world: 'Pathfinding',
-          model: 'Voice Think Fast', audio: 'audio/blocked_bad.opus' },
+          model: 'Voice Think Fast', voice: 'voice_blocked_bad.json' },
         // Turns 19-23: the charge surfaces inside the digression and the agent has to act
         // on it without over-reacting before the caller says it is not theirs.
         { call: 'bank_narr_ok', from: 19, to: 23, outcome: 'ok',

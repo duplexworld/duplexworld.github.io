@@ -176,8 +176,11 @@ mountFlight(document.getElementById('world'), {
             note: 'Four unmapped closures; finds the one detour that survives.' },
           { key: 'errand_ok', at: 2, outcome: 'ok', cond: 'All-day assistance', verdict: 'Solved',
             note: 'The second destination is revealed only on arrival at the first.' },
-          { key: 'wander', at: 0, outcome: 'bad', cond: 'Single intent', verdict: 'Failed',
-            note: 'The same instance, three times the route.' },
+          // `wander` used to sit here and it ARRIVES: eleven blocks against a five block
+          // optimum, ending on the same corner as the success beside it, so on a map it
+          // read as a second success. This run never reaches the pharmacy at all.
+          { key: 'base_lost', at: 0, outcome: 'bad', cond: 'Single intent', verdict: 'Failed',
+            note: 'Fifteen blocks, seven wrong turns, and the call ends short of the door.' },
           { key: 'blocked_bad', at: 1, outcome: 'bad', cond: 'Rerouting', verdict: 'Failed',
             note: 'The same closures, never resolved.' },
           { key: 'errand_bad', at: 2, outcome: 'bad', cond: 'All-day assistance', verdict: 'Failed',
