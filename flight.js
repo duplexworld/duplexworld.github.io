@@ -2849,7 +2849,13 @@ function mountFlight(root, config) {
       // much lighter now WITHOUT the screen emptying, because the film no longer rides this
       // curve: it holds at full opacity across the whole filmed span, so there is always a
       // picture there even at the instant the text is changing over.
-      const HOLD = 0.70, END = 1.12;
+      // HOLD 0.90, not 0.70. Measured on the split pages: 32% of the story page was
+      // mid-dissolve at any given scroll position, and the longest stretch a reader could
+      // read without something moving was about three screens. A dissolve is a cost paid
+      // for continuity, and the cost was being paid over nearly a third of the page. At
+      // 0.90 the panel is solid for the first 90% of its band and the handover happens in
+      // the last 10%, which is where the reader is leaving anyway.
+      const HOLD = 0.90, END = 1.10;
       let vis = d <= HOLD ? 1 : 1 - smooth(Math.min(1, (d - HOLD) / (END - HOLD)));
       // The opening statement does not fade IN. At scrollY = 0 the reader is a full band
       // above the first stop, so the curve above put the page's own headline on screen at
@@ -2877,7 +2883,7 @@ function mountFlight(root, config) {
       const trav = bandTravel[i] || 0;
       p.style.transform = reduce
         ? (trav ? `translate3d(0, ${trav.toFixed(1)}px, 0)` : 'none')
-        : `translate3d(0, ${(((1 - vis) * (pos > c ? -34 : 34)) + trav).toFixed(1)}px, 0)`;
+        : `translate3d(0, ${(((1 - vis) * (pos > c ? -12 : 12)) + trav).toFixed(1)}px, 0)`;
       // Operable exactly as long as it is legible. These used to be two different
       // thresholds - inert below 0.55, painted until 0.002 - which left a wide band where a
       // sighted reader could see a perfectly readable "Project page" button, click straight
