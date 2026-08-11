@@ -144,10 +144,12 @@
    at every laptop width, which is what the index is for. */
 .fw-shell-split .fw-globe-label {
   text-align: left;
-  max-width: 86px;
+  max-width: 108px;
   white-space: normal;
   line-height: 1.18;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  hyphens: none;
 }
 
 /* Inside the right margin, never past it. A negative inset here put the dots half off the
@@ -261,7 +263,7 @@
   width: min(calc((var(--left) - var(--gut) * 1.1) / 1.14), calc((100vh - 260px) * 16 / 9 / 1.14));
 }
 .fw-shell-split[data-block="maps"] .fw-maps {
-  --map-tall: clamp(300px, 60vh, 640px);
+  --map-tall: clamp(260px, 50vh, 560px);
   --map-h: calc((var(--map-tall) - 9px) / 2);
 }
 /* The index would print through the matrix, and the "six worlds" tile already names them.
@@ -736,10 +738,46 @@
    away from it, and at this width its labels wrap mid-word. Two lists of six worlds on
    one screen is one too many. */
 .fw-shell-split[data-block="band"] .fw-globes { display: none; }
+/* The world plate is drawn on the stage, which on a full-width band is not there: it was
+   printing under the copy that now spans the page. The band's own eyebrow names the stop. */
+.fw-shell-split[data-block="band"] .fw-mark { display: none; }
 .fw-shell-split[data-block="band"] .fw-panel {
+  will-change: transform;
   left: 0;
   width: 100%;
   max-width: min(1200px, calc(100vw - 48px));
   margin: 0 auto;
   padding-inline: 24px;
+}
+
+
+/* The two bands whose content is a GRID rather than prose need their own column counts:
+   six live walks read as three across, and the recordings as two, which keeps a transcript
+   wide enough to be read rather than skimmed. */
+.fw-shell-split[data-block="band"] .fw-maps {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  --map-h: clamp(190px, 22vh, 260px);
+}
+.fw-shell-split[data-block="band"] .fw-runs {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  /* The half-width layout packed five tiles into a fixed set of rows. On the band there
+     are seven, each with a player and a transcript, so the rows size to their content and
+     the band's travel carries the reader down them. */
+  grid-auto-rows: auto !important;
+  height: auto !important;
+  max-height: none !important;
+}
+.fw-shell-split[data-block="band"] .fw-run {
+  min-height: 320px;
+  grid-column: auto !important;
+}
+
+
+/* At 1366 the opening's three plot tiles are ~30px shorter than at 1560, which is exactly
+   the fifth system's row. The rows tighten rather than the chart losing a system. */
+@media (max-width: 1440px) {
+  .fw-open-hrows { gap: 2px; margin-top: 2px; }
+  .fw-open-htrack { height: 7px; }
+  .fw-open-cell.is-plot .fw-open-lab { margin-bottom: 0; }
+  .fw-open-pnote { margin-top: 4px; }
 }

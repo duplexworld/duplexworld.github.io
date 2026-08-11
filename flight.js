@@ -675,11 +675,134 @@ function mountFlight(root, config) {
     /* Cards: a heading, a line, and a list. Used for the three metric pillars and for the
        nine enterprise conversation types, which are the same shape of object - a named
        thing with one sentence and some contents. */
+    /* The three pillars, one column each.
+       ---------------------------------------------------------------------------
+       The pillar structure IS the paper's central design decision, and as a flat glossary
+       it was invisible. Each metric states four things in a fixed order: symbol, full
+       name, one plain sentence, and the range with its direction - the last of which the
+       glossary never gave, so a reader could not tell which way was better. */
+    /* Small multiples: one panel per conversation type, five bars each, ONE shared axis.
+       ---------------------------------------------------------------------------
+       A panel per type is only comparable if the scale does not move between panels, so
+       the maximum is set once for the whole figure. Systems are direct-labelled in the
+       first panel only; after that the colour carries the identity, which is the entire
+       reason a system keeps one hue across this page. */
+    if (s.multiples) {
+      const M = s.multiples;
+      const fig = el('figure', 'fw-sm');
+      if (s.lede) {
+        const le = el('p', 'fw-sm-lede');
+        le.textContent = s.lede;
+        fig.appendChild(le);
+      }
+      let firstPanel = true;
+      (M.groups || []).forEach((g) => {
+        const gr = el('section', 'fw-sm-grp' + (g.apart ? ' is-apart' : ''));
+        const gl = el('h3', 'fw-sm-gl');
+        gl.textContent = g.label;
+        gr.appendChild(gl);
+        const wrap = el('div', 'fw-sm-wrap');
+        g.rows.forEach((row) => {
+          const pan = el('div', 'fw-sm-pan');
+          const nm = el('div', 'fw-sm-name');
+          nm.textContent = row.name;
+          pan.appendChild(nm);
+          const key = firstPanel;
+          row.v.forEach((v, k) => {
+            const sys = M.systems[k];
+            const r = el('div', 'fw-sm-row');
+            r.style.setProperty('--sys', sysColor(sys));
+            if (key) {
+              const lb = el('span', 'fw-sm-sys');
+              lb.textContent = sys;
+              r.appendChild(lb);
+            }
+            const tr = el('div', 'fw-sm-track');
+            const ba = el('div', 'fw-sm-bar');
+            ba.style.width = (100 * Math.min(1, v / M.max)).toFixed(2) + '%';
+            tr.appendChild(ba);
+            const va = el('span', 'fw-sm-val');
+            va.textContent = v.toFixed(3);
+            r.append(tr, va);
+            r.title = sys + ' \u00b7 ' + row.name + ' \u00b7 Pass@1 ' + v.toFixed(3);
+            pan.appendChild(r);
+          });
+          firstPanel = false;
+          wrap.appendChild(pan);
+        });
+        gr.appendChild(wrap);
+        fig.appendChild(gr);
+      });
+      if (M.note) {
+        const nt = el('div', 'fw-sm-note');
+        nt.textContent = M.note;
+        fig.appendChild(nt);
+      }
+      fig.setAttribute('role', 'img');
+      fig.setAttribute('aria-label', (s.lede || '')
+        + ' Pass@1 for five systems across each conversation type, on one shared scale.');
+      p.appendChild(fig);
+    }
+
+    if (s.pillarCols) {
+      const cols = el('div', 'fw-pil');
+      s.pillarCols.forEach((g) => {
+        const col = el('section', 'fw-pil-col');
+        col.style.setProperty('--tint', g.tint || 'var(--ink)');
+        const hd = el('header', 'fw-pil-head');
+        const h = el('h3', 'fw-pil-h');
+        h.textContent = g.name;
+        hd.appendChild(h);
+        if (g.line) {
+          const l = el('p', 'fw-pil-l');
+          l.textContent = g.line;
+          hd.appendChild(l);
+        }
+        col.appendChild(hd);
+        (g.metrics || []).forEach((m) => {
+          const card = el('article', 'fw-pil-m');
+          const sy = el('div', 'fw-pil-sym');
+          sy.textContent = m.sym;
+          const fu = el('div', 'fw-pil-full');
+          fu.textContent = m.full;
+          const sa = el('p', 'fw-pil-says');
+          sa.textContent = m.says;
+          card.append(sy, fu, sa);
+          if (m.range) {
+            const rg = el('div', 'fw-pil-range');
+            rg.textContent = m.range;
+            card.appendChild(rg);
+          }
+          col.appendChild(card);
+        });
+        cols.appendChild(col);
+      });
+      p.appendChild(cols);
+    }
+
+    /* The one claim the paper makes that no chart can carry. */
+    if (s.callout) {
+      const co = el('aside', 'fw-callout');
+      const h = el('b', 'fw-callout-h');
+      h.textContent = s.callout.head;
+      const b = el('p', 'fw-callout-b');
+      b.textContent = s.callout.body;
+      co.append(h, b);
+      p.appendChild(co);
+    }
+
     if (s.cards && s.cards.length) {
       const grid = el('div', 'fw-cards' + (s.cardCols ? ' is-c' + s.cardCols : ''));
       s.cards.forEach((c) => {
         const card = el('article', 'fw-card');
         if (c.accent) card.style.setProperty('--tint', c.accent);
+        // The paper's own mark for this conversation type. Same glyph in both places, so
+        // a reader who has seen the table recognises the card without reading it.
+        if (c.icon) {
+          const ic = el('div', 'fw-card-ic');
+          ic.appendChild(artImg(c.icon, '', 'fw-card-icimg'));
+          card.appendChild(ic);
+        }
         const h = el('h3', 'fw-card-h');
         h.textContent = c.name;
         card.appendChild(h);
@@ -706,7 +829,19 @@ function mountFlight(root, config) {
         });
         grid.appendChild(card);
       });
+      if (s.cardsLede) {
+        const le = el('p', 'fw-cards-lede');
+        le.textContent = s.cardsLede;
+        p.appendChild(le);
+      }
       p.appendChild(grid);
+      // Nine here, eleven in the corpus. Stating the difference is what stops the two
+      // navigation-only shapes reading as an inconsistency.
+      if (s.cardsFoot) {
+        const fo = el('p', 'fw-cards-foot');
+        fo.textContent = s.cardsFoot;
+        p.appendChild(fo);
+      }
     }
 
     /* Five recorded runs, side by side.
@@ -953,6 +1088,71 @@ function mountFlight(root, config) {
         wait.textContent = 'loading';
         box.appendChild(wait);
         fig.append(head, box);
+        /* A player, not <audio controls>: the default control is 300px of grey chrome that
+           would wreck the visual system, and it offers a volume slider and a download menu
+           this page has no use for. One button, one bar in the system's own colour, and the
+           clock. The bar is a real <input type=range> so it is keyboard operable and reads
+           as a slider to assistive technology. */
+        if (r.audio) {
+          const pl = el('div', 'fw-pl');
+          pl.style.setProperty('--sys', sysColor(r.model || ''));
+          const au = document.createElement('audio');
+          au.preload = 'none';                       // fetched only when somebody presses play
+          // Two sources, because one format does not reach every browser: Safari does not
+          // play Ogg-Opus at all, and a single .opus source fails there with a bare
+          // "source not supported" and no visible reason. AAC is offered first for that
+          // reason; anything that prefers Opus takes the smaller file.
+          const primary = artSrc(r.audio)[0] || r.audio;
+          const aac = primary.replace(/\.opus$/i, '.m4a');
+          [[aac, 'audio/mp4'], [primary, 'audio/ogg; codecs=opus']].forEach(([u, ty]) => {
+            const so = document.createElement('source');
+            so.src = u;
+            so.type = ty;
+            au.appendChild(so);
+          });
+          const btn = el('button', 'fw-pl-btn');
+          btn.type = 'button';
+          btn.setAttribute('aria-label', 'Play ' + (r.type || '') + ', ' + (r.world || ''));
+          btn.innerHTML = PLAY_SVG;
+          const bar = document.createElement('input');
+          bar.type = 'range';
+          bar.className = 'fw-pl-bar';
+          bar.min = '0'; bar.max = '1000'; bar.value = '0';
+          bar.setAttribute('aria-label', 'Position in the recording');
+          const tm = el('span', 'fw-pl-time');
+          tm.textContent = '0:00';
+          const clock = (s2) => {
+            if (!isFinite(s2)) return '0:00';
+            const m = Math.floor(s2 / 60);
+            return m + ':' + String(Math.floor(s2 % 60)).padStart(2, '0');
+          };
+          btn.addEventListener('click', () => {
+            if (au.paused) {
+              // One clip at a time. A second one starting over the first is the fastest
+              // way to make a page of recordings unusable.
+              document.querySelectorAll('audio').forEach((o) => { if (o !== au) o.pause(); });
+              au.play().catch(() => {});
+            } else {
+              au.pause();
+            }
+          });
+          au.addEventListener('play', () => { btn.innerHTML = PAUSE_SVG; pl.classList.add('is-on'); });
+          au.addEventListener('pause', () => { btn.innerHTML = PLAY_SVG; pl.classList.remove('is-on'); });
+          au.addEventListener('ended', () => { bar.value = '0'; tm.textContent = clock(au.duration); });
+          au.addEventListener('timeupdate', () => {
+            if (au.duration) {
+              bar.value = String(Math.round(1000 * au.currentTime / au.duration));
+              bar.style.setProperty('--pc', (100 * au.currentTime / au.duration).toFixed(1) + '%');
+            }
+            tm.textContent = clock(au.currentTime) + ' / ' + clock(au.duration);
+          });
+          au.addEventListener('loadedmetadata', () => { tm.textContent = '0:00 / ' + clock(au.duration); });
+          bar.addEventListener('input', () => {
+            if (au.duration) au.currentTime = au.duration * (Number(bar.value) / 1000);
+          });
+          pl.append(btn, bar, tm, au);
+          fig.appendChild(pl);
+        }
         if (r.map) {
           fig.dataset.key = r.map;
           fig.tabIndex = 0;
@@ -1304,7 +1504,19 @@ function mountFlight(root, config) {
         }
         grid.appendChild(card);
       });
+      if (s.cardsLede) {
+        const le = el('p', 'fw-cards-lede');
+        le.textContent = s.cardsLede;
+        p.appendChild(le);
+      }
       p.appendChild(grid);
+      // Nine here, eleven in the corpus. Stating the difference is what stops the two
+      // navigation-only shapes reading as an inconsistency.
+      if (s.cardsFoot) {
+        const fo = el('p', 'fw-cards-foot');
+        fo.textContent = s.cardsFoot;
+        p.appendChild(fo);
+      }
     }
     // The results table. Deliberately narrow: one column per pillar plus reliability, which
     // is the fewest columns that still shows a different system winning each one.
@@ -1973,7 +2185,11 @@ function mountFlight(root, config) {
             const who = el('b', '');
             who.textContent = t.who === 'agent' ? 'Agent' : 'Caller';
             const tx = el('span', '');
-            tx.textContent = String(t.text).replace(/###STOP###/g, '').trim();
+            // Verbatim words, but the em dash the model emitted is rendered as a single
+          // hyphen. It is a punctuation glyph, not a word, and on this page it is also a
+          // house rule: a dash is a prosodic break to a speech engine.
+          tx.textContent = String(t.text).replace(/###STOP###/g, '')
+            .replace(/\u2014|\u2013/g, ' - ').replace(/\s+-\s+/g, ' - ').trim();
             b.append(who, tx);
             list.appendChild(b);
             list.scrollTop = list.scrollHeight;
@@ -2392,6 +2608,10 @@ function mountFlight(root, config) {
     return moved || pending;
   }
   let liveStop = 0;
+  // How far each full-width band's panel has travelled through its own band. Kept out of
+  // the stylesheet because the panel's transform is written inline every frame, and an
+  // inline transform beats any rule that tries to add to it.
+  const bandTravel = [];
   let liveStep = 0;
   let sayT = 0;
   let filmVis = 0;
@@ -2411,6 +2631,24 @@ function mountFlight(root, config) {
       const c = centrePx(i);
       const half = bands[i] * H * 0.5;
       const d = Math.abs(pos - c) / half;            // 0 at the stop, 1 at the band edge
+      // A pinned panel taller than the viewport hides its own tail: the reader scrolls,
+      // the panel does not move, and the last cards and the callout are unreachable. On
+      // the full-width bands the panel therefore TRAVELS through its band, by exactly the
+      // amount it overflows, so everything in it passes the screen once.
+      if (s.block === 'band') {
+        const pan = panels[i];
+        if (pan) {
+          const top = pan.offsetTop || 0;
+          const spill = top + pan.scrollHeight - (H - 24);
+          // The travel finishes at 72% of the band, not at its edge: the panel starts
+          // fading out near the edge, so a tail that only arrives there is read through
+          // a half-faded panel. Finishing early means the last card and the callout are
+          // fully lit and stationary for the rest of the band.
+          const RUN = 0.72;
+          const prog = Math.max(0, Math.min(1, (pos - (c - half)) / (2 * half * RUN)));
+          bandTravel[i] = spill > 8 ? -spill * prog : 0;
+        }
+      }
       // HOLD, then a short dissolve. Not a curve that starts falling immediately.
       //
       // `d` is 0 at the stop and 1 at the band edge. The previous shape held full strength
@@ -2455,8 +2693,10 @@ function mountFlight(root, config) {
       // so a chart is at full length by the time the panel is fully lit rather than still
       // filling as it starts to leave.
       p.style.setProperty('--grow', Math.min(1, vis * 1.9).toFixed(3));
-      p.style.transform = reduce ? 'none'
-        : `translate3d(0, ${((1 - vis) * (pos > c ? -34 : 34)).toFixed(1)}px, 0)`;
+      const trav = bandTravel[i] || 0;
+      p.style.transform = reduce
+        ? (trav ? `translate3d(0, ${trav.toFixed(1)}px, 0)` : 'none')
+        : `translate3d(0, ${(((1 - vis) * (pos > c ? -34 : 34)) + trav).toFixed(1)}px, 0)`;
       // Operable exactly as long as it is legible. These used to be two different
       // thresholds - inert below 0.55, painted until 0.002 - which left a wide band where a
       // sighted reader could see a perfectly readable "Project page" button, click straight
@@ -2992,6 +3232,12 @@ function sysColor(name) {
   if (/openai|gpt|realtime/.test(m)) return 'var(--sys-gpt)';
   return 'var(--ink)';
 }
+
+// Two glyphs, drawn rather than typed, so the button is the same size in every font.
+const PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
+const PAUSE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true">'
+  + '<rect x="7" y="5.5" width="3.6" height="13" rx="1"/>'
+  + '<rect x="13.4" y="5.5" width="3.6" height="13" rx="1"/></svg>';
 
 function vendorMark(model) {
   const m = String(model).toLowerCase();

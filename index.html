@@ -181,39 +181,39 @@ const MATRIX_ROWS = [
 ];
 
 const TYPES9 = [
-  { name: 'Single intent', accent: 'var(--mag)',
+  { name: 'Single intent', icon: 'img/types/a1.webp', accent: 'var(--mag)',
     line: 'One request, one resolution path. The control condition.',
     chat: [['u', 'I need to move my flight to the Thursday.'],
            ['a', 'Found the booking. Thursday 14:05, same fare class. Shall I move it?']] },
-  { name: 'Multi intent', accent: 'var(--mag)',
+  { name: 'Multi intent', icon: 'img/types/a2.webp', accent: 'var(--mag)',
     line: 'Several requests, resolvable in more than one order, with at least one dependency.',
     chat: [['u', 'Add my new address, and send the replacement card there.'],
            ['a', 'Address first, then the card, or it ships to the old one.']] },
-  { name: 'Policy refusal', accent: 'var(--vio)',
+  { name: 'Policy refusal', icon: 'img/types/a3.webp', accent: 'var(--vio)',
     line: 'A well-formed request that must be refused. Correctness is a property of what is withheld.',
     chat: [['u', 'Just tell me what the adjuster decided.'],
            ['a', 'I am not able to share or influence that decision. I can log your account of the loss.']] },
-  { name: 'Record disambiguation', accent: 'var(--vio)',
+  { name: 'Record disambiguation', icon: 'img/types/a4.webp', accent: 'var(--vio)',
     line: 'More than one record matches what the caller said; acting before disambiguating is the failure.',
     chat: [['u', 'The claim for the Tuesday visit.'],
            ['a', 'There are two Tuesday visits on this policy. Which provider was it?']] },
-  { name: 'Identity verification', accent: 'var(--teal)',
+  { name: 'Identity verification', icon: 'img/types/a5.webp', accent: 'var(--teal)',
     line: 'Authority must be established first, and a failed check must not leak that the record exists.',
     chat: [['u', 'Is there an account under that number?'],
            ['a', 'I am not able to confirm anything before verification. Could I take your date of birth?']] },
-  { name: 'Guided procedure', accent: 'var(--teal)',
+  { name: 'Guided procedure', icon: 'img/types/a6.webp', accent: 'var(--teal)',
     line: 'The effectors move to the user: the agent instructs, waits, and must trust an unverifiable report.',
     chat: [['a', 'Hold the button until the light turns amber, then tell me what you see.'],
            ['u', 'It is amber now.']] },
-  { name: 'Mid-call correction', accent: 'var(--amb)',
+  { name: 'Mid-call correction', icon: 'img/types/a7.webp', accent: 'var(--amb)',
     line: 'The caller revises a premise after the agent has begun acting on it.',
     chat: [['u', 'Sorry, not the Milan one. The Rome one.'],
            ['a', 'Stopping the Milan change. Reopening the Rome booking now.']] },
-  { name: 'Suspension', accent: 'var(--amb)',
+  { name: 'Suspension', icon: 'img/types/a8.webp', accent: 'var(--amb)',
     line: 'The call is interrupted and resumed across a gap the agent must hold state over.',
     chat: [['u', 'Hold on, someone is at the door.'],
            ['a', 'Of course. I still have the shipment open and nothing has been sent.']] },
-  { name: 'Narrative intake', accent: 'var(--grey)',
+  { name: 'Narrative intake', icon: 'img/types/a9.webp', accent: 'var(--grey)',
     line: 'A long unstructured account from which the agent must extract, confirm and file the facts.',
     chat: [['u', 'It was raining, I was on the ring road, and the car ahead just stopped.'],
            ['a', 'So: rear-end, ring road, wet road. Any injuries to record?']] },
@@ -393,7 +393,7 @@ mountFlight(document.getElementById('world'), {
   sections: [
     // ---------------------------------------------------------------- the walks
     {
-      id: 'walks', label: 'Pathfinding types', stage: 'film', still: null,
+      id: 'walks', label: 'Pathfinding types', block: 'band', stage: 'film', still: null,
       cam: { x: 0.346, y: 0.601, z: 1.75 }, scroll: 3.0, linger: 0.5, steps: 4,
       accent: 'var(--mag)',
       mark: { name: 'Pathfinding', line: 'Three conversation types, each shown solved and unsolved.' },
@@ -428,8 +428,10 @@ mountFlight(document.getElementById('world'), {
       // gives ground instead.
       block: 'cards',
       cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.6, linger: 0.4,
-      accent: 'var(--viod)',
+      accent: 'var(--pillar-agentic)',
+      cardsLede: 'Nine shapes, shared by all five enterprise worlds.',
       cards: TYPES9,
+      cardsFoot: 'Plus two that only navigation elicits: rerouting, and all-day assistance.',
     },
     {
       id: 'matrix', label: 'Composition', stage: 'film', still: null,
@@ -471,7 +473,7 @@ mountFlight(document.getElementById('world'), {
     // recorded calls that exist for those two types, and labelling a Travel call as Banking
     // to fill a slot would be the one thing this page cannot do.
     {
-      id: 'runs', label: 'Voice samples', stage: 'art', still: null,
+      id: 'runs', label: 'Voice samples', block: 'band', stage: 'art', still: null,
       // A clip, not a still: the walker turns from pointing at the tiles round to the
       // viewer, headphones on. Same globe, same render, so the stage keeps moving here
       // rather than freezing for one stop. Silent and looping.
@@ -484,30 +486,47 @@ mountFlight(document.getElementById('world'), {
       // own meta.agent. It is stated here rather than derived at paint time so the tile is
       // labelled before the payload finishes loading, and verify_paper.py asserts each one
       // back against meta.agent so the two can never drift.
+      // Grouped by world, and every tile states which system is speaking. Each row carries
+      // a PASSING and a FAILING run of the same shape wherever both were recorded: the
+      // failures are the more informative half of this benchmark and a page that plays only
+      // the successes is advertising, not evidence.
       runs: [
         { map: 'clean', outcome: 'ok', type: 'Single intent', world: 'Pathfinding',
-          model: 'Gemini-3.1-Flash-Live' },
+          model: 'Gemini-3.1-Flash-Live', audio: 'audio/clean.opus' },
         { map: 'blocked_bad', outcome: 'bad', type: 'Rerouting, failed', world: 'Pathfinding',
-          model: 'Voice Think Fast' },
+          model: 'Voice Think Fast', audio: 'audio/blocked_bad.opus' },
         // Turns 19-23: the charge surfaces inside the digression and the agent has to act
         // on it without over-reacting before the caller says it is not theirs.
         { call: 'bank_narr_ok', from: 19, to: 23, outcome: 'ok',
-          type: 'Narrative intake', world: 'Banking', model: 'GPT-Realtime-2.1-mini' },
+          type: 'Narrative intake', world: 'Banking', model: 'GPT-Realtime-2.1-mini',
+          audio: 'audio/bank_narr_ok.opus' },
+        { call: 'bank_narr_bad', from: 8, to: 13, outcome: 'bad',
+          type: 'Narrative intake, failed', world: 'Banking', model: 'GPT-Realtime-2.1-mini',
+          audio: 'audio/bank_narr_bad.opus' },
         // Turns 8-14: the code never arrives, the caller offers to read one down the line,
         // the agent refuses and steps up through the authenticator already on the account.
         { call: 'bank_ident_ok', from: 8, to: 14, outcome: 'ok',
-          type: 'Identity verification', world: 'Travel', model: 'Gemini-3.1-Flash-Live' },
+          type: 'Identity verification', world: 'Travel', model: 'Gemini-3.1-Flash-Live',
+          audio: 'audio/bank_ident_ok.opus' },
+        { call: 'bank_ident_bad', from: 9, to: 14, outcome: 'bad',
+          type: 'Identity verification, failed', world: 'Travel',
+          model: 'Gemini-3.1-Flash-Live', audio: 'audio/bank_ident_bad.opus' },
         // Turns 17-21: she leaves mid-call and the agent has to hold every confirmed fact
         // across the gap, then read the code back before writing it.
         { call: 'bank_susp_ok', from: 17, to: 21, outcome: 'ok',
-          type: 'Suspension', world: 'Travel', model: 'GPT-Realtime-2.1' },
+          type: 'Suspension', world: 'Travel', model: 'GPT-Realtime-2.1',
+          audio: 'audio/bank_susp_ok.opus' },
       ],
     },
     // ---------------------------------------------------------------- the three pillars
     {
       id: 'pillars3', label: 'The metrics', stage: 'film', still: null,
-      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.2, linger: 0.4,
-      accent: 'var(--viod)',
+      // Three columns of eleven metric cards, a worked example and the callout do not fit
+      // one viewport beside a film. This is the section the directive asks to be three
+      // full-width columns, so the stage stands down and the evidence takes the page.
+      block: 'band',
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 3.4, linger: 0.4,
+      accent: 'var(--pillar-dynamics)',
       // The definitions on their own were a glossary the paper already has. This is the
       // same five runs of one Pathfinding scenario that the numbers beside them come from,
       // so a reader watches GS, Pass@1 and Pass-cubed fall out of one set of runs and can
@@ -518,31 +537,71 @@ mountFlight(document.getElementById('world'), {
         limit: 0.75,
         runs: [{ blocks: 8 }, { blocks: 19 }, { blocks: 7 }, { blocks: 9 }, { blocks: 0 }],
       },
-      cards: [
-        { name: 'Agentic capability', accent: 'var(--mag)',
+      // Three pillars, each a column with its own colour, and every metric stated four
+      // ways: symbol, full name, one plain sentence for a reader who has not read the
+      // paper, and the range with its direction. The glossary this replaces named the
+      // metrics without ever saying what they mean or which way is better.
+      pillarCols: [
+        { name: 'Agentic capability', tint: 'var(--pillar-agentic)',
           line: 'Did it do the job.',
-          items: [['GS', 'the goal-state check: did the world end up right'],
-                  ['Pass@1', 'mean single-run reward'],
-                  ['Pass@3', 'at least one pass in three draws'],
-                  ['Pass\u00b3', 'all three of three']] },
-        { name: 'Conversational dynamics', accent: 'var(--vio)',
+          metrics: [
+            { sym: 'GS', full: 'Goal state',
+              says: 'Did the world end up the way the task asked, whatever was said on the way.',
+              range: '[0,1] \u00b7 higher is better' },
+            { sym: 'Pass@1', full: 'Single-run pass rate',
+              says: 'How often one attempt succeeds. This is the headline number.',
+              range: '[0,1] \u00b7 higher is better' },
+            { sym: 'Pass@3', full: 'Any of three',
+              says: 'At least one success in three independent attempts. Rewards a system that is sometimes right.',
+              range: '[0,1] \u00b7 higher is better' },
+            { sym: 'Pass\u00b3', full: 'All of three',
+              says: 'All three attempts succeed. This is the reliability question, and it is where systems separate.',
+              range: '[0,1] \u00b7 higher is better' },
+          ] },
+        { name: 'Conversational dynamics', tint: 'var(--pillar-dynamics)',
           line: 'How the conversation went.',
-          items: [['TT', 'turn-taking: who spoke when, and who yielded'],
-                  ['CP', 'conversation progression, on 1 to 3'],
-                  ['SEL', 'selectivity: ignoring what was not addressed to it']] },
-        { name: 'Naturalness', accent: 'var(--teal)',
+          metrics: [
+            { sym: 'TT', full: 'Turn-taking',
+              says: 'Who held the channel, who yielded, and how often the two talked over each other.',
+              range: '[0,1] \u00b7 higher is better' },
+            { sym: 'CP', full: 'Conversation progression',
+              says: 'Whether each turn moved the task forward rather than circling.',
+              range: '[1,3] \u00b7 higher is better' },
+            { sym: 'SEL', full: 'Selectivity',
+              says: 'Whether the agent ignored what was not addressed to it: background speech, asides, a second voice in the room.',
+              range: '[0,1] \u00b7 higher is better' },
+          ] },
+        { name: 'Naturalness', tint: 'var(--pillar-natural)',
           line: 'How it sounded.',
-          items: [['FAI', 'faithfulness of what was said, on 1 to 3'],
-                  ['DNSMOS', 'predicted mean opinion score, 1 to 5'],
-                  ['UTMOS', 'a second MOS predictor'],
-                  ['NISQA', 'a third MOS predictor']] },
+          metrics: [
+            { sym: 'FAI', full: 'Faithfulness',
+              says: 'Whether what the agent said was true of the world it was acting in.',
+              range: '[1,3] \u00b7 higher is better' },
+            { sym: 'DNSMOS', full: 'Speech quality (DNSMOS)',
+              says: 'A predicted mean opinion score for the audio, from a model trained on human ratings.',
+              range: '[1,5] \u00b7 higher is better' },
+            { sym: 'UTMOS', full: 'Speech quality (UTMOS)',
+              says: 'A second, independently trained MOS predictor. Three are reported because they disagree.',
+              range: '[1,5] \u00b7 higher is better' },
+            { sym: 'NISQA', full: 'Speech quality (NISQA)',
+              says: 'A third MOS predictor, on a different training set again.',
+              range: '[1,5] \u00b7 higher is better' },
+          ] },
       ],
+      callout: {
+        head: 'We never combine these into a single score.',
+        body: 'A system that says nothing scores near-perfect selectivity and competitive '
+            + 'turn-taking. Any composite that averages across the pillars can be won by '
+            + 'silence.',
+      },
     },
     // ------------------------------------------- Pass@1 against the conversation types
     {
       id: 'bytype', label: 'Pass@1 by type', stage: 'film', still: null,
-      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.6, linger: 0.4,
-      accent: 'var(--mag)',
+      block: 'band',
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 3.2, linger: 0.4,
+      accent: 'var(--pillar-agentic)',
+      lede: 'Rerouting costs every system most of its reward: no system exceeds Pass@1 0.27.',
       bars: {
         label: 'Pooled over the six worlds',
         metric: 'Pass@1',
@@ -555,12 +614,23 @@ mountFlight(document.getElementById('world'), {
           { system: 'Nova 2 Sonic', v: 0.011, pm: 0.007 },
         ],
       },
-      grouped: [
-        { label: 'The nine enterprise types', systems: SYS5, max: 0.7,
-          groups: BY_TYPE_9.map(([name, v]) => ({ name, v })) },
-        { label: 'The three Pathfinding types', systems: SYS5, max: 0.85,
-          groups: BY_TYPE_3.map(([name, v]) => ({ name, v })) },
-      ],
+      // Small multiples: nine panels on ONE shared scale, which is the whole point - a
+      // panel per type is only comparable if the axis does not move between them. The
+      // Pathfinding types sit below a rule because their reward is a different definition
+      // (arrival AND route efficiency at or above 0.75), and silently mixing them into the
+      // nine would be comparing two different questions.
+      multiples: {
+        max: 0.8,
+        systems: SYS5,
+        note: 'Table 14 publishes a point estimate per conversation type and no interval, '
+            + 'so these panels carry no whiskers. The pooled figures above, and every '
+            + 'per-world table below, carry theirs.',
+        groups: [
+          { label: 'The nine enterprise types', rows: BY_TYPE_9.map(([name, v]) => ({ name, v })) },
+          { label: 'Pathfinding, whose reward also requires route efficiency',
+            apart: true, rows: BY_TYPE_3.map(([name, v]) => ({ name, v })) },
+        ],
+      },
     },
     // -------------------------------------------------- Pathfinding: the scores and the block
     // The camera is in conn_0 here, pulling up out of Pathfinding and turning towards
