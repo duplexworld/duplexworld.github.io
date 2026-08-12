@@ -105,10 +105,11 @@ mountFlight(document.getElementById('world'), {
     {
       id: 'pathfinding-pass', label: 'Pathfinding', stage: 'film', still: null,
       cam: { x: 0.346, y: 0.601, z: 1.75 }, scroll: 7.8, linger: 0.42,
-      accent: 'var(--mag)',
-      mark: { name: 'Pathfinding',
-              line: 'A voice copilot guiding a walker who cannot see the map, over an 8 by 8 '
-                  + 'grid of city blocks.' },
+      accent: 'var(--pillar-agentic)',
+      // Same treatment as the other five: the name and the globe carry it.
+      mark: { name: 'Pathfinding' },
+      plate: { name: 'Pathfinding', img: 'img/pathfinding.webp' },
+      block: 'band',
       bars: {
         label: 'Pass@1, Pathfinding',
         metric: 'Pass@1',
@@ -125,13 +126,13 @@ mountFlight(document.getElementById('world'), {
     },
     // ---------------------------------------------------------------- the six worlds
     world('banking', 'Banking',
-      'Financial-crime statute, with authority stepped up per operation risk tier.',
+      '',
       T3_BANKING,
       'Banking, realistic channel, n = 135 conversations per cell. The clause corpus is withheld '
       + 'from the system prompt, so knowing when to look something up is itself under test. The '
       + 'lowest reward of the six worlds.'),
     world('healthcare', 'Healthcare',
-      'Lawful disclosure, decided per record through a disclosure matrix rather than per caller.',
+      '',
       T3_HEALTHCARE,
       'Healthcare, realistic channel, n = 135 conversations per cell. A fully verified subscriber '
       + "may be refused her adult daughter's claim while a daughter named as an authorised "
@@ -139,8 +140,7 @@ mountFlight(document.getElementById('world'), {
       + 'entitled to nothing. The capability isolated is refusing without leaking in the act of '
       + 'refusing.'),
     world('travel', 'Travel',
-      'A limited remit between two parties, where the modal right answer is a correction or a '
-      + 'refusal with nowhere to escalate to.',
+      '',
       T3_TRAVEL,
       'Travel, realistic channel, n = 135 conversations per cell. Restraint is scored by negative '
       + 'assertion and write-counting rather than end state: the assertion asks whether a listing '
@@ -148,15 +148,14 @@ mountFlight(document.getElementById('world'), {
       + 'to a correct run. The highest single cell in the benchmark, and the world with the '
       + 'heaviest over-effort.'),
     world('insurance', 'Insurance',
-      'First notice of a loss the agent is structurally forbidden from adjudicating.',
+      '',
       T3_INSURANCE,
       'Insurance, realistic channel, n = 135 conversations per cell. Authority is fixed per '
       + 'policyholder and the refusal is institutional rather than statutory. Several such '
       + 'regimes are enforced in the tool surface itself, which makes the unsafe behaviour '
       + 'unrepresentable rather than merely discouraged.'),
     world('logistics', 'Logistics',
-      'Contract topology over physical goods: who may redirect a shipment the agent can move in '
-      + 'the record but cannot see.',
+      '',
       T3_LOGISTICS,
       'Logistics, realistic channel, n = 135 conversations per cell. It has the least to refuse '
       + 'of the five enterprise worlds, and the smallest gap between reaching the right state '

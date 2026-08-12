@@ -3087,6 +3087,9 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
    width layout put the table beside a film, which cut it at DNSMOS and left three
    columns no reader could reach. */
 .fw-plate {
+  /* Set by the flight: 0 until this panel is most of the way in, so two world names are
+     never legible at the same time. See the note beside --namevis in flight.js. */
+  opacity: var(--namevis, 1);
   display: flex; align-items: center; gap: 16px;
   padding-bottom: 12px; margin-bottom: 16px;
   border-bottom: 1px solid var(--grid);

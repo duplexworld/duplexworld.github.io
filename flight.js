@@ -3222,6 +3222,16 @@ function mountFlight(root, config) {
       }
       const p = panels[i];
       p.style.opacity = vis.toFixed(3);
+      /* The world's NAME fades faster than the panel it sits in.
+         ---------------------------------------------------------------------------
+         Adjacent world stops draw their name in the same place, so during a handover
+         both were legible at once and read as one name printed over another - measured
+         at two scroll positions, Travel over Insurance and Insurance over Logistics,
+         within 22px of each other. A body of numbers can dissolve into the next; a
+         single large word cannot, because the eye reads both. The name only appears
+         once its own panel is most of the way in. */
+      p.style.setProperty('--namevis',
+        Math.max(0, Math.min(1, (vis - 0.72) / 0.28)).toFixed(3));
       // Published so anything inside the panel that wants to arrive WITH the scroll can,
       // instead of firing a wall-clock transition on arrival. Eased past the halfway point
       // so a chart is at full length by the time the panel is fully lit rather than still
@@ -3373,6 +3383,10 @@ function mountFlight(root, config) {
       // splits, because six live maps need room a paragraph does not.
       // An explicit `block` wins: the closing stop has no content to classify by, and it is
       // the one stop whose layout is different from every other.
+      // A band that is a WORLD keeps the film, as a banner above its results. Marked
+      // separately from the block so the other bands - the matrix, the violins, the small
+      // multiples - stay clean.
+      root.dataset.plate = S[liveStop].plate ? '1' : '';
       root.dataset.block = S[liveStop].block ? S[liveStop].block
         : S[liveStop].summary ? 'summary'
         : S[liveStop].runs ? 'runs'
