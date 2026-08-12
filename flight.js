@@ -211,8 +211,20 @@ function mountFlight(root, config) {
     const small = VID && VID.srcSmall;
     if (!small) return VID ? VID.src : null;
     const c = navigator.connection || {};
+    /* The test used to be saveData, 2G, or a narrow viewport, which means every ordinary
+       desktop took the 38.9 MB encode however slow its line was. The film is fetched WHOLE
+       before the flight can begin, so that download is dead time on a page that looks
+       static until it lands: measured against the deployed site, 3.1s at 100 Mbps, 12.5s
+       at 25, and 31s at 10. The small encode is the same 104 seconds at 960x540 and 7.4 MB,
+       so on anything short of a fast line it is the better picture - the one that is
+       actually moving.
+       `downlink` is Chrome's own estimate in Mbps and `effectiveType` its bucket; both are
+       absent in Safari and Firefox, where this falls through to the old behaviour. */
+    const slowType = /(^|-)(2g|3g)$/.test(String(c.effectiveType || ''));
+    const slowLink = typeof c.downlink === 'number' && c.downlink > 0 && c.downlink < 12;
     const thin = c.saveData === true
-      || /(^|-)2g$/.test(String(c.effectiveType || ''))
+      || slowType
+      || slowLink
       || window.matchMedia('(max-width: 900px)').matches;
     return thin ? small : VID.src;
   }
