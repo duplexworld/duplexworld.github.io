@@ -891,32 +891,3 @@
 .fw-run:has(.wm-voice) { min-height: 620px; }
 
 
-/* THE FILM ON A WORLD'S RESULTS
-   ---------------------------------------------------------------------------------
-   A band stands the stage down, which is right for the matrix and the violins but wrong
-   for a world: the dive into that world is the graphic the page is built around. It
-   comes back as a banner - full width, short, cropped to a strip - above the header,
-   so it keeps its presence without taking the width the eleven columns need. */
-.fw-shell-split[data-block="band"][data-plate="1"] .fw-video {
-  opacity: 1 !important;
-  pointer-events: none;
-  left: 50%;
-  top: 84px;
-  width: min(1200px, calc(100vw - 48px)) !important;
-  height: clamp(150px, 22vh, 230px);
-  object-fit: cover;
-  object-position: center 42%;
-  border-radius: 14px;
-  /* The feather the film carries everywhere else would cut a strip in half, so on a
-     banner it is a short fade at the two vertical edges only. */
-  --ramp-t: 10px; --ramp-b: 14px; --ramp-x: 0px;
-}
-.fw-shell-split[data-block="band"][data-plate="1"] .fw-copy {
-  padding-top: calc(84px + clamp(150px, 22vh, 230px) + 24px);
-}
-@media (max-width: 700px) {
-  .fw-shell-split[data-block="band"][data-plate="1"] .fw-video {
-    top: 76px; height: 130px; width: calc(100vw - 28px) !important;
-  }
-  .fw-shell-split[data-block="band"][data-plate="1"] .fw-copy { padding-top: 224px; }
-}
