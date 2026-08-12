@@ -40,6 +40,21 @@ function mountFlight(root, config) {
   let reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const S = config.sections || [];
   const N = S.length;
+  /* `cam` is as load-bearing as `video.stops` and was the one unvalidated thing on the hot
+     path. The endpoints of cameraAt spread it, and spreading undefined is legal, so a
+     section missing its camera MOUNTS CLEANLY and then throws the first time the reader
+     scrolls between two centres - inside a requestAnimationFrame callback, which never
+     reschedules, so the flight freezes for the rest of the visit with one console line.
+     Filling it in is better than failing: the page reads, and the warning says why. */
+  const CAM0 = { x: 0.5, y: 0.5, z: 1.0 };
+  S.forEach((s, i) => {
+    const c = s.cam;
+    if (c && Number.isFinite(c.x) && Number.isFinite(c.y) && Number.isFinite(c.z)) return;
+    console.warn('flight: section ' + i + ' (' + (s.id || s.label || '?')
+      + ') has no usable cam; using the centre of the frame');
+    s.cam = { ...CAM0, ...(c || {}) };
+    ['x', 'y', 'z'].forEach((k) => { if (!Number.isFinite(s.cam[k])) s.cam[k] = CAM0[k]; });
+  });
   const HERO = config.hero;
   const ASPECT = HERO.w / HERO.h;
 
@@ -110,6 +125,15 @@ function mountFlight(root, config) {
     heroImg.hidden = false;
     setHeroSrc();
     heroImg.addEventListener('load', layout);
+    // ...and put it in the document. The only other insertion site runs at mount time and
+    // is gated on heroWanted, which is false whenever there is a valid film - so when the
+    // film died this function un-hid and sourced an element that was never in the tree.
+    // The left half of the page stayed empty for the whole flight, and the paint loop went
+    // on writing styles to a detached node and reading a zero rect back off it.
+    if (stage && !heroImg.parentNode) {
+      const before = stage.querySelector('.fw-veil');
+      stage.insertBefore(heroImg, before || null);
+    }
   }
 
   // The rendered chain, when there is one. Scroll drives currentTime rather than a
@@ -168,8 +192,37 @@ function mountFlight(root, config) {
   if (heroWanted) { setHeroSrc(); } else { heroImg.hidden = true; }
   let videoOK = false;
   let blobURL = null;
-  const videoEl = VID ? document.createElement('video') : null;
+  /* WHICH film, and whether to fetch one at all.
+     -----------------------------------------------------------------------------------
+     The film is 38.9 MB and it was fetched whole on every page, which is 95-97% of every
+     page load. Two things were wrong with that beyond the size:
+
+       - a reader with prefers-reduced-motion paid all 38.9 MB for a video the page then
+         deliberately never plays. That is the worst byte-per-pixel ratio on the site and
+         it is charged to the reader least able to use it;
+       - a phone on a slow connection paid the same as a desktop, for a stage that is at
+         most 390 px wide there. Measured at 3 min 24 s on a 1.6 Mbps link.
+
+     So: no film at all under reduced motion (the computed camera and the hero still are
+     what that reader was going to see anyway), and the 7.4 MB 960x540 encode - same 104
+     seconds, same shots - on a narrow viewport or a connection that says it is metered.
+     A wide desktop, which is where this film is actually looked at, is unchanged. */
+  function filmSrc() {
+    const small = VID && VID.srcSmall;
+    if (!small) return VID ? VID.src : null;
+    const c = navigator.connection || {};
+    const thin = c.saveData === true
+      || /(^|-)2g$/.test(String(c.effectiveType || ''))
+      || window.matchMedia('(max-width: 900px)').matches;
+    return thin ? small : VID.src;
+  }
+  const videoEl = (VID && !reduce) ? document.createElement('video') : null;
+  if (VID && reduce) {
+    console.info('flight: reduced motion, so the film is not fetched');
+    loadHero();
+  }
   if (videoEl) {
+    const VSRC = filmSrc();
     videoEl.className = 'fw-video';
     // Fetched whole and handed over as a Blob rather than pointed at the URL.
     //
@@ -183,10 +236,10 @@ function mountFlight(root, config) {
     //
     // The wait costs nothing visible: the computed camera flies the page until `loadeddata`
     // lands, which is the arrangement the page already had.
-    fetch(VID.src)
+    fetch(VSRC)
       .then((r) => (r.ok ? r.blob() : Promise.reject(new Error('HTTP ' + r.status))))
       .then((b) => { blobURL = URL.createObjectURL(b); videoEl.src = blobURL; })
-      .catch(() => { videoEl.src = VID.src; });   // streamed is worse than absent, but not by much
+      .catch(() => { videoEl.src = VSRC; });   // streamed is worse than absent, but not by much
     videoEl.muted = true;
     videoEl.defaultMuted = true;
     videoEl.playsInline = true;
@@ -341,6 +394,43 @@ function mountFlight(root, config) {
   // manages it exists.
   const mapStops = [];
   const runStops = [];
+  /* Declared up here beside runStops, not beside the tape renderer further down: the panel
+     build runs long before that point, so a `const` at the renderer would be in its
+     temporal dead zone the first time a section with tapes is built. */
+  const MARK_INK = {
+    'turn_take/smooth': 'var(--mk-smooth)',
+    'turn_take/contested': 'var(--mk-contested)',
+    'turn_take/failed': 'var(--mk-failed)',
+    interruption: 'var(--mk-interrupt)',
+    backchannel: 'var(--mk-back)',
+    self_correction: 'var(--mk-self)',
+  };
+  // What each marker is called in words. The page is read by people who have not read the
+  // appendix, and "turn_take/contested" is not a phrase anyone says out loud.
+  const MARK_SAY = {
+    'turn_take/smooth': 'clean handover',
+    'turn_take/contested': 'both spoke at once',
+    'turn_take/failed': 'handover failed',
+    interruption: 'cut in',
+    backchannel: 'mm-hm',
+    self_correction: 'corrected itself',
+  };
+  const FX_SAY = {
+    frame_drop: 'dropped frames',
+    burst_noise: 'burst of noise',
+    background_noise: 'background noise',
+    out_of_turn_speech: 'a second voice',
+    muffling: 'muffled',
+    telephony: 'telephony band',
+  };
+  // Drawn on the tape, in the order a reader should notice them. Smooth handovers are
+  // deliberately excluded: on a well-behaved call they are most of the marks and they
+  // bury the three that matter.
+  const MARK_SHOWN = ['turn_take/contested', 'turn_take/failed', 'interruption',
+                      'self_correction'];
+  const tapeStops = [];
+  const tapeData = {};
+  let tapesFetch = null;
 
   const copyWrap = el('div', 'fw-copy');
   // Scrolling swaps the live panel with no other signal, so announce it - but announce the
@@ -351,7 +441,15 @@ function mountFlight(root, config) {
   const status = el('div', 'fw-sr');
   status.setAttribute('role', 'status');
   status.setAttribute('aria-live', 'polite');
-  const panels = S.map((s, i) => {
+  /* One bad section must not take the page with it.
+     -----------------------------------------------------------------------------------
+     The build empties `root` up front and only appends the finished stage at the very
+     end, so ANY throw in here - a `pillars` without `rows`, a `matrix` without `types`,
+     a `ring` without `slices` - left <main> with zero children and a blank white screen.
+     There was no console-visible cause beyond the stack, and the page looked like a
+     server error rather than a config typo. Now the broken section degrades to a panel
+     that names itself and says what failed, and the other twelve still read. */
+  function buildPanel(s, i) {
     const p = el('article', 'fw-panel' + (s.layout === 'hero' ? ' fw-panel-hero' : ''));
     if (s.id) p.id = s.id;
     p.style.setProperty('--accent', s.accent || 'var(--pillar-agentic)');
@@ -379,6 +477,32 @@ function mountFlight(root, config) {
       const ml = el('p', 'fw-body fw-phone-only');
       ml.textContent = s.mark.line;
       p.appendChild(ml);
+    }
+
+    /* THE ONWARD LINK. The pages are a sequence - experience, setup, samples, metrics,
+       results, overview - and a reader who reaches the bottom of one should not have to go
+       back up to the bar to find where the argument continues. One link, named, at the end
+       of the page it follows from. Rendered as an anchor rather than a button so it is a
+       real navigation the browser can open in a new tab and a screen reader announces as a
+       link. */
+    if (s.next && s.next.href) {
+      const nx = el('a', 'fw-next');
+      nx.href = s.next.href;
+      const nk = el('span', 'fw-next-k');
+      nk.textContent = s.next.kicker || 'Next';
+      const nl = el('span', 'fw-next-l');
+      nl.textContent = s.next.label || '';
+      const na = el('span', 'fw-next-a');
+      na.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13m-6-7 7 7'
+        + '-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"'
+        + ' stroke-linejoin="round"/></svg>';
+      nx.append(nk, nl, na);
+      if (s.next.note) {
+        const nn = el('span', 'fw-next-n');
+        nn.textContent = s.next.note;
+        nx.appendChild(nn);
+      }
+      p.appendChild(nx);
     }
 
     /* The opening summary: the abstract, and the three figures it is claiming.
@@ -630,6 +754,112 @@ function mountFlight(root, config) {
 
        Every number here is derived from the runs beside it, in the page, so the arithmetic
        cannot drift from the illustration. */
+    /* THE HARNESS. Who is actually talking to whom.
+       Nobody picks up the phone: the caller is three models working together and the agent
+       is a commercial speech-to-speech system, both on one 200 millisecond clock. A reader
+       who does not know that reads every number on the later pages as a person talking to a
+       bot, which is not what was run. The animated version of this diagram is a page of its
+       own; this is the same fact, stated where the reader first needs it. */
+    if (s.harness) {
+      const HN = s.harness;
+      const fig = el('figure', 'fw-hn');
+      const cols = el('div', 'fw-hn-cols');
+
+      const side = (head, sub, items, cls) => {
+        const c = el('div', 'fw-hn-side ' + cls);
+        const h = el('div', 'fw-hn-head');
+        const hs = el('span', 'fw-hn-head-k');
+        hs.textContent = head;
+        const ht = el('span', 'fw-hn-head-t');
+        ht.textContent = sub;
+        h.append(hs, ht);
+        c.appendChild(h);
+        items.forEach((it) => {
+          const b = el('div', 'fw-hn-box');
+          const nm = el('div', 'fw-hn-role');
+          nm.textContent = it.role;
+          const md = el('div', 'fw-hn-model');
+          md.textContent = it.model;
+          b.append(nm, md);
+          if (it.says) {
+            const sy = el('p', 'fw-hn-says');
+            sy.textContent = it.says;
+            b.appendChild(sy);
+          }
+          c.appendChild(b);
+        });
+        return c;
+      };
+
+      cols.appendChild(side('The caller', HN.callerNote || 'simulated', HN.caller || [],
+        'is-caller'));
+
+      // The middle column is the point of the figure: both sides hold the channel at the
+      // same time, and the tick is the clock they share.
+      const mid = el('div', 'fw-hn-mid');
+      const lane = (who, cls) => {
+        const l = el('div', 'fw-hn-lane ' + cls);
+        const n = el('span', 'fw-hn-lane-n');
+        n.textContent = who;
+        const t = el('span', 'fw-hn-lane-t');
+        l.append(n, t);
+        return l;
+      };
+      const midHead = el('div', 'fw-hn-mid-h');
+      midHead.textContent = HN.midHead || 'both at once';
+      mid.append(midHead, lane('caller', 'is-c'), lane('agent', 'is-a'));
+      const tick = el('div', 'fw-hn-tick');
+      tick.textContent = HN.tick || '200 ms ticks';
+      mid.appendChild(tick);
+      if (HN.midNote) {
+        const mn = el('p', 'fw-hn-mid-n');
+        mn.textContent = HN.midNote;
+        mid.appendChild(mn);
+      }
+      cols.appendChild(mid);
+
+      const ag = el('div', 'fw-hn-side is-agent');
+      const ah = el('div', 'fw-hn-head');
+      const ahk = el('span', 'fw-hn-head-k');
+      ahk.textContent = 'The agent';
+      const aht = el('span', 'fw-hn-head-t');
+      aht.textContent = HN.agentNote || 'under test';
+      ah.append(ahk, aht);
+      ag.appendChild(ah);
+      const abox = el('div', 'fw-hn-box is-tall');
+      const ar = el('div', 'fw-hn-role');
+      ar.textContent = HN.agentRole || 'Hears audio, answers in audio';
+      abox.appendChild(ar);
+      if (HN.agentSays) {
+        const as = el('p', 'fw-hn-says');
+        as.textContent = HN.agentSays;
+        abox.appendChild(as);
+      }
+      (HN.systems || []).forEach((nm, k) => {
+        const row = el('div', 'fw-hn-sys' + (k === 0 ? ' is-lead' : ''));
+        row.textContent = nm;
+        abox.appendChild(row);
+      });
+      ag.appendChild(abox);
+      cols.appendChild(ag);
+      fig.appendChild(cols);
+
+      fig.setAttribute('role', 'img');
+      fig.setAttribute('aria-label', 'The harness. The caller is simulated: '
+        + (HN.caller || []).map((c) => c.role + ' with ' + c.model).join(', ')
+        + '. The agent under test is one of ' + (HN.systems || []).length
+        + ' commercial speech-to-speech systems: ' + (HN.systems || []).join(', ')
+        + '. Both hold the channel at once, on a ' + (HN.tick || '200 ms') + ' clock.');
+
+      if (HN.more && HN.more.href) {
+        const a = el('a', 'fw-hn-more');
+        a.href = HN.more.href;
+        a.textContent = HN.more.label || 'See it run';
+        fig.appendChild(a);
+      }
+      p.appendChild(fig);
+    }
+
     if (s.worked) {
       const W = s.worked;
       const fig = el('figure', 'fw-work');
@@ -664,7 +894,13 @@ function mountFlight(root, config) {
         const val = el('span', 'fw-work-v');
         val.textContent = r.blocks ? (r.blocks + ' blocks  ' + Math.round(100 * opt / r.blocks) + '%')
                                    : 'no arrival';
-        row.append(nm, track, val);
+        /* The verdict in a word, not only in a colour. Three of these runs differ from
+           each other ONLY by where the bar ends relative to a dashed line, which is a lot
+           to ask a reader to decode - and asks a red-green colour-blind reader to decode
+           it from two hues that look the same to them. */
+        const chip = el('span', 'fw-work-c');
+        chip.textContent = r.blocks ? (r.blocks <= opt / lim ? 'Pass' : 'Fail') : 'No arrival';
+        row.append(nm, track, chip, val);
         rows.appendChild(row);
       });
       fig.appendChild(rows);
@@ -787,7 +1023,12 @@ function mountFlight(root, config) {
       }
       fig.setAttribute('role', 'img');
       fig.setAttribute('aria-label', (s.lede || '')
-        + ' Pass@1 for five systems across each conversation type, on one shared scale.');
+        + ' Pass@1 for five systems across each conversation type, on one shared scale. '
+        + (M.groups || []).flatMap((g) => (g.rows || []).map((row) =>
+            row.name + ': '
+            + (row.v || []).map((v, k) => M.systems[k] + ' ' + v.toFixed(3)).join(', ')
+          )).join('. ')
+        + '. ' + (M.note || ''));
       addZoom(fig, 'Pass@1 by conversation type');
       p.appendChild(fig);
     }
@@ -1013,7 +1254,12 @@ function mountFlight(root, config) {
         });
         cap.textContent = V.find || '';
         host.setAttribute('role', 'img');
-        host.setAttribute('aria-label', (s.eyebrow || '') + '. ' + (V.find || ''));
+        host.setAttribute('aria-label', (s.eyebrow || '') + '. ' + (V.find || '') + ' '
+          + (d.worlds || []).map((w) => w.world + ': median '
+              + (w.median != null ? Number(w.median).toFixed(1) : '?') + ' minutes over '
+              + w.n + ' conversations'
+              + (w.atCap ? ', ' + w.atCap + ' of them at the cap' : '')
+              + (w.censored ? ', ' + w.censored + ' right-censored' : '')).join('. ') + '.');
         addZoom(host, s.eyebrow || 'Conversation duration');
       }).catch(() => { cap.textContent = 'The duration data did not load.'; });
     }
@@ -1064,14 +1310,15 @@ function mountFlight(root, config) {
             + (k === M.split ? ' is-cut' : ''));
           if (v) {
             c.textContent = String(v);
-            // Five systems, three runs each, and Pathfinding is run in two channels.
-            // The old text said "3 scenarios x 5 runs = 15", which summed to a 720
-            // conversation corpus against the 3,825 this page reports.
+            // Five systems, five runs each, and Pathfinding is run in two channels.
+            // This arithmetic has been wrong twice: "3 scenarios x 5 runs = 15" summed to
+            // 720, and a later "3 runs" summed to 2,295. Both were checked against the
+            // 3,825 this page reports elsewhere, which is the only test that catches it.
             const chans = M.channels && M.channels[r.world] ? M.channels[r.world] : 1;
-            const convs = v * (M.systems || 5) * (M.runs || 3) * chans;
+            const convs = v * (M.systems || 5) * (M.runs || 5) * chans;
             c.title = r.world + ' \u00b7 ' + M.types[k] + ': ' + v + ' scenarios, '
               + convs + ' conversations (' + v + ' \u00d7 ' + (M.systems || 5)
-              + ' systems \u00d7 ' + (M.runs || 3) + ' runs'
+              + ' systems \u00d7 ' + (M.runs || 5) + ' runs'
               + (chans > 1 ? ' \u00d7 ' + chans + ' channels' : '') + ')';
           } else {
             c.setAttribute('aria-hidden', 'true');
@@ -1103,6 +1350,19 @@ function mountFlight(root, config) {
       const tt = el('div', 'fw-mx-total');
       tt.textContent = String(colTot.reduce((a, b) => a + b, 0));
       foot.appendChild(tt);
+      /* The matrix implies a corpus size, and that number is printed elsewhere on the site
+         from a different source. If the two ever disagree the page is quietly lying in one
+         of two places, so say so in the console rather than let a reader find it. */
+      if (M.corpus) {
+        const implied = M.rows.reduce((sum, r) => {
+          const ch = M.channels && M.channels[r.world] ? M.channels[r.world] : 1;
+          return sum + r.cells.reduce((a, v) => a + v, 0) * ch;
+        }, 0) * (M.systems || 5) * (M.runs || 5);
+        if (implied !== M.corpus) {
+          console.warn('composition matrix implies ' + implied
+            + ' conversations, the page reports ' + M.corpus);
+        }
+      }
       grid.appendChild(foot);
       fig.appendChild(grid);
 
@@ -1114,9 +1374,17 @@ function mountFlight(root, config) {
         fn.textContent = M.foot;
         fig.appendChild(fn);
       }
-      // A screen reader gets the finding, not the word "table".
+      /* role="img" makes every descendant presentational, so whatever the figure prints
+         is deleted from the accessibility tree and the label is ALL a screen reader gets.
+         A label that only restates the caption therefore deletes the data: 85 numbers here,
+         253 in the small multiples. So the label carries the grid, row by row. */
       fig.setAttribute('role', 'img');
-      fig.setAttribute('aria-label', (s.eyebrow || '') + '. ' + (M.find || ''));
+      fig.setAttribute('aria-label', (s.eyebrow || '') + '. ' + (M.find || '') + ' '
+        + M.rows.map((r) => r.world + ': '
+            + r.cells.map((v, k) => (v ? M.types[k] + ' ' + v : null))
+                     .filter(Boolean).join(', ')
+            + '; ' + r.cells.reduce((a, b) => a + b, 0) + ' in total').join('. ')
+        + '. ' + (M.foot || ''));
       addZoom(fig, s.eyebrow || 'Composition');
       p.appendChild(fig);
     }
@@ -1156,7 +1424,12 @@ function mountFlight(root, config) {
            as a slider to assistive technology. */
         // A Pathfinding tile carries a voice payload rather than a bare audio file: its
         // playback is owned by the walk renderer, which drives the map from the recording.
-        if (r.audio || (r.map && r.voice)) {
+        /* A walk tile carries NO player. Pressing play on it used to switch the tile into
+           the renderer's voice mode, which swaps the map for the transcript - so starting
+           the audio covered the very thing the tile is there to show, in a 300px box. The
+           recording, the speech activity timeline and the transcript all moved to the open
+           view, where there is room for them beside the map. */
+        if (r.audio && !(r.map && r.voice)) {
           const pl = el('div', 'fw-pl');
           pl.style.setProperty('--sys', sysColor(r.model || ''));
           pl.style.setProperty('--on-sys', sysInk(r.model || ''));
@@ -1229,8 +1502,15 @@ function mountFlight(root, config) {
                   btn.innerHTML = a.paused ? PLAY_SVG : PAUSE_SVG;
                   pl.classList.toggle('is-on', !a.paused);
                 };
-                a.addEventListener('play', sync);
-                a.addEventListener('pause', sync);
+                // Bound once per <audio>, not once per press. `start()` runs on every
+                // click, including the already-loaded fast path, so an unguarded pair here
+                // grew without bound: after four presses each play/pause event ran four
+                // copies of sync, every one of them writing innerHTML on the button.
+                if (!a.__plBound) {
+                  a.__plBound = true;
+                  a.addEventListener('play', sync);
+                  a.addEventListener('pause', sync);
+                }
                 setTimeout(sync, 120);
               };
               if (vloaded) { start(); return; }
@@ -1283,38 +1563,143 @@ function mountFlight(root, config) {
           fig.appendChild(pl);
           }
         }
-        if (r.map && !r.voice) {
-          // A tile WITH a recording is a player, not a link: its whole surface being a
-          // button meant every press of play also threw the full-size overlay over the
-          // timeline the press had just opened. Tiles without a recording keep the
-          // open-on-click behaviour, which is the only way into the full walk from here.
+        if (r.map) {
+          /* EVERY walk tile opens. This used to be gated on the tile having no recording,
+             because a tile with one carried a player and clicking the tile would have
+             thrown the overlay over the timeline that press had just opened. The player is
+             gone - a 300px box is no place to play a call, and voice mode replaced the map
+             with the transcript, so starting the audio covered the route the tile exists to
+             show. So the tile is a link again, and the recording plays in the open view
+             where the map, the timeline and the transcript all fit at once. */
           fig.dataset.key = r.map;
           fig.tabIndex = 0;
           fig.setAttribute('role', 'button');
           fig.setAttribute('aria-label', (r.type || '') + ', ' + (r.world || '')
-            + '. Opens full size, with a step control.');
-          // The tile opens the full-size walk, but it also CONTAINS the player, and a
-          // click on play must not do both. Gated on where the click came from rather
-          // than on stopping propagation, which depends on listener order.
+            + '. Opens the walk full size'
+            + (r.voice ? ', with its recording, speech activity timeline and transcript.'
+                       : ', with a step control.'));
           const open = (e) => {
             if (e && e.target && e.target.closest && e.target.closest('.fw-pl')) return;
-            openWalk({ key: r.map, cond: r.type, note: r.world });
+            openWalk({ key: r.map, cond: r.type, note: r.world,
+                       voice: r.voice, model: r.model });
           };
           fig.addEventListener('click', open);
           fig.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
           });
-        } else if (r.map) {
-          fig.dataset.key = r.map;
         } else {
           fig.dataset.call = r.call;
           fig.dataset.from = String(r.from);
           fig.dataset.to = String(r.to);
+          /* An enterprise tile opens the same full view a walk tile does. The tile shows a
+             five-turn excerpt and a strip of the activity around it; the whole call, the
+             full two-lane timeline and the complete transcript need room the tile does not
+             have. Guarded on where the click came from rather than on stopping
+             propagation, so pressing play inside the tile still just plays. */
+          fig.tabIndex = 0;
+          fig.setAttribute('role', 'button');
+          fig.setAttribute('aria-label', (r.type || '') + ', ' + (r.world || '') + ', '
+            + (r.model || '') + '. Opens the whole call, with its speech activity timeline '
+            + 'and full transcript.');
+          const openCallTile = (e) => {
+            if (e && e.target && e.target.closest && e.target.closest('.fw-pl')) return;
+            const D = asTape(callData[r.call]);
+            if (!D) return;
+            openCall(D, { type: r.type, verdict: r.outcome, model: r.model, line: r.world },
+                     fig);
+          };
+          fig.addEventListener('click', openCallTile);
+          fig.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCallTile(e); }
+          });
         }
         grid.appendChild(fig);
       });
       p.appendChild(grid);
       runStops.push({ i, cfg: s.runs, grid });
+    }
+
+    /* The nine pairs. Each entry names a call payload; the tile is a header, an empty box
+       and nothing else until the section is approached, because eighteen timelines built
+       at mount would be eighteen transcripts in the DOM behind a hidden panel. */
+    if (s.tapes && s.tapes.length) {
+      const grid = el('div', 'fw-tapes');
+      s.tapes.forEach((t) => {
+        const D0 = t;
+        const fig = el('figure', 'fw-tp is-' + (D0.verdict || 'ok'));
+        fig.dataset.key = D0.key;
+        const cap = el('figcaption', 'fw-tp-cap');
+        const ty = el('span', 'fw-tp-type');
+        ty.textContent = D0.type || '';
+        const vd = el('span', 'fw-tp-verdict');
+        vd.textContent = D0.verdict === 'bad' ? 'Fail' : 'Pass';
+        const who = el('span', 'fw-tp-model');
+        who.style.setProperty('--sys-t', sysTextColor(D0.model || ''));
+        who.innerHTML = vendorMark(D0.model || '');
+        const wn = el('span', '');
+        wn.textContent = D0.model || '';
+        who.appendChild(wn);
+        cap.append(ty, vd, who);
+        fig.appendChild(cap);
+        if (D0.line) {
+          const ln = el('p', 'fw-tp-line');
+          ln.textContent = D0.line;
+          fig.appendChild(ln);
+        }
+        const box = el('div', 'fw-tp-box');
+        box.textContent = 'loading';
+        fig.appendChild(box);
+        /* The whole tile is the control. A tile that carries a click affordance in one
+           corner is a target people miss; the tile IS the thing they want to open. */
+        fig.tabIndex = 0;
+        fig.setAttribute('role', 'button');
+        const open = () => {
+          const D = tapeData[D0.key];
+          if (!D) return;
+          openCall(D, D0, fig);
+        };
+        fig.addEventListener('click', open);
+        fig.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+        });
+        fig.setAttribute('aria-label', (D0.type || 'A call') + ', '
+          + (D0.verdict === 'bad' ? 'fail' : 'pass') + ', ' + (D0.model || '')
+          + '. Opens the call: its speech activity timeline, the recording, and the '
+          + 'full transcript.');
+        grid.appendChild(fig);
+      });
+      p.appendChild(grid);
+      /* One legend for the whole grid, not one per tile. Every mark on the tape also
+         carries a title, but a title is mouse-only, so this is the version that works for
+         everyone - and it is what makes the tape readable without the appendix. */
+      const lg = el('div', 'fw-tp-legend');
+      [['turn_take/contested', 'both spoke at once'],
+       ['turn_take/failed', 'handover failed'],
+       ['interruption', 'cut in'],
+       ['self_correction', 'corrected itself']].forEach(([k, say]) => {
+        const w = el('span', '');
+        const i = el('i', '');
+        i.style.setProperty('--mk', MARK_INK[k]);
+        const t = el('span', '');
+        t.textContent = say;
+        w.append(i, t);
+        lg.appendChild(w);
+      });
+      const tw = el('span', '');
+      const ti = el('i', 'is-tool');
+      const tt = el('span', '');
+      tt.textContent = 'tool call';
+      tw.append(ti, tt);
+      lg.appendChild(tw);
+      const fw = el('span', '');
+      const fi = el('i', '');
+      fi.style.setProperty('--mk', 'var(--tp-fx)');
+      const ft = el('span', '');
+      ft.textContent = 'what the harness did to the audio';
+      fw.append(fi, ft);
+      lg.appendChild(fw);
+      p.appendChild(lg);
+      tapeStops.push({ i, cfg: s.tapes, grid });
     }
 
     // Front matter. The paper's own abstract, under its own heading, exactly as a project
@@ -1487,17 +1872,21 @@ function mountFlight(root, config) {
       const tbl = el('table', 'fw-pillars' + (P.reveal ? ' is-staged' : ''));
       // A results table with no caption announces as an unnamed table. This says which
       // world it reports and how it is read, before the reader enters 55 cells.
-      const cap = el('caption', 'fw-p-cap');
-      cap.textContent = (s.mark && s.mark.name ? s.mark.name + ': ' : '')
+      // A table takes exactly one caption. The visible sentence and the screen-reader
+      // sentence therefore live in one element, the second half hidden, rather than as
+      // two caption nodes where the browser silently drops the later one.
+      const cap = el('caption', 'fw-p-cap' + (P.caption ? '' : ' fw-sr'));
+      if (P.caption) {
+        const vis = el('span', 'fw-p-cap-t');
+        vis.textContent = P.caption;
+        cap.appendChild(vis);
+      }
+      const sr = el('span', 'fw-sr');
+      sr.textContent = (s.mark && s.mark.name ? s.mark.name + ': ' : '')
         + 'five systems across eleven metrics in three pillars, '
         + 'each with its 95% interval. Higher is better throughout.';
-      cap.classList.add('fw-sr');
+      cap.appendChild(sr);
       tbl.appendChild(cap);
-      if (P.caption) {
-        const cp = el('caption', '');
-        cp.textContent = P.caption;
-        tbl.appendChild(cp);
-      }
       const thead = el('thead', '');
       const gr = el('tr', 'fw-p-groups');
       gr.appendChild(el('td', 'fw-p-corner'));
@@ -1612,8 +2001,15 @@ function mountFlight(root, config) {
           const from = col, to = col + g.cols.length;
           col = to;
           tbl.querySelectorAll('tr').forEach((tr) => {
+            // The group row spans its columns, so index arithmetic does not address it -
+            // it is handled by the th.fw-p-group pass below. It used to fall through this
+            // loop, get the wrong cells hidden, and be corrected a few lines later purely
+            // because that pass happened to run second.
+            if (tr.classList.contains('fw-p-groups')) return;
             const cells = [...tr.children];
-            const off = cells[0] && /fw-p-corner|fw-p-sys/.test(cells[0].className) ? 1 : 1;
+            // Every remaining row opens with one row-head cell: the metric-name row starts
+            // with the corner, the system rows with the system name.
+            const off = 1;
             for (let k = from; k < to; k++) {
               const cell = cells[k + off];
               if (cell) cell.hidden = !on;
@@ -1913,6 +2309,24 @@ function mountFlight(root, config) {
     }
     copyWrap.appendChild(p);
     return p;
+  }
+  const panels = S.map((s, i) => {
+    try {
+      return buildPanel(s, i);
+    } catch (e) {
+      console.error('flight: section ' + i + ' (' + (s.id || s.label || '?')
+        + ') failed to build:', e);
+      const p = el('article', 'fw-panel');
+      if (s.id) p.id = s.id;
+      p.style.setProperty('--accent', s.accent || 'var(--pillar-agentic)');
+      const h = el('h2', 'fw-title');
+      h.textContent = s.title || (s.mark && s.mark.name) || s.label || 'Section ' + (i + 1);
+      const b = el('p', 'fw-body');
+      b.textContent = 'This section did not render.';
+      p.append(h, b);
+      copyWrap.appendChild(p);
+      return p;
+    }
   });
   stage.append(copyWrap, status);
 
@@ -2034,6 +2448,111 @@ function mountFlight(root, config) {
   const hint = el('div', 'fw-hint');
   hint.textContent = config.hint || 'scroll to fly in';
   stage.appendChild(hint);
+
+  /* STEP CONTROLS.
+     ---------------------------------------------------------------------------
+     Two buttons that move the reader exactly one stop, forward or back.
+
+     A scroll flight has one property a normal page does not: there are RIGHT places to
+     stop. Every section's copy is fully lit only at its band centre, and a reader landing
+     anywhere else is reading through a dissolve. Wheel and trackpad cannot hit those
+     centres, and on a page that runs to 47 viewport heights a reader who wants the next
+     section has to hunt for it. So the target is the band centre itself, not a viewport of
+     travel: pressing down always lands somewhere the page is meant to be looked at.
+
+     Deliberately NOT a scroll hijack. Nothing here listens to wheel or touch; the buttons
+     issue an ordinary scrollTo and the flight paints from the scroll position exactly as it
+     does for a drag. Native scrolling stays native. */
+  const stepBar = el('div', 'fw-step');
+  const stepUp = el('button', 'fw-step-btn is-up');
+  const stepDown = el('button', 'fw-step-btn is-down');
+  const CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" '
+    + 'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" '
+    + 'stroke-linejoin="round"/></svg>';
+  [stepUp, stepDown].forEach((b) => { b.type = 'button'; b.innerHTML = CHEV; });
+  stepUp.setAttribute('aria-label', 'Previous section');
+  stepDown.setAttribute('aria-label', 'Next section');
+  const stepNow = el('span', 'fw-step-now');
+  stepNow.setAttribute('aria-hidden', 'true');
+  stepBar.append(stepUp, stepNow, stepDown);
+
+  /* Where the buttons can land. The opening is a block in normal flow rather than a stop,
+     so it is not in `centres` - but it is the first screen a reader sees, and pressing up
+     from the first stop has to return to it rather than to a scroll position that merely
+     looks like the top. Hence target 0 is the document top whenever there is an opening. */
+  function stepTargets() {
+    const t = S.map((s, i) => Math.max(0, centrePx(i) - vh() / 2));
+    return openEl ? [0].concat(t) : t;
+  }
+  /* Which stop the reader is ON, for the readout and the disabled states: the nearest
+     target, so drifting a little past a centre still reads as being in that section. */
+  const STEP_EPS = 24;                    // px of slack; smooth scrolling never lands exact
+  function stepIndex(targets) {
+    const y = window.scrollY || window.pageYOffset || 0;
+    let best = 0, bestD = Infinity;
+    targets.forEach((t, i) => {
+      const dd = Math.abs(t - y);
+      if (dd < bestD) { bestD = dd; best = i; }
+    });
+    return best;
+  }
+  /* Where a press GOES, which is a different question. Not "nearest plus one": on a page
+     with no opening block the reader starts at y = 0, which is thousands of pixels above
+     the first stop, and nearest-plus-one skipped that stop entirely - the first press of
+     down landed on the SECOND section. The honest rule is directional: go to the first
+     target strictly beyond where the reader is. */
+  /* Where the last press is heading, until the scroll gets there.
+     A smooth scroll takes a few hundred milliseconds, and during it window.scrollY is an
+     intermediate value. Asking it "what is the next stop" mid-flight answers with the one
+     already being travelled to, so a reader pressing down twice quickly moved one section
+     and then nudged a few pixels. Pressing ahead of the animation is the normal way people
+     use a control like this, so the pending target - not the live position - is what the
+     next press steps from. */
+  let stepPend = null;
+  let stepPendT = 0;
+  function stepFrom() {
+    const y = window.scrollY || window.pageYOffset || 0;
+    // The latch expires: if the scroll never arrives (the reader grabbed the page mid-way,
+    // or the target moved under a resize) the live position must take over again.
+    if (stepPend == null || Date.now() - stepPendT > 1200) return y;
+    if (Math.abs(y - stepPend) < 4) { stepPend = null; return y; }
+    return stepPend;
+  }
+  function stepNext(targets, dir) {
+    const y = stepFrom();
+    if (dir > 0) {
+      for (let i = 0; i < targets.length; i++) if (targets[i] > y + STEP_EPS) return i;
+      return -1;
+    }
+    for (let i = targets.length - 1; i >= 0; i--) if (targets[i] < y - STEP_EPS) return i;
+    return -1;
+  }
+  function stepGo(dir) {
+    const targets = stepTargets();
+    const to = stepNext(targets, dir);
+    if (to < 0) return;
+    stepPend = targets[to];
+    stepPendT = Date.now();
+    window.scrollTo({ top: targets[to], behavior: reduce ? 'instant' : 'smooth' });
+    // The live region already announces each section as it settles, so this does not
+    // duplicate it; what it does is move focus somewhere real, because a button that
+    // disables itself under the reader's finger otherwise drops focus to <body>.
+    if (to === targets.length - 1 && document.activeElement === stepDown) stepUp.focus();
+    if (to === 0 && document.activeElement === stepUp && !openEl) stepDown.focus();
+  }
+  stepUp.addEventListener('click', () => stepGo(-1));
+  stepDown.addEventListener('click', () => stepGo(1));
+  function stepSync() {
+    const targets = stepTargets();
+    const at = stepIndex(targets);
+    // Disabled when there is genuinely nowhere to go in that direction, asked of the same
+    // function that does the going - so a button is never live with nothing behind it.
+    const y = window.scrollY || window.pageYOffset || 0;
+    stepUp.disabled = !targets.some((t) => t < y - STEP_EPS);
+    stepDown.disabled = !targets.some((t) => t > y + STEP_EPS);
+    stepNow.textContent = (at + 1) + '/' + targets.length;
+  }
+  stage.appendChild(stepBar);
 
   /* THE OPENING.
      ---------------------------------------------------------------------------
@@ -2200,6 +2719,11 @@ function mountFlight(root, config) {
       }
       if (c.ring) {
         const R = c.ring;
+        // Keyed off the world's own name so the config stays a plain list of pairs and the
+        // colours live in the sheet with the rest of the palette.
+        let holderLabel = '';
+        const wcol = (nm) => 'var(--world-' + String(nm).toLowerCase().replace(/[^a-z]/g, '')
+          + ', var(--ink))';
         const total = R.slices.reduce((a, s) => a + s[1], 0);
         const wrap = el('div', 'fw-ring');
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -2217,7 +2741,8 @@ function mountFlight(root, config) {
           seg.setAttribute('stroke-dasharray', Math.max(0, len - 1.2) + ' ' + (circ - len + 1.2));
           seg.setAttribute('stroke-dashoffset', -circ * acc / total);
           seg.setAttribute('transform', 'rotate(-90 50 50)');
-          seg.setAttribute('class', 'fw-ring-seg' + (k === R.slices.length - 1 ? ' is-last' : ''));
+          seg.setAttribute('class', 'fw-ring-seg');
+          seg.style.setProperty('--wc', wcol(nm));
           const ti = document.createElementNS('http://www.w3.org/2000/svg', 'title');
           ti.textContent = nm + ': ' + v + ' conversations, '
             + (100 * v / total).toFixed(1) + '% of the corpus';
@@ -2242,15 +2767,27 @@ function mountFlight(root, config) {
         }
         R.slices.forEach(([nm, v]) => {
           const row = el('div', 'fw-ring-krow');
+          const sw = el('span', 'fw-ring-sw');
+          sw.style.setProperty('--wc', wcol(nm));
+          sw.setAttribute('aria-hidden', 'true');
           const n = el('span', 'fw-ring-kname');
           n.textContent = nm;
-          const q = el('b', '');
-          q.textContent = String(v);
-          row.append(n, q);
+          row.append(sw, n);
+          // The figure is off the face of the chart now, so it has to stay reachable.
+          row.title = nm + ': ' + v + ' conversations, '
+            + (100 * v / total).toFixed(1) + '% of the corpus';
           key.appendChild(row);
         });
+        /* Colour is now the only thing tying a legend row to its slice, so the numbers have
+           to survive somewhere a screen reader and a colour-blind reader can both reach.
+           This is that place. */
+        holderLabel = (R.keyHead || 'Conversations by world') + '. '
+          + R.slices.map(([nm, v]) => nm + ' ' + v).join(', ')
+          + '. ' + R.centre + ' ' + (R.centreSub || '') + '.';
         const holder = el('div', 'fw-ring-wrap');
         holder.append(wrap, key);
+        holder.setAttribute('role', 'img');
+        holder.setAttribute('aria-label', holderLabel);
         box.appendChild(holder);
       }
       if (c.figure) {
@@ -2594,6 +3131,25 @@ function mountFlight(root, config) {
         return;
       }
       walkInst = window.renderGeoDemo({ GEO: mapPayloads[cell.key], host: body });
+      /* And then, if there is a recording of this walk, the rest of the visualizer's view
+         of it: the two-lane speech activity timeline, the transcript rail and the call
+         transport, all on the recording's own clock. In the OPEN view the renderer lays
+         these out beside the map rather than in place of it, which is the whole reason the
+         audio moved here from the tile. Fetched on demand: the calls are megabytes and a
+         reader who only wanted to see the route never pays for one. */
+      if (!cell.voice) return;
+      fetch((MAPS.base || '../') + cell.voice)
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error('HTTP ' + res.status))))
+        .then((v) => {
+          if (walkOverlay !== ov || !walkInst) return;   // closed while it was in flight
+          walkInst.setVoice(v);
+          // Opened, not started. The reader asked to SEE the walk; the recording is
+          // offered by the transport under it, not forced on them.
+          walkInst.setVoiceMode(true, { autoplay: false });
+        })
+        .catch((e) => {
+          console.warn('flight: voice for "' + cell.key + '" did not load:', e.message);
+        });
     });
   }
 
@@ -2632,8 +3188,19 @@ function mountFlight(root, config) {
     while (callTimers.length) clearTimeout(callTimers.pop());
   }
 
+  /* Which run stop is currently built. Rebuilding one that is already up is not a no-op:
+     it wipes the transcript under a recording that is still playing, restarts the looping
+     excerpt over the live audio, and - because `__laid` lives on the figure and survives
+     the wipe - convinces the new sync closure that the now-empty list is already laid out,
+     so the playhead highlight never comes back. The walk tiles have always been guarded
+     this way; the call tiles were not, and a single scroll gesture on samples.html (which
+     has only two sections, so every stop is "near") was enough to trigger it. */
+  let runsLive = -1;
+
   function mountRuns(stop) {
+    if (runsLive === stop) return;
     stopCalls();
+    runsLive = stop;
     runStops.forEach((rs) => {
       if (rs.i !== stop) return;
       // The two Pathfinding tiles are the same live renderer the walks stop uses.
@@ -2763,9 +3330,14 @@ function mountFlight(root, config) {
   }
 
   function unmountRuns(except) {
+    if (runsLive !== except) runsLive = -1;
     runStops.forEach((rs) => {
       if (rs.i === except) return;
       rs.grid.querySelectorAll('.fw-run').forEach((fig) => {
+        // `__laid` is the "playhead mode is built" latch. It lives on the figure, which
+        // survives this teardown, so leaving it set makes the next build believe an empty
+        // list is already populated.
+        fig.__laid = false;
         const k = fig.dataset.key;
         if (k && mapLive[k]) {
           const inst = mapLive[k];
@@ -2797,6 +3369,461 @@ function mountFlight(root, config) {
     const near = runStops.find((rs) => Math.abs(rs.i - stop) <= 1);
     unmountRuns(near ? near.i : -1);
     if (near) mountRuns(near.i);
+    // The tiles change the panel's height, and the band travel is derived from it.
+    measureSpill();
+  }
+
+  /* ---------------------------------------------------------------- call tapes
+     A recorded enterprise call, drawn the way the live visualizer draws one.
+     ---------------------------------------------------------------------------------
+     The tile that used to be here showed a two-lane strip and a looping excerpt of the
+     transcript. That is the smallest possible view of a full-duplex call, and it left out
+     everything the benchmark is actually about: where the two speakers collided, which
+     handovers were contested and which failed, where the agent corrected itself, when it
+     reached for a tool, and what the harness was doing to the audio at the time.
+
+     This is a port of TimelinePlayer from src/tau2/visualizer/static/js/player.js, cut down
+     to what a reader needs and fed by a static payload in the same shape the visualizer's
+     own /bundle endpoint returns (make_calls.py writes it). Three surfaces on one clock:
+
+        the tape        two speech lanes, the marker rail above, the effects band below
+        the transcript  every turn, the spoken one lit, click a line to seek
+        the readout     what the grader returned, in the grader's terms
+
+     The TIMELINE is the whole run. The AUDIO is a window of it - these calls are six to
+     twenty minutes and eighteen of them in two codecs is about 100 MB - so the window is
+     drawn on the tape as a bracket and the transport is clamped to it. Nothing pretends
+     the excerpt is the call. */
+
+
+  function tapesReady() {
+    if (tapesFetch) return tapesFetch;
+    const keys = [];
+    tapeStops.forEach((ts) => ts.cfg.forEach((t) => keys.push(t.key)));
+    const base = (CALLS && CALLS.base) || '../';
+    tapesFetch = Promise.all(keys.map((k) =>
+      fetch(base + 'call_' + k + '.json')
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+        .then((j) => { tapeData[k] = j; })
+        .catch((e) => { console.warn('flight: call "' + k + '" did not load:', e.message); })));
+    return tapesFetch;
+  }
+
+  function fmtClock(s) {
+    if (!isFinite(s) || s < 0) s = 0;
+    return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  }
+
+  /* One tile. Returns nothing; everything hangs off the figure it is given. */
+  function buildTape(fig, D, full) {
+    // `fig` is the BOX inside the figure, or the body of the open dialog when `full`. The playing state has to land on the figure
+    // itself, because that is what the sheet keys the playhead off - written on the box it
+    // was a class nothing could ever match, and the playhead stayed invisible while the
+    // audio ran.
+    const card = fig.closest('.fw-tp') || fig;
+    const dur = D.dur || 1;
+    const pct = (t) => (100 * Math.max(0, Math.min(dur, t)) / dur).toFixed(3) + '%';
+    fig.innerHTML = '';
+
+    // ---- the tape
+    const tape = el('div', 'fw-tp-tape');
+    // The whole figure already carries the reading of itself as its accessible name, and a
+    // stack of absolutely positioned <i> elements announces as nothing useful.
+    tape.setAttribute('aria-hidden', 'true');
+
+    const rail = el('div', 'fw-tp-rail');
+    D.marks.forEach((m) => {
+      if (MARK_SHOWN.indexOf(m.kind) < 0) return;
+      const i = el('i', 'fw-tp-mk');
+      i.style.left = pct(m.t);
+      i.style.setProperty('--mk', MARK_INK[m.kind] || 'var(--grey)');
+      i.title = (MARK_SAY[m.kind] || m.kind) + (m.note ? ' (' + m.note + ')' : '')
+        + ' at ' + fmtClock(m.t);
+      rail.appendChild(i);
+    });
+    D.tools.forEach((t) => {
+      const i = el('i', 'fw-tp-tool' + (t.ok ? '' : ' is-err'));
+      i.style.left = pct(t.t);
+      i.title = t.name + (t.ok ? '' : ' (returned an error)') + ' at ' + fmtClock(t.t);
+      rail.appendChild(i);
+    });
+    tape.appendChild(rail);
+
+    [['agent', 'Agent'], ['user', 'Caller']].forEach(([who, label]) => {
+      const lane = el('div', 'fw-tp-lane is-' + who);
+      const nm = el('span', 'fw-tp-lane-n');
+      nm.textContent = label;
+      lane.appendChild(nm);
+      const track = el('div', 'fw-tp-track');
+      (D.lanes[who] || []).forEach(([a, b]) => {
+        const seg = el('i', '');
+        seg.style.left = pct(a);
+        // A 0.2 s utterance in a 20 minute call is a sixth of a pixel. Floored so a short
+        // turn is visible as a turn rather than as nothing.
+        seg.style.width = 'max(2px, ' + (100 * (b - a) / dur).toFixed(3) + '%)';
+        track.appendChild(seg);
+      });
+      lane.appendChild(track);
+      tape.appendChild(lane);
+    });
+
+    // Effects sit UNDER the lanes because they are done to the call, not by it.
+    if (D.fx && D.fx.length) {
+      const fxl = el('div', 'fw-tp-fx');
+      D.fx.forEach((f) => {
+        const i = el('i', 'fw-tp-fxs is-' + String(f.kind).replace(/[^a-z_]/g, ''));
+        i.style.left = pct(f.s);
+        i.style.width = 'max(1.5px, ' + (100 * (f.e - f.s) / dur).toFixed(3) + '%)';
+        i.title = (FX_SAY[f.kind] || f.kind) + ' at ' + fmtClock(f.s);
+        fxl.appendChild(i);
+      });
+      tape.appendChild(fxl);
+    }
+
+    // The window the shipped audio covers, drawn on the run it came from.
+    const win = D.win || [0, dur];
+    const over = el('div', 'fw-tp-over');
+    const wb = el('div', 'fw-tp-win');
+    wb.style.left = pct(win[0]);
+    wb.style.width = (100 * (win[1] - win[0]) / dur).toFixed(3) + '%';
+    over.appendChild(wb);
+    const head = el('div', 'fw-tp-head');
+    over.appendChild(head);
+    tape.appendChild(over);
+    fig.appendChild(tape);
+
+    const scale = el('div', 'fw-tp-scale');
+    const a0 = el('span', ''); a0.textContent = '0:00';
+    const a1 = el('span', 'fw-tp-scale-w');
+    a1.textContent = 'audio: ' + fmtClock(win[0]) + ' to ' + fmtClock(win[1]);
+    const a2 = el('span', ''); a2.textContent = fmtClock(dur);
+    scale.append(a0, a1, a2);
+    fig.appendChild(scale);
+
+    /* The tile stops here: a header, its one line, and the shape of the whole call. The
+       transport and the transcript belong to the open view, because a tile carrying an
+       audio player and 40 turns of dialogue is a page of players, and because a reader who
+       wants to LISTEN to a call wants the room to read it at the same time. */
+    if (!full) {
+      const cue = el('div', 'fw-tp-cue');
+      cue.textContent = 'Open the call';
+      const arw = el('span', 'fw-tp-cue-a');
+      arw.setAttribute('aria-hidden', 'true');
+      arw.textContent = '\u2192';
+      cue.appendChild(arw);
+      fig.appendChild(cue);
+      return;
+    }
+
+    // ---- the transport
+    const pl = el('div', 'fw-tp-pl');
+    const btn = el('button', 'fw-tp-btn');
+    btn.type = 'button';
+    btn.innerHTML = PLAY_SVG;
+    btn.setAttribute('aria-label', 'Play the excerpt of this call');
+    const bar = document.createElement('input');
+    bar.type = 'range';
+    bar.className = 'fw-tp-bar';
+    bar.min = '0'; bar.max = '1000'; bar.value = '0';
+    bar.setAttribute('aria-label', 'Position in the excerpt');
+    const tm = el('span', 'fw-tp-time');
+    tm.textContent = '0:00';
+    const au = document.createElement('audio');
+    au.preload = 'none';
+    /* Opus FIRST, then AAC. Both are shipped for every call. Chrome reports Opus as
+       "probably" and takes the first it can play, so listing AAC first made every Chrome
+       reader download the larger file - measured at +57% across the set - while Safari,
+       which cannot decode Ogg at all, falls through to the AAC either way. */
+    [[D.audio + '.opus', 'audio/ogg; codecs=opus'], [D.audio + '.m4a', 'audio/mp4']]
+      .forEach(([u, ty]) => {
+        const so = document.createElement('source');
+        so.src = (CALLS && CALLS.base ? CALLS.base : '') + u;
+        so.type = ty;
+        au.appendChild(so);
+      });
+    pl.append(btn, bar, tm);
+    fig.appendChild(pl);
+    fig.appendChild(au);
+
+    // ---- the transcript
+    const list = el('div', 'fw-tp-turns');
+    /* Every turn of the call, not the window's slice. The window is what you can HEAR; the
+       transcript is what was said, and a reader who has opened the call has asked for the
+       whole thing. Turns outside the audible window are marked so it is clear which part
+       the recording covers rather than leaving the reader to wonder why play does nothing
+       against the first ten minutes. */
+    D.turns.forEach((t) => {
+      const inWin = t.e > win[0] && t.s < win[1];
+      const row = el('button', 'fw-tp-turn is-' + t.who + (inWin ? '' : ' is-outside'));
+      row.type = 'button';
+      if (!inWin) row.title = 'Outside the excerpt that was shipped as audio';
+      row.dataset.s = String(t.s);
+      row.dataset.e = String(t.e);
+      const w = el('span', 'fw-tp-who');
+      w.textContent = t.who === 'agent' ? 'Agent' : 'Caller';
+      const x = el('span', 'fw-tp-txt');
+      x.textContent = t.text;
+      const c = el('span', 'fw-tp-at');
+      c.textContent = fmtClock(t.s);
+      row.append(w, x, c);
+      // Seeking by clicking a line is the one interaction the visualizer's transcript has
+      // that a reader immediately tries. A <button> rather than a div with onclick, so it
+      // is reachable and operable from the keyboard.
+      row.addEventListener('click', () => {
+        if (!inWin) return;               // there is no audio at that second to seek to
+        const at = Math.max(0, Math.min(win[1] - win[0], t.s - win[0]));
+        au.currentTime = at;
+        if (au.paused) btn.click();
+      });
+      list.appendChild(row);
+    });
+    fig.appendChild(list);
+
+    // ---- playback
+    let raf = 0;
+    const rows = [...list.querySelectorAll('.fw-tp-turn')];
+    const paint = () => {
+      const at = win[0] + (au.currentTime || 0);
+      head.style.left = pct(at);
+      head.style.opacity = '1';
+      const span = Math.max(0.001, win[1] - win[0]);
+      bar.value = String(Math.round(1000 * (au.currentTime || 0) / span));
+      tm.textContent = fmtClock(at) + ' / ' + fmtClock(dur);
+      let live = null;
+      rows.forEach((r) => {
+        const on = at >= Number(r.dataset.s) - 0.15 && at <= Number(r.dataset.e) + 0.15;
+        r.classList.toggle('is-now', on);
+        if (on && !live) live = r;
+      });
+      // Follow the speech, but only inside the tile: scrolling the PAGE while a recording
+      // plays would drag the reader out of the section they are listening to.
+      if (live && live !== fig.__lastLive) {
+        fig.__lastLive = live;
+        const lt = live.offsetTop - list.clientHeight * 0.42;
+        list.scrollTo({ top: Math.max(0, lt), behavior: 'smooth' });
+      }
+      if (!au.paused) raf = requestAnimationFrame(paint);
+    };
+    const stop = () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+    };
+    au.addEventListener('play', () => {
+      btn.innerHTML = PAUSE_SVG;
+      card.classList.add('is-playing');
+      stop();
+      raf = requestAnimationFrame(paint);
+    });
+    ['pause', 'ended'].forEach((ev) => au.addEventListener(ev, () => {
+      btn.innerHTML = PLAY_SVG;
+      card.classList.remove('is-playing');
+      stop();
+      paint();
+    }));
+    btn.addEventListener('click', () => {
+      if (au.paused) {
+        // One clip at a time, across the whole page. Two calls playing over each other is
+        // the fastest way to make a page of recordings unusable.
+        document.querySelectorAll('audio').forEach((o) => { if (o !== au) o.pause(); });
+        au.play().catch(() => { tm.textContent = 'recording unavailable'; });
+      } else {
+        au.pause();
+      }
+    });
+    bar.addEventListener('input', () => {
+      const span = Math.max(0.001, win[1] - win[0]);
+      au.currentTime = span * (Number(bar.value) / 1000);
+      paint();
+    });
+    // Cancels the loop and drops the decoder when the section leaves.
+    fig.__tapeStop = () => { stop(); au.pause(); };
+    /* Open on the audible part. The transcript is the whole call, so it opens at 0:00
+       while the transport sits at the start of the window - which reads as the two being
+       out of step until you press play. Put the list where the recording actually is. */
+    const firstIn = rows.find((r) => Number(r.dataset.e) > win[0]);
+    if (firstIn) list.scrollTop = Math.max(0, firstIn.offsetTop - list.clientHeight * 0.28);
+    paint();
+    head.style.opacity = '';
+  }
+
+  /* THE OPEN CALL.
+     ---------------------------------------------------------------------------------
+     The same dialog the walks use, so it inherits the focus trap, the Escape handler, the
+     backdrop click and the focus return that were already got right there. What goes in it
+     is the visualizer's own view of one conversation: the line of context, the two-lane
+     speech activity timeline with every marker on it, the transport, the whole transcript
+     following the playhead, and the grader's readout underneath. */
+  let callOverlay = null;
+  let callOpener = null;
+
+  function closeCall() {
+    if (!callOverlay) return;
+    // Stop the audio before the node goes: a detached <audio> keeps playing.
+    callOverlay.querySelectorAll('audio').forEach((a) => a.pause());
+    const box = callOverlay.querySelector('.fw-tp-box');
+    if (box && box.__tapeStop) box.__tapeStop();
+    document.removeEventListener('keydown', onCallKey, true);
+    callOverlay.remove();
+    callOverlay = null;
+    if (callOpener && document.contains(callOpener)) callOpener.focus();
+    callOpener = null;
+  }
+
+  function onCallKey(e) {
+    if (!callOverlay) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeCall(); return; }
+    if (e.key !== 'Tab') return;
+    const f = [...callOverlay.querySelectorAll(
+      'button, [href], input, select, textarea, audio[controls], [tabindex]:not([tabindex="-1"])')]
+      .filter((n) => !n.disabled && n.offsetParent !== null);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
+  /* The enterprise calls and the recorded tapes are two payload shapes for one thing, and
+     the open view only ever spoke the tape's. A run payload calls its speech `utterances`,
+     its audio effects `effects`, states no duration and marks no excerpt window; the tape
+     shape wants `turns`, `fx`, `dur`, `win` and `marks`. Handing one to the other threw on
+     the first missing array and the dialog opened with a title and an empty body.
+
+     Nothing is invented here: the duration is the last moment anything happens, and the
+     window is the whole call, because the whole call is exactly what the tile could not
+     show and what opening it is for. */
+  function asTape(D) {
+    if (!D) return null;
+    if (D.turns && D.dur) return D;                 // already a tape
+    const turns = D.utterances || D.turns || [];
+    const lanes = D.lanes || {};
+    const ends = [].concat(
+      turns.map((t) => t.e || 0),
+      (lanes.agent || []).map((p) => p[1] || 0),
+      (lanes.user || []).map((p) => p[1] || 0),
+      (D.tools || []).map((t) => t.t || t.s || 0));
+    const dur = D.dur || (ends.length ? Math.ceil(Math.max.apply(null, ends)) : 1);
+    /* Talk time and tool count are not stated by a run payload, but they are IN it: the
+       lanes are the speech and the tools are the tool calls. Derived rather than left
+       blank, and derived rather than typed, so they cannot disagree with the timeline
+       drawn from the same two arrays. */
+    const secs = (v) => (v || []).reduce((a, [x, y]) => a + Math.max(0, (y || 0) - (x || 0)), 0);
+    const score = Object.assign({}, D.score);
+    if (score.talk == null && (lanes.agent || lanes.user)) {
+      score.talk = { agent: secs(lanes.agent), user: secs(lanes.user) };
+    }
+    if (score.tool_calls == null && D.tools) score.tool_calls = D.tools.length;
+    return {
+      key: D.key, meta: D.meta, score: score, audio: D.audio,
+      turns: turns, lanes: lanes, tools: D.tools || [],
+      fx: D.fx || D.effects || [], marks: D.marks || [],
+      dur: dur, win: [0, dur],
+    };
+  }
+
+  function openCall(D, cfg, opener) {
+    /* The opener is PASSED, not read off document.activeElement. Clicking a div does not
+       focus it in Chrome and clicking a button does not focus it in Safari, so reading the
+       active element recorded <body> for most mouse users and focus returned to the top of
+       the document on close. */
+    const from = opener || document.activeElement;
+    closeCall();
+    callOpener = from;
+    const ov = el('div', 'fw-walk fw-call');
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-label', (cfg.type || 'A call') + ', '
+      + (cfg.verdict === 'bad' ? 'fail' : 'pass') + ', ' + (cfg.model || ''));
+    const card = el('div', 'fw-walk-card fw-call-card');
+    const head = el('header', 'fw-walk-head fw-call-head');
+    const t = el('div', 'fw-walk-title');
+    t.textContent = cfg.type || '';
+    const vd = el('span', 'fw-tp-verdict' + (cfg.verdict === 'bad' ? ' is-bad' : ''));
+    vd.textContent = cfg.verdict === 'bad' ? 'Fail' : 'Pass';
+    const who = el('span', 'fw-tp-model');
+    who.style.setProperty('--sys-t', sysTextColor(cfg.model || ''));
+    who.innerHTML = vendorMark(cfg.model || '');
+    const wn = el('span', '');
+    wn.textContent = cfg.model || '';
+    who.appendChild(wn);
+    const sub = el('div', 'fw-walk-sub');
+    sub.textContent = cfg.line || '';
+    const x = el('button', 'fw-walk-x');
+    x.type = 'button';
+    x.setAttribute('aria-label', 'Close');
+    x.textContent = '\u00d7';
+    x.addEventListener('click', closeCall);
+    const row = el('div', 'fw-call-headrow');
+    row.append(t, vd, who);
+    head.append(row, sub, x);
+    const body = el('div', 'fw-walk-body fw-call-body');
+    const box = el('div', 'fw-tp-box');
+    body.appendChild(box);
+    card.append(head, body);
+    ov.appendChild(card);
+    ov.addEventListener('click', (e) => { if (e.target === ov) closeCall(); });
+    document.body.appendChild(ov);
+    callOverlay = ov;
+    document.addEventListener('keydown', onCallKey, true);
+    x.focus();
+    buildTape(box, D, true);
+    // What the grader returned, in the grader's own terms, under the conversation it is
+    // about. Read out of the payload rather than typed, so it cannot disagree with the run.
+    const sc = D.score || {};
+    const stats = el('div', 'fw-call-stats');
+    const talk = sc.talk || {};
+    /* A field that is not in this payload is LEFT OUT, not printed as a question mark. The
+       enterprise calls and the recorded tapes carry different grader output - one states
+       talk time and a termination reason, the other does not - and a row of "?" said the
+       call was missing something rather than that this shape never had it. */
+    [['Reward', sc.reward == null ? null : String(sc.reward)],
+     ['Ended', sc.termination ? String(sc.termination).replace(/_/g, ' ') : null],
+     ['Agent speech', talk.agent != null ? Math.round(talk.agent) + ' s' : null],
+     ['Caller speech', talk.user != null ? Math.round(talk.user) + ' s' : null],
+     ['Tool calls', sc.tool_calls == null ? null : String(sc.tool_calls)],
+     ['Background', sc.noise || null]].filter(([, v]) => v != null).forEach(([k, v]) => {
+      const c = el('div', 'fw-call-stat');
+      const kk = el('span', 'fw-call-stat-k');
+      kk.textContent = k;
+      const vv = el('b', '');
+      vv.textContent = v;
+      c.append(kk, vv);
+      stats.appendChild(c);
+    });
+    body.appendChild(stats);
+  }
+
+  function mountTapes(stop) {
+    tapeStops.forEach((ts) => {
+      if (ts.i !== stop) return;
+      tapesReady().then(() => {
+        ts.grid.querySelectorAll('.fw-tp').forEach((fig) => {
+          if (fig.__built) return;
+          const D = tapeData[fig.dataset.key];
+          if (!D) { fig.querySelector('.fw-tp-box').textContent = 'This call did not load.'; return; }
+          fig.__built = true;
+          buildTape(fig.querySelector('.fw-tp-box'), D);
+        });
+        measureSpill();
+      });
+    });
+  }
+
+  function tapesOnStopChange(stop) {
+    if (!tapeStops.length) return;
+    /* Build when the section is APPROACHED, but stop the audio the moment it is no longer
+       the live stop. Those are deliberately different thresholds: building early is what
+       makes the tiles ready when the reader arrives, whereas a recording that outlives its
+       own section is playing from a panel that is hidden and inert, with the pause button
+       the reader would reach for no longer on screen. On a three-section page a one-stop
+       tolerance covers the entire document, so this was every scroll. */
+    const live = tapeStops.some((ts) => ts.i === stop);
+    if (!live) {
+      document.querySelectorAll('.fw-tp .fw-tp-box').forEach((f) => {
+        if (f.__tapeStop) f.__tapeStop();
+      });
+    }
+    const near = tapeStops.find((ts) => Math.abs(ts.i - stop) <= 1);
+    if (near) mountTapes(near.i);
   }
 
   // ---------------------------------------------------------------- geometry
@@ -2814,6 +3841,34 @@ function mountFlight(root, config) {
   // per section, every animation frame. Cached in measure(), which layout() calls.
   let centres = [];
   let total = 0;
+  /* How far each band panel overflows the viewport, which is how far it has to travel to
+     show its own tail. This was being derived in paintCopy from `offsetTop` + `scrollHeight`
+     - two layout reads per band section, interleaved with the inline style writes made for
+     the previous section, so each one forced a synchronous reflow. Measured at nine forced
+     reflows per animation frame on the results page. It only changes on resize, which is
+     exactly when measure() runs. */
+  let spills = [];
+  /* Measured LAZILY, per panel, the first time that panel is actually on screen.
+     -----------------------------------------------------------------------------------
+     Measuring them all in one pass at layout looks tidier and is wrong: every panel except
+     the live one carries the `hidden` attribute, and a hidden element reports offsetTop 0
+     and scrollHeight 0. So the eager version recorded "no overflow" for every panel the
+     reader had not reached yet, and those panels then never travelled - which is precisely
+     the bug the travel exists to prevent, a panel taller than the viewport hiding its own
+     tail. Doing it on the stop change costs two layout reads per section per resize, which
+     is nothing, and keeps the paint loop free of layout reads either way. */
+  function measureSpill() { spills = []; }
+  function spillOf(i) {
+    if (spills[i] != null) return spills[i];
+    const s = S[i];
+    if (!s || s.block !== 'band') return 0;
+    const pan = panels[i];
+    // Not measurable yet. Return 0 WITHOUT caching, so the next frame tries again rather
+    // than freezing the wrong answer in for the life of the layout.
+    if (!pan || pan.hidden || !pan.offsetHeight) return 0;
+    spills[i] = (pan.offsetTop || 0) + pan.scrollHeight - (vh() - 24);
+    return spills[i];
+  }
   function measure() {
     const H = vh();
     // The opening is in flow, so it occupies real document height ABOVE the flight. Every
@@ -2831,6 +3886,7 @@ function mountFlight(root, config) {
     });
   }
   measure();
+  measureSpill();
   function totalPx() { return total; }
   function centrePx(i) { return centres[i]; }
 
@@ -2949,6 +4005,9 @@ function mountFlight(root, config) {
 
   function layout() {
     measure();
+    // Once per layout, deliberately: these are the only two layout reads left on the band
+    // path, and doing them here means the paint loop never touches the layout engine.
+    measureSpill();
     spacer.style.height = totalPx() + 'px';
     syncScrollbar();
     fitFilm();
@@ -3201,8 +4260,7 @@ function mountFlight(root, config) {
       if (s.block === 'band') {
         const pan = panels[i];
         if (pan) {
-          const top = pan.offsetTop || 0;
-          const spill = top + pan.scrollHeight - (H - 24);
+          const spill = spillOf(i);
           // The travel finishes at 72% of the band, not at its edge: the panel starts
           // fading out near the edge, so a tail that only arrives there is read through
           // a half-faded panel. Finishing early means the last card and the callout are
@@ -3237,7 +4295,11 @@ function mountFlight(root, config) {
       // for continuity, and the cost was being paid over nearly a third of the page. At
       // 0.90 the panel is solid for the first 90% of its band and the handover happens in
       // the last 10%, which is where the reader is leaving anyway.
-      const HOLD = 0.90, END = 1.10;
+      /* 0.94, up from 0.90. The dissolve is what makes the page continuous, but it is
+         also what a reader trying to FOLLOW a section experiences as the text going soft
+         under them. At 0.94 a panel is solid for 94% of its band and hands over in the
+         last 6%, which is the part the reader is leaving anyway. */
+      const HOLD = 0.94, END = 1.10;
       let vis = d <= HOLD ? 1 : 1 - smooth(Math.min(1, (d - HOLD) / (END - HOLD)));
       // The opening statement does not fade IN. At scrollY = 0 the reader is a full band
       // above the first stop, so the curve above put the page's own headline on screen at
@@ -3283,9 +4345,17 @@ function mountFlight(root, config) {
       const live = vis > 0.14;
       p.style.pointerEvents = live ? 'auto' : 'none';
       p.inert = !live;
-      // If focus was inside a panel that just went dead, park it on that panel's rail dot
-      // rather than letting the browser drop it to <body> with no announcement.
-      if (!live && p.contains(document.activeElement)) dots[i].focus();
+      /* If focus was inside a panel that just went dead, park it somewhere real rather than
+         letting the browser drop it to <body> with no announcement. It used to go to that
+         panel's rail dot, but every page here sets rail:false, and the sheet hides a hidden
+         rail with display:none - focus() on a display:none element is a silent no-op, so
+         the rescue produced exactly the outcome it exists to prevent. The panel arriving on
+         screen is the honest destination; it is about to be the only thing readable. */
+      if (!live && p.contains(document.activeElement)) {
+        const dot = dots[i];
+        if (dot && dot.offsetParent !== null) dot.focus();
+        else { root.tabIndex = -1; root.focus({ preventScroll: true }); }
+      }
       p.hidden = vis <= 0.002;
 
       // In video mode the chain already shows each globe full-frame, so the floating
@@ -3325,6 +4395,15 @@ function mountFlight(root, config) {
       }
     }
     // The live stop, and how far into its staged reveal the reader has come.
+    if (liveStop !== nearI) {
+      /* Re-measure the arriving panel's overflow. The cached value is taken the first time
+         the panel is measurable, which is part-way through the approach - before the card
+         grid has settled to its final column count, and while the panel is still taller
+         than it will end up. Locking that in made the nine-card section travel 409px to
+         cover 155px of overflow, so the last card ended a third of a screen above the fold
+         with dead space under it. Once per stop change is not a hot path. */
+      spills[nearI] = null;
+    }
     liveStop = nearI;
     {
       const s = S[liveStop], c = centrePx(liveStop), half = bands[liveStop] * H * 0.5;
@@ -3448,6 +4527,7 @@ function mountFlight(root, config) {
       // this on the first frame would leave that stop's walks permanently empty.
       mapsOnStopChange(liveStop);
       runsOnStopChange(liveStop);
+      tapesOnStopChange(liveStop);
       // Only on a stop change: writing this every frame would relayout the film continuously.
       if (SHELL === 'stacked' && filmPx[liveStop]) {
         document.documentElement.style.setProperty('--film', filmPx[liveStop] + 'px');
@@ -3768,6 +4848,10 @@ function mountFlight(root, config) {
   // stops the bar looking like a box on a page that has not moved.
   const markScrolled = () => {
     document.documentElement.classList.toggle('is-scrolled', window.scrollY > 8);
+    // Same listener, because the step buttons' enabled state is a pure function of scroll
+    // position and adding a second passive listener for it would be a second wake-up per
+    // scroll event for two boolean writes.
+    stepSync();
   };
   window.addEventListener('scroll', markScrolled, { passive: true });
   markScrolled();
@@ -3777,6 +4861,7 @@ function mountFlight(root, config) {
 
   if (heroWanted && !heroImg.complete) heroImg.addEventListener('load', layout);
   layout();
+  stepSync();
 
   return {
     layout,
@@ -3816,6 +4901,18 @@ const VENDOR_ICON = [
 function sysInk(name) {
   const m = String(name).toLowerCase();
   return (/mini/.test(m) && !/gemini/.test(m)) || /nova|sonic/.test(m) ? '#17171f' : '#ffffff';
+}
+
+/* The same five systems, in the darkened variants that are legible AS TEXT. sysColor's
+   values are fills: drawn as a bar they are fine, set as a label they run to 2.18:1. */
+function sysTextColor(name) {
+  const m = String(name).toLowerCase();
+  if (/gemini|flash-live/.test(m)) return 'var(--sys-gemini-t)';
+  if (/mini/.test(m)) return 'var(--sys-mini-t)';
+  if (/xai|grok|think fast/.test(m)) return 'var(--sys-grok-t)';
+  if (/nova|sonic/.test(m)) return 'var(--sys-nova-t)';
+  if (/openai|gpt|realtime/.test(m)) return 'var(--sys-gpt-t)';
+  return 'var(--ink)';
 }
 
 function sysColor(name) {

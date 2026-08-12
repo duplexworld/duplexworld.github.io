@@ -50,7 +50,7 @@
 <script>
 window.__DW_ICONS = {
   openai: 'img/icons/openai.webp', gemini: 'img/icons/gemini.webp',
-  grok: img/icons/grok.webp, nova: img/icons/nova.webp,
+  grok: 'img/icons/grok.webp', nova: 'img/icons/nova.webp',
 };
 </script>
 <script src="data.js"></script>
@@ -78,11 +78,12 @@ mountFlight(document.getElementById('world'), {
   // the moment the film is inside that world, so clicking one is a real flight to it.
   hint: 'scroll',
   nav: [
-    { label: 'Experience', href: 'experience.html' },
-    { label: 'Conversation types', href: 'index.html' },
-    { label: 'Voice samples', at: 'runs' },
-    { label: 'Metrics', href: 'index.html' },
+    { label: 'Experience', href: 'index.html' },
+    { label: 'Setup', href: 'setup.html' },
+    { label: 'Voice samples', href: 'samples.html' },
+    { label: 'Metrics', href: 'metrics.html' },
     { label: 'Results', href: 'results.html' },
+    { label: 'Overview', href: 'overview.html' },
   ],
   video: { src: 'flight.mp4', poster: 'img/poster.webp',
     // One entry per section, in section order. A length mismatch is not a soft
@@ -152,6 +153,7 @@ mountFlight(document.getElementById('world'), {
       block: 'out',
       cam: { x: 0.500, y: 0.480, z: 1.02 }, scroll: 1.8, linger: 0.3,
       accent: 'var(--mag)',
+      next: { kicker: 'Next', label: 'How this was scored', href: 'metrics.html' },
     },
   ],
 });

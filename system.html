@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>How a call is run - DuplexWorld</title>
+<meta name="description" content="What actually happens in one DuplexWorld conversation: a simulated caller made of three models talking to a speech-to-speech agent, on a 200 millisecond clock.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/icon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#17171f">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DuplexWorld">
+<meta property="og:title" content="How a call is run - DuplexWorld">
+<meta property="og:description" content="A simulated caller made of three models, talking to a speech-to-speech agent, on a 200 millisecond clock.">
+<meta property="og:image" content="img/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="img/og-card.png">
+<link rel="stylesheet" href="world.css">
+<link rel="stylesheet" href="alt-split.css">
+<style>
+/* THIS PAGE ONLY.
+   =====================================================================================
+   One screen, no scroll, one loop. It exists because everything else on this site shows
+   RESULTS, and a reader who has not read the paper has no idea what produced them - what
+   "a conversation" even is here, or who is on the other end of it.
+
+   Its own stylesheet rather than 200 lines in the shared one: nothing here is reused
+   anywhere, and a diagram that is the whole page is easier to keep honest when its rules
+   sit beside it. Colours and type come from the shared tokens, so it cannot drift from the
+   rest of the site. */
+html, body { height: 100%; }
+body.fw-sys {
+  margin: 0; background: var(--bg-base); color: var(--ink);
+  /* No scroll, as asked. Content is sized to fit; below the breakpoint it is allowed to
+     scroll rather than be cut, because a phone cannot hold this at any type size that is
+     still readable. */
+  overflow: hidden;
+}
+.sys-wrap {
+  height: 100dvh; display: grid;
+  /* The stage takes the slack. Everything else is sized by its content, so on a tall
+     screen the diagram grows rather than floating in the middle of an empty page. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: stretch;
+  gap: clamp(10px, 2.4vh, 32px);
+  padding: calc(var(--topbar-h, 64px) + clamp(8px, 2vh, 22px)) clamp(16px, 3vw, 40px)
+           clamp(12px, 2vh, 24px);
+  box-sizing: border-box;
+}
+.sys-head { text-align: center; }
+.sys-h {
+  margin: 0; font-size: clamp(21px, 2.4vw, 33px); font-weight: 780;
+  letter-spacing: -0.02em; line-height: 1.08; color: var(--ink);
+}
+.sys-sub {
+  margin: 5px auto 0; max-width: 78ch; color: var(--soft);
+  font-size: clamp(14px, 1.05vw, 17px); line-height: 1.45;
+}
+
+/* ---- the loop: caller on the left, agent on the right, the channel between them */
+.sys-stage {
+  align-self: center;
+  display: grid; grid-template-columns: 1fr minmax(220px, 1.25fr) 1fr;
+  align-items: center; gap: clamp(10px, 1.6vw, 26px); min-height: 0;
+}
+.sys-side {
+  display: flex; flex-direction: column; gap: clamp(6px, 1vh, 12px); min-width: 0;
+}
+.sys-side-h {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--grey);
+}
+.sys-side-h b { font-weight: 700; color: var(--ink); text-transform: none; letter-spacing: 0; }
+.sys-box {
+  border: 1px solid var(--line); border-radius: 12px; background: var(--paper);
+  padding: clamp(7px, 1.1vh, 12px) 13px; position: relative;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.sys-box.is-live {
+  border-color: var(--role); box-shadow: 0 0 0 3px color-mix(in srgb, var(--role) 15%, transparent);
+  transform: translateY(-1px);
+}
+.sys-role {
+  font-size: 14px; font-weight: 700; color: var(--role, var(--ink)); margin-bottom: 1px;
+}
+.sys-model {
+  font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums;
+  display: flex; align-items: center; gap: 6px;
+}
+.sys-model img { width: 15px; height: 15px; border-radius: 3px; }
+.sys-note { font-size: 14px; color: var(--grey); line-height: 1.35; margin-top: 2px; }
+
+/* the five systems under test, one of which is lit at a time */
+.sys-agents { display: flex; flex-direction: column; gap: 5px; }
+.sys-agent {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 14px; padding: 5px 9px; border-radius: 8px;
+  border: 1px solid transparent; color: var(--soft);
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+.sys-agent img { width: 15px; height: 15px; border-radius: 3px; flex: none; }
+.sys-agent.is-live {
+  color: var(--ink); font-weight: 640;
+  background: color-mix(in srgb, var(--sys-t, var(--ink)) 9%, transparent);
+  border-color: color-mix(in srgb, var(--sys-t, var(--ink)) 26%, transparent);
+}
+
+/* ---- the channel */
+.sys-chan { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.sys-chan-l {
+  text-align: center; font-size: 14px; color: var(--grey);
+  font-variant-numeric: tabular-nums;
+}
+.sys-wire { position: relative; height: clamp(96px, 17vh, 168px); }
+.sys-lane {
+  position: absolute; left: 0; right: 0; height: 30px;
+  border-radius: 999px; background: var(--bg-base);
+  border: 1px solid var(--line); overflow: hidden;
+}
+.sys-lane.is-user { top: 4px; }
+.sys-lane.is-agent { bottom: 4px; }
+.sys-lane-n {
+  position: absolute; left: 10px; top: 0; line-height: 30px;
+  font-size: 14px; color: var(--grey); z-index: 2; pointer-events: none;
+}
+/* One packet of speech, crossing the channel. The direction is the point: the caller's
+   words are synthesised and sent, and the agent answers in audio, both at once when they
+   overlap - which is what "full duplex" means and what a turn diagram cannot show. */
+.sys-pkt {
+  position: absolute; top: 7px; height: 16px; border-radius: 999px;
+  background: var(--pkt); opacity: .95;
+}
+.sys-lane.is-user .sys-pkt { background: var(--pillar-dynamics); }
+.sys-lane.is-agent .sys-pkt { background: var(--pillar-agentic); }
+.sys-tick {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  font-size: 14px; color: var(--grey);
+}
+.sys-tick i {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--grid);
+  display: inline-block;
+}
+.sys-tick i.is-on { background: var(--ink2); }
+.sys-say {
+  min-height: 3.2em; text-align: center; font-size: clamp(14px, 1.05vw, 17px);
+  line-height: 1.4; color: var(--ink); padding: 0 6px;
+}
+.sys-say b { color: var(--role, var(--ink)); }
+
+/* ---- the strip of conversation types */
+.sys-strip { display: flex; flex-direction: column; gap: 7px; }
+.sys-strip-h {
+  font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--grey); text-align: center;
+}
+.sys-types {
+  display: flex; align-items: center; justify-content: center;
+  gap: clamp(5px, 0.9vw, 12px); flex-wrap: wrap;
+}
+.sys-type {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 11px 5px 6px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--paper);
+  font-size: 14px; color: var(--soft);
+  transition: background .25s ease, color .25s ease, border-color .25s ease;
+}
+.sys-type img {
+  width: 22px; height: 22px; border-radius: 5px; object-fit: cover; flex: none;
+}
+.sys-type.is-live {
+  color: var(--ink); font-weight: 640;
+  border-color: var(--ink2); background: color-mix(in srgb, var(--ink2) 7%, transparent);
+}
+.sys-foot {
+  text-align: center; font-size: 14px; color: var(--grey);
+}
+.sys-foot a { color: var(--viod); }
+
+@media (max-width: 980px) {
+  body.fw-sys { overflow: auto; }
+  .sys-wrap { height: auto; min-height: 100dvh; }
+  .sys-stage { grid-template-columns: 1fr; }
+  .sys-wire { height: 96px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* The loop is the content, so it is not removed - it is stepped instead of swept, and
+     nothing eases. A reader who cannot take motion still gets every state. */
+  .sys-box, .sys-agent, .sys-type { transition: none; }
+  .sys-pkt { transition: none; }
+}
+</style>
+</head>
+<body class="fw-sys">
+
+<a class="fw-skip" href="#sys">Skip to the diagram</a>
+
+<header class="topbar is-scrolled" data-nav-host>
+  <a class="wordmark" href="index.html"><img class="wordmark-logo" src="img/hero.webp" alt="">Duplex&nbsp;World <span class="sub">benchmark</span></a>
+<nav class="fw-nav" aria-label="Sections">
+  <a class="fw-nav-item" href="index.html">Experience</a>
+  <a class="fw-nav-item" href="overview.html">Overview</a>
+  <a class="fw-nav-item" href="types.html">Conversation types</a>
+  <a class="fw-nav-item" href="samples.html">Voice samples</a>
+  <a class="fw-nav-item" href="system.html" aria-current="page">How it works</a>
+  <a class="fw-nav-item" href="metrics.html">Metrics</a>
+  <a class="fw-nav-item" href="results.html">Results</a>
+</nav>
+</header>
+
+<main id="sys" class="sys-wrap">
+  <div class="sys-head">
+    <h1 class="sys-h">How one conversation is run</h1>
+    <p class="sys-sub">
+      Nobody picks up the phone. The caller is three models working together, the agent is a
+      commercial speech-to-speech system, and both talk on the same clock: simulated time
+      advances in 200 millisecond ticks, so a slow system and a fast one produce traces you
+      can compare.
+    </p>
+  </div>
+
+  <div class="sys-stage">
+    <section class="sys-side" id="sysUser">
+      <div class="sys-side-h">The caller <b>&nbsp;simulated</b></div>
+    </section>
+
+    <section class="sys-chan">
+      <div class="sys-chan-l" id="sysPhase">the caller speaks</div>
+      <div class="sys-wire">
+        <div class="sys-lane is-user"><span class="sys-lane-n">caller</span><i class="sys-pkt" id="pktU"></i></div>
+        <div class="sys-lane is-agent"><span class="sys-lane-n">agent</span><i class="sys-pkt" id="pktA"></i></div>
+      </div>
+      <div class="sys-tick" id="sysTick"></div>
+      <p class="sys-say" id="sysSay"></p>
+    </section>
+
+    <section class="sys-side" id="sysAgent">
+      <div class="sys-side-h">The agent <b>&nbsp;under test</b></div>
+    </section>
+  </div>
+
+  <div class="sys-strip">
+    <div class="sys-strip-h">Eleven conversation types, in six worlds</div>
+    <div class="sys-types" id="sysTypes"></div>
+    <p class="sys-foot">
+      Every pairing above is run five times per scenario, in two acoustic channels for
+      navigation.
+    </p>
+    <a class="fw-next" href="metrics.html">
+      <span class="fw-next-t">
+        <span class="fw-next-note">Metrics</span>
+        <strong class="fw-next-l">What all of this is scored on</strong>
+      </span>
+      <span class="fw-next-a" aria-hidden="true">&#8594;</span>
+    </a>
+  </div>
+</main>
+
+<script src="data.js"></script>
+<script>
+/* THE LOOP.
+   =====================================================================================
+   A scripted timeline rather than CSS keyframes, because the point of the diagram is the
+   ORDER things happen in, and the order has a shape that keyframes cannot express: while
+   the agent is speaking, the decision model is being asked "interrupt?" and "backchannel?"
+   every two seconds, and those two questions are what make the caller able to cut in. A
+   loop of pure animation would show two boxes trading turns, which is exactly the wrong
+   picture - it is the thing the harness is built to avoid.
+
+   Every model name and every number here is Table 6 of the paper and Section 4.2. */
+(function () {
+  "use strict";
+  var ICONS = { openai: 'img/icons/openai.webp', gemini: 'img/icons/gemini.webp',
+                grok: 'img/icons/grok.webp', nova: 'img/icons/nova.webp' };
+  var el = function (t, c) { var n = document.createElement(t); if (c) n.className = c; return n; };
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- the caller: three models, each with one job
+  var USER = [
+    { id: 'sim',  role: 'Writes the words', model: 'gpt-5.6-luna',
+      note: 'What the caller says next, given the scenario and what it has heard.',
+      colour: 'var(--pillar-dynamics-t)' },
+    { id: 'dec',  role: 'Decides when to speak', model: 'claude-haiku-4.5',
+      note: 'Two independent yes/no calls every 2 seconds while the agent is talking: '
+          + 'interrupt, and backchannel. Turn-taking lives here, not in the agent.',
+      colour: 'var(--mk-self)' },
+    { id: 'tts',  role: 'Says them out loud', model: 'ElevenLabs eleven_v3',
+      note: 'Every caller utterance is synthesised. No human speech was recorded.',
+      colour: 'var(--ambd)' },
+  ];
+  var SYSTEMS = [
+    { name: 'Voice Think Fast', vendor: 'grok' },
+    { name: 'GPT-Realtime-2.1', vendor: 'openai' },
+    { name: 'Gemini-3.1-Flash-Live', vendor: 'gemini' },
+    { name: 'GPT-Realtime-2.1-mini', vendor: 'openai' },
+    { name: 'Nova 2 Sonic', vendor: 'nova' },
+  ];
+  var SYSCOL = { grok: '#17171f', openai: 'var(--sys-gpt)',
+                 gemini: 'var(--sys-gemini-t)', nova: 'var(--sys-nova-t)' };
+
+  var uHost = document.getElementById('sysUser');
+  var boxes = {};
+  USER.forEach(function (u) {
+    var b = el('div', 'sys-box');
+    b.style.setProperty('--role', u.colour);
+    var r = el('div', 'sys-role'); r.textContent = u.role;
+    var m = el('div', 'sys-model'); m.textContent = u.model;
+    var n = el('div', 'sys-note'); n.textContent = u.note;
+    b.append(r, m, n);
+    uHost.appendChild(b);
+    boxes[u.id] = b;
+  });
+
+  var aHost = document.getElementById('sysAgent');
+  var aBox = el('div', 'sys-box');
+  aBox.style.setProperty('--role', 'var(--pillar-agentic)');
+  var aRole = el('div', 'sys-role'); aRole.textContent = 'Hears audio, answers in audio';
+  var aNote = el('div', 'sys-note');
+  aNote.textContent = 'One of five commercial speech-to-speech systems. It is never told '
+    + 'whose turn it is.';
+  var aList = el('div', 'sys-agents');
+  var aEls = SYSTEMS.map(function (s) {
+    var row = el('div', 'sys-agent');
+    row.style.setProperty('--sys-t', SYSCOL[s.vendor] || 'var(--ink)');
+    var im = document.createElement('img');
+    im.src = ICONS[s.vendor]; im.alt = '';
+    var nm = el('span', ''); nm.textContent = s.name;
+    row.append(im, nm);
+    aList.appendChild(row);
+    return row;
+  });
+  aBox.append(aRole, aNote, aList);
+  aHost.appendChild(aBox);
+
+  // ---- the tick clock. Five dots is one second of simulated time at 200 ms a tick.
+  var tickHost = document.getElementById('sysTick');
+  var tickLabel = el('span', ''); tickLabel.textContent = '200 ms ticks';
+  var dots = [];
+  for (var i = 0; i < 5; i++) { var dd = el('i', ''); dots.push(dd); tickHost.appendChild(dd); }
+  tickHost.appendChild(tickLabel);
+
+  // ---- the strip. The map first, because navigation is the world that is not a call
+  // centre, then the nine shapes every enterprise world shares.
+  /* All ELEVEN, because that is what the heading says. Nine are shared by the five
+     enterprise worlds; the last two exist only in navigation, where the user cannot see
+     the map, so they carry the map rather than a type icon. Listing ten under a heading
+     that says eleven is the kind of small lie a diagram should never tell. */
+  var TYPES = (window.TYPES9 || []).map(function (t) { return { name: t.name, img: t.icon }; })
+    .concat([{ name: 'Rerouting', img: 'img/pathfinding.webp' },
+             { name: 'All-day assistance', img: 'img/pathfinding.webp' }]);
+  var tHost = document.getElementById('sysTypes');
+  var tEls = TYPES.map(function (t) {
+    var c = el('div', 'sys-type');
+    var im = document.createElement('img');
+    im.src = t.img; im.alt = ''; im.loading = 'lazy';
+    var nm = el('span', ''); nm.textContent = t.name;
+    c.append(im, nm);
+    tHost.appendChild(c);
+    return c;
+  });
+
+  var phase = document.getElementById('sysPhase');
+  var say = document.getElementById('sysSay');
+  var pktU = document.getElementById('pktU');
+  var pktA = document.getElementById('pktA');
+
+  function pkt(node, from, to) {
+    node.style.left = from + '%';
+    node.style.width = Math.max(0, to - from) + '%';
+  }
+  function live(id) {
+    Object.keys(boxes).forEach(function (k) { boxes[k].classList.toggle('is-live', k === id); });
+  }
+
+  /* One turn of the loop, written as a script because that is what it is. Times are in
+     milliseconds of wall clock; the LABELS are simulated seconds, which is the thing the
+     diagram is teaching. */
+  var STEPS = [
+    { t: 0,    phase: 'the caller speaks',
+      say: '<b>gpt-5.6-luna</b> writes the caller’s next line, and it is spoken by the TTS.',
+      box: 'sim', u: [0, 0], a: [0, 0] },
+    { t: 700,  box: 'tts', u: [2, 34] },
+    { t: 1500, phase: 'the agent answers',
+      say: 'The agent hears audio, not text. It decides what to do and answers in audio.',
+      box: null, agent: true, u: [2, 34], a: [40, 78] },
+    { t: 2600, phase: 'should the caller cut in?',
+      say: 'Every 2 seconds while the agent talks, <b>claude-haiku-4.5</b> is asked two '
+         + 'separate yes/no questions: interrupt, and backchannel.',
+      box: 'dec', agent: true, a: [40, 92] },
+    { t: 3600, phase: 'both at once',
+      say: 'It said yes. The caller starts before the agent has finished, and for a moment '
+         + 'both are speaking - which is the thing this benchmark measures.',
+      box: 'tts', agent: true, u: [62, 96], a: [40, 92] },
+    { t: 4900, phase: 'scored, then run again',
+      say: 'The whole exchange is scored on twelve metrics, and the same scenario is run '
+         + 'five times against each of the five systems.',
+      box: null, u: [0, 0], a: [0, 0], nextAgent: true },
+  ];
+
+  var step = 0, typeI = 0, agentI = 0, timer = null;
+
+  function render(s) {
+    if (s.phase) phase.textContent = s.phase;
+    if (s.say) say.innerHTML = s.say;
+    live(s.box);
+    aBox.classList.toggle('is-live', !!s.agent);
+    if (s.u) pkt(pktU, s.u[0], s.u[1]);
+    if (s.a) pkt(pktA, s.a[0], s.a[1]);
+    aEls.forEach(function (e, k) { e.classList.toggle('is-live', k === agentI); });
+    tEls.forEach(function (e, k) { e.classList.toggle('is-live', k === typeI); });
+  }
+
+  function advance() {
+    var s = STEPS[step];
+    render(s);
+    if (s.nextAgent) {
+      // A new turn of the loop is a new pairing: the next system, and the next shape of
+      // conversation. Over one full cycle the reader sees the whole grid the corpus is.
+      agentI = (agentI + 1) % SYSTEMS.length;
+      typeI = (typeI + 1) % TYPES.length;
+    }
+    var next = STEPS[(step + 1) % STEPS.length];
+    var wait = next.t > s.t ? next.t - s.t : 1400;
+    step = (step + 1) % STEPS.length;
+    timer = window.setTimeout(advance, wait);
+  }
+
+  // The packets ease across the channel; under reduced motion they simply appear where
+  // they belong, which keeps every state and removes the sweep.
+  if (!reduce) {
+    pktU.style.transition = 'left .5s cubic-bezier(.3,.7,.3,1), width .5s cubic-bezier(.3,.7,.3,1)';
+    pktA.style.transition = 'left .5s cubic-bezier(.3,.7,.3,1), width .5s cubic-bezier(.3,.7,.3,1)';
+  }
+  // The tick dots run continuously underneath, because the clock does not stop for turns.
+  var tk = 0;
+  window.setInterval(function () {
+    tk = (tk + 1) % (dots.length + 1);
+    dots.forEach(function (d, k) { d.classList.toggle('is-on', k < tk); });
+  }, 200);
+
+  advance();
+
+  // A tab nobody is looking at should not run a timeline. Cheap, and it keeps a laptop
+  // from spending a battery on a diagram in a background tab.
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { window.clearTimeout(timer); }
+    else if (!document.hidden) { window.clearTimeout(timer); advance(); }
+  });
+})();
+</script>
+</body>
+</html>

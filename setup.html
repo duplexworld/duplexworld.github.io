@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Setup - DuplexWorld</title>
+<meta name="description" content="What DuplexWorld tests: a mapless walker guided by a copilot who cannot see the street, and the nine enterprise conversation types.">
+<!-- Inline so the browser never fires its automatic /favicon.ico request, which is a
+     404 on a static server and the only broken asset the page would otherwise have. -->
+<!-- The mark itself, cut from the same render the page opens on. The old inline SVG was
+     a ring and a bar in the retired palette: a placeholder that read as an unfinished
+     project in the one place every reader sees before the page loads. -->
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/icon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#17171f">
+<!-- Without these a shared link previews as a blank rectangle. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DuplexWorld">
+<meta property="og:title" content="DuplexWorld: Can voice agents help you get through the day?">
+<meta property="og:description" content="Six worlds of an ordinary day, eleven conversation types and one twelve-metric suite in three pillars, across 3,825 scored conversations and 387 hours of speech.">
+<meta property="og:image" content="img/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="DuplexWorld: Can voice agents help you get through the day?">
+<meta name="twitter:description" content="Six worlds of an ordinary day, eleven conversation types and one twelve-metric suite in three pillars.">
+<meta name="twitter:image" content="img/og-card.png">
+<link rel="stylesheet" href="world.css">
+<link rel="stylesheet" href="map.css">
+<link rel="stylesheet" href="alt-split.css">
+</head>
+<body>
+
+<!-- Tab lands here first. The page is a scroll flight, so a keyboard reader would
+     otherwise cycle the header before reaching any content. -->
+<a class="fw-skip" href="#world">Skip to the page</a>
+
+<header class="topbar" data-nav-host>
+  <a class="wordmark" href="index.html"><img class="wordmark-logo" src="img/hero.webp" alt="">Duplex&nbsp;World <span class="sub">benchmark</span></a>
+</header>
+
+<main id="world"></main>
+
+<!-- The walk renderer. Loaded before the flight so the map tiles can mount the moment their
+     payloads land; if it is missing the flight still runs and the tiles stay as placeholders
+     rather than throwing. -->
+<script src="walkmap.js"></script>
+<script>
+window.__DW_ICONS = {
+  openai: 'img/icons/openai.webp', gemini: 'img/icons/gemini.webp',
+  grok: 'img/icons/grok.webp', nova: 'img/icons/nova.webp',
+};
+</script>
+<script src="data.js"></script>
+<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};</script>
+<script src="flight.js"></script>
+<script>
+mountFlight(document.getElementById('world'), {
+  shell: 'split',
+  rail: false,
+  hero: { src: 'img/hero.webp', w: 1222, h: 1254 },
+  logo: { src: 'img/hero.webp' },
+  maps: { base: './' },
+  calls: { base: './' },
+  hint: 'scroll',
+  nav: [
+    { label: 'Experience', href: 'index.html' },
+    { label: 'Setup', href: 'setup.html' },
+    { label: 'Voice samples', href: 'samples.html' },
+    { label: 'Metrics', href: 'metrics.html' },
+    { label: 'Results', href: 'results.html' },
+    { label: 'Overview', href: 'overview.html' },
+  ],
+  video: { src: 'flight.mp4', srcSmall: 'flight-small.mp4', poster: 'img/poster.webp',
+    // One entry per section, in section order. A length mismatch is not a soft
+    // failure: the config is rejected and the film is dropped for the page.
+    stops: [2.00, 3.00, 2.00, 4.00, 103.50] },
+  sections: [
+    {
+      id: 'task', label: 'The setup', stage: 'film', still: null,
+      eyebrow: 'The setup',
+      title: 'One map, two people, and only one of them can see it.',
+      body: 'The walking world is the new task, so it is the one worth understanding '
+          + 'first. The copilot holds a map and cannot see the street. The walker is on '
+          + 'the street and has no map. Everything has to be established out loud, and '
+          + 'every route below is a real recorded run.',
+      cam: { x: 0.346, y: 0.601, z: 1.40 }, scroll: 2.6, linger: 0.4,
+      accent: 'var(--mag)',
+    },
+    {
+      id: 'harness', label: 'The harness', stage: 'film', still: null, block: 'band',
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.8, linger: 0.4,
+      accent: 'var(--pillar-dynamics)',
+      eyebrow: 'The harness',
+      title: 'Nobody picks up the phone.',
+      body: 'The caller is three models working together and the agent is a commercial '
+          + 'speech-to-speech system. Both talk on the same clock, so a slow system and a '
+          + 'fast one produce traces you can compare.',
+      harness: {
+        callerNote: 'simulated',
+        caller: [
+          { role: 'Writes the words', model: 'gpt-5.6-luna',
+            says: 'What the caller says next, given the scenario and what it has heard.' },
+          { role: 'Decides when to speak', model: 'claude-haiku-4.5',
+            says: 'Two independent yes/no calls every 2 seconds while the agent is '
+                + 'talking: interrupt, and backchannel. Turn-taking lives here, not in '
+                + 'the agent.' },
+          { role: 'Says them out loud', model: 'ElevenLabs eleven_v3',
+            says: 'Every caller utterance is synthesised. No human speech was recorded.' },
+        ],
+        midHead: 'both at once',
+        tick: '200 ms ticks',
+        midNote: 'The caller starts before the agent has finished, and for a moment both '
+               + 'are speaking - which is the thing this benchmark measures.',
+        agentNote: 'under test',
+        agentRole: 'Hears audio, answers in audio',
+        agentSays: 'One of five commercial speech-to-speech systems. It is never told '
+                 + 'whose turn it is.',
+        systems: ['Voice Think Fast', 'GPT-Realtime-2.1', 'Gemini-3.1-Flash-Live',
+                  'GPT-Realtime-2.1-mini', 'Nova 2 Sonic'],
+        more: { label: 'Watch one call run, tick by tick', href: 'system.html' },
+      },
+    },
+    {
+      id: 'walks', label: 'Pathfinding types', block: 'band', stage: 'film', still: null,
+      lede: 'The agent holds the map. The walker holds the street. Neither can see what '
+          + 'the other sees.',
+      navCards: [
+        { name: 'Single intent',
+          line: 'Five blocks, two turns, nothing closed. The control condition.' },
+        { name: 'Rerouting',
+          line: 'Four closures the copilot\u2019s map does not show. Exactly one detour survives.' },
+        { name: 'All-day assistance',
+          line: 'A second destination, revealed only on arrival at the first.' },
+      ],
+      cam: { x: 0.346, y: 0.601, z: 1.75 }, scroll: 4.7, linger: 0.5, steps: 4,
+      accent: 'var(--mag)',
+      mark: { name: 'Pathfinding', line: 'Three conversation types, each shown solved and unsolved.' },
+      // No paragraph. The tiles are the argument, the types are named on them, and the
+      // paper already explains each one at length.
+      maps: {
+        cols: 3,
+        // Figures 3, 4 and 5. Each pair shares a start, a destination and a closure set, so
+        // the contrast between two tiles isolates the agent. The failures are marked as
+        // failures and nothing more: which cap they hit is a detail for the paper.
+        cells: [
+          { key: 'clean', at: 0, outcome: 'ok', cond: 'Single intent', verdict: 'Pass',
+            note: 'Five blocks of five, two turns, no closures.' },
+          { key: 'blocked_ok', at: 1, outcome: 'ok', cond: 'Rerouting', verdict: 'Pass',
+            note: 'Four unmapped closures; finds the one detour that survives.' },
+          { key: 'errand_ok', at: 2, outcome: 'ok', cond: 'All-day assistance', verdict: 'Pass',
+            note: 'The second destination is revealed only on arrival at the first.' },
+          // `wander` used to sit here and it ARRIVES: eleven blocks against a five block
+          // optimum, ending on the same corner as the success beside it, so on a map it
+          // read as a second success. This run never reaches the pharmacy at all.
+          { key: 'base_lost', at: 0, outcome: 'bad', cond: 'Single intent', verdict: 'Fail',
+            note: 'Fifteen blocks, seven wrong turns, and the call ends short of the door.' },
+          { key: 'blocked_bad', at: 1, outcome: 'bad', cond: 'Rerouting', verdict: 'Fail',
+            note: 'The same closures, never resolved.' },
+          { key: 'errand_bad', at: 2, outcome: 'bad', cond: 'All-day assistance', verdict: 'Fail',
+            note: 'Ends with the walker believing they had arrived.' },
+        ],
+      },
+    },
+    {
+      id: 'types9', label: 'Conversation types', stage: 'film', still: null,
+      // Its own block: nine cards want every column they can get, and the film beside them
+      // is context rather than evidence here, so the panel keeps its width and the graphic
+      // gives ground instead.
+      block: 'band',
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.6, linger: 0.4,
+      accent: 'var(--pillar-agentic)',
+      cardsLede: 'Nine shapes, shared by all five enterprise worlds.',
+      cards: TYPES9,
+      cardsFoot: 'Plus two that only navigation elicits: rerouting, and all-day assistance.',
+    },
+    {
+      id: 'out', label: 'Duplex World', stage: 'film', still: null, layout: 'hero',
+      block: 'out',
+      cam: { x: 0.500, y: 0.480, z: 1.02 }, scroll: 1.8, linger: 0.3,
+      accent: 'var(--mag)',
+      next: { kicker: 'Next', label: 'Hear the calls', href: 'samples.html' },
+    },
+  ],
+});
+</script>
+</body>
+</html>

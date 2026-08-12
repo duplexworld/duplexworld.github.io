@@ -222,7 +222,7 @@ const HIGH = PILLARS.flatMap((g) => g.cols).map(() => 'high');
 // All five take the same band, because the film gives each world exactly the same sixteen
 // seconds. Equal bands over equal film is what makes the middle of the page run at one
 // speed instead of lurching between stops.
-function world(id, name, line, rows, _caption, cam) {
+function world(id, name, line, rows, caption, cam) {
   return {
     id, label: name, stage: 'film', still: null,
     // A full-width band. Eleven columns with their intervals do not fit beside a film:
@@ -247,7 +247,10 @@ function world(id, name, line, rows, _caption, cam) {
                                v: parseFloat(r.vals[1][0]),
                                pm: parseFloat(r.vals[1][1]) })),
     },
-    pillars: { rowHead: 'System', groups: PILLARS, best: HIGH, rows },
+    // The caption belongs to the TABLE, not to the world's name plate. The plate carries no
+    // one-liner by design - the worlds name themselves - but the reader entering 55 cells is
+    // owed the cell size and what the world isolates, which is what this says.
+    pillars: { rowHead: 'System', groups: PILLARS, best: HIGH, rows, caption },
   };
 }
 

@@ -40,6 +40,21 @@
    object the live endpoint returns, snapshotted to JSON by make_payloads.py, so nothing
    downstream of here knows the difference. Returns a handle the page uses to tear the
    instance down before building the next one. */
+/* DEMO: every value that reaches innerHTML from the PAYLOAD goes through this first.
+   The payloads are generated from run artefacts, so their text is not authored by hand:
+   a corner name, a termination reason or a trace line only has to contain a '<' once for
+   the status bar to start rendering markup, and the page ships with no CSP behind it.
+   The transcript renderer further down has always escaped; these two did not. */
+function escGeo(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+/* Numbers straight out of JSON are not numbers until something says so. */
+function numGeo(v, fb) {
+  return Number.isFinite(Number(v)) ? String(Number(v)) : (fb === undefined ? "-" : fb);
+}
+
 window.renderGeoDemo = function ({ GEO, host, voice, compact }) {
   if (!host) return null;
   const divHost = compact ? null : document.getElementById("geo-div");
@@ -1435,12 +1450,12 @@ function paintStatus(st, hname){
   if(sig===_statusSig)return;
   _statusSig=sig;
   $el("status").innerHTML=`
-    <span class="pill ${R.arrived?"ok":"bad"}">${R.arrived?"Delivered":(R.termination_reason||"not delivered")}</span>
-    <span>at <b>${W.corner_names[st.node]||st.node}</b> facing <b>${hname}</b></span>
-    <span>blocks <b>${blocks}</b> / ${R.optimal_blocks_clear} optimal</span>
-    <span>wrong-way moves <b>${R.wrong_way_moves??0}</b></span>
+    <span class="pill ${R.arrived?"ok":"bad"}">${R.arrived?"Delivered":escGeo(R.termination_reason||"not delivered")}</span>
+    <span>at <b>${escGeo(W.corner_names[st.node]||st.node)}</b> facing <b>${escGeo(hname)}</b></span>
+    <span>blocks <b>${numGeo(blocks)}</b> / ${numGeo(R.optimal_blocks_clear)} optimal</span>
+    <span>wrong-way moves <b>${numGeo(R.wrong_way_moves, "0")}</b></span>
     ${bad?`<span style="color:var(--belief)">copilot belief diverges</span>`:``}
-    <span class="act">${ACTION||st.say||""}</span>`;
+    <span class="act">${escGeo(ACTION||st.say||"")}</span>`;
 }
 function scalebar(){
   let best=10;
@@ -1882,10 +1897,27 @@ mapTheme(
     const last = (v.utterances || [])[uttEls.length - 1];
     VDUR = Math.max(last ? last.e : 0, STOPS.length ? STOPS[STOPS.length - 1].t : 0) + 1.5;
     if (v.audio) {
-      audioEl.src = v.audio;
+      /* DEMO: AAC first, then Opus. A bare .src of an Ogg-Opus file is silence in Safari -
+         WebKit has never shipped Ogg - and it fails with no visible error, so pressing
+         play on a Pathfinding walk on a Mac simply did nothing. The .m4a sibling is
+         already built and shipped beside every .opus; a <source> list lets the browser
+         pick. Kept as a list rather than a UA sniff so the fallback is the browser's own
+         decision. */
+      while (audioEl.firstChild) audioEl.removeChild(audioEl.firstChild);
+      audioEl.removeAttribute("src");
+      const srcs = [[v.audio, "audio/ogg; codecs=opus"],
+                    [String(v.audio).replace(/\.opus$/i, ".m4a"), "audio/mp4"]];
+      srcs.forEach(([u, ty]) => {
+        const so = document.createElement("source");
+        so.src = u;
+        so.type = ty;
+        audioEl.appendChild(so);
+      });
+      audioEl.load();
       audioEl.hidden = false;
       $el("railNote").textContent = "";
     } else {
+      while (audioEl.firstChild) audioEl.removeChild(audioEl.firstChild);
       audioEl.removeAttribute("src");
       audioEl.hidden = true;
       $el("railNote").textContent = "transcript only, no audio kept for this call";
@@ -2028,8 +2060,14 @@ mapTheme(
      with it, the recording becomes the master clock, and the speech activity timeline appears
      under the map. The call plays once and stops at the end, because a call that silently
      restarts mid-sentence is disorienting in a way a looping silent map is not. */
-  function voiceOn(on) {
+  /* DEMO: `opts.autoplay === false` opens voice mode without starting the recording.
+     The gallery wants a click on the voice tile to start playing, which is what this did
+     unconditionally. The project page opens the same view inside a dialog, and a dialog
+     that begins talking the instant it appears is startling, gives the reader no chance to
+     read the first turn, and on a phone starts a download they did not ask for. */
+  function voiceOn(on, opts) {
     if (on && !VOICE) return;
+    const autoplay = !(opts && opts.autoplay === false);
     VOICEON = !!on;
     root.classList.toggle("wm-voice", VOICEON);
     vTile.classList.toggle("on", VOICEON);
@@ -2051,15 +2089,26 @@ mapTheme(
       VCLK = 0; pos = 0; uttI = -1; phase = "run"; svg.style.opacity = "1";
       applyPos(); drawStateNow(); paintRail(0);
       requestAnimationFrame(drawTL);
-      if (VOICE.audio) {
+      // Opened paused means BOTH clocks paused. Starting the walk while the recording sits
+      // at zero desynchronises them from the first frame, and the transport then reads
+      // "Pause" over a call that has not begun.
+      if (!autoplay) { stop(); }
+      if (VOICE.audio && autoplay) {
         audioEl.currentTime = 0;
         audioEl.play().then(() => { AUDIOOK = true; })
           .catch(() => {                   // autoplay refused, or the file will not decode
             AUDIOOK = false;
             $el("railNote").textContent = "audio blocked by the browser, press play above";
           });
+      } else if (VOICE.audio) {
+        /* DEMO: opened without autoplay, but the recording is still THERE. AUDIOOK was only
+           ever set on the autoplay path, so leaving it false made the transport drive the
+           map in silence - pressing play walked the route and never touched the audio. The
+           file exists; whether it decodes is settled the first time play() is pressed. */
+        audioEl.currentTime = 0;
+        AUDIOOK = true;
       }
-      start();
+      if (autoplay) start(); else { stop(); drawStateNow(); }
     } else {
       VCLK = null; AUDIOOK = false;
       try { audioEl.pause(); } catch (e) { /* nothing playing */ }
@@ -2078,7 +2127,16 @@ mapTheme(
     if (running) { stop(); if (AUDIOOK) { try { audioEl.pause(); } catch (e) { } } }
     else {
       if (vEnded()) seekTime(0);
-      if (AUDIOOK) { try { audioEl.play(); } catch (e) { } }
+      // play() rejects with a promise, which a try/catch around the call never sees: a
+      // refusal or a codec the browser cannot decode failed silently and the walk ran on
+      // without sound, with nothing on screen to say why.
+      if (AUDIOOK) {
+        const pr = audioEl.play();
+        if (pr && pr.catch) pr.catch(() => {
+          AUDIOOK = false;
+          $el("railNote").textContent = "this browser could not play the recording";
+        });
+      }
       phase = "run"; svg.style.opacity = "1"; start();
     }
   };
@@ -2303,12 +2361,12 @@ mapTheme(
     divHost.innerHTML =
       `<b style="color:${R.arrived ? "var(--good)" : "var(--bad)"}">`
       + `${R.arrived ? "Delivered" : "Not delivered"}</b>`
-      + ` &nbsp;·&nbsp; blocks <b>${R.blocks_walked}</b> of ${R.optimal_blocks_clear}`
-      + (R.route_efficiency != null ? ` (efficiency <b>${R.route_efficiency.toFixed(2)}</b>)` : "")
-      + ` &nbsp;·&nbsp; wrong-way <b>${R.wrong_way_moves}</b>`
+      + ` &nbsp;·&nbsp; blocks <b>${numGeo(R.blocks_walked)}</b> of ${numGeo(R.optimal_blocks_clear)}`
+      + (Number.isFinite(Number(R.route_efficiency)) ? ` (efficiency <b>${Number(R.route_efficiency).toFixed(2)}</b>)` : "")
+      + ` &nbsp;·&nbsp; wrong-way <b>${numGeo(R.wrong_way_moves)}</b>`
       + ` &nbsp;·&nbsp; believes corner <b>${pct(R.belief_node_accuracy)}</b>,`
       + ` facing <b>${pct(R.belief_heading_accuracy)}</b>`
-      + (R.closures_total ? ` &nbsp;·&nbsp; closures <b>${R.closures_discovered}/${R.closures_total}</b>` : "")
+      + (R.closures_total ? ` &nbsp;·&nbsp; closures <b>${numGeo(R.closures_discovered)}/${numGeo(R.closures_total)}</b>` : "")
       + (R.track_side ? ` &nbsp;·&nbsp; pavement <b>${R.on_right_side ? "correct" : "WRONG SIDE"}</b>` : "");
   }
 
@@ -2324,7 +2382,7 @@ mapTheme(
       if (VOICEON) voiceOn(true);          // already open: restart on the new call
     },
     get hasVoice() { return !!(VOICE && (VOICE.utterances || []).length); },
-    setVoiceMode(on) { voiceOn(on); },
+    setVoiceMode(on, opts) { voiceOn(on, opts); },
     probe,
     destroy() {
       stop();

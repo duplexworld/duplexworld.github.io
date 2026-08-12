@@ -53,7 +53,11 @@
      and 20px, including half-pixel values, which is the tell that they were nudged one at
      a time rather than derived. --t-ctrl is deliberately off-scale: controls read better
      slightly smaller than body. */
-  --t-micro:   12px;                        /* eyebrows, tags, rail, hint */
+  /* Raised from 12px. The floor on this project is 14px and this token fed the
+     eyebrows, tags, rail and hint, which is most of the small type on the page.
+     The scale had already collapsed to 14 nearly everywhere, so this closes the
+     gap rather than opening a new step. */
+  --t-micro:   14px;                        /* eyebrows, tags, rail, hint */
   --t-ctrl:    14px;                      /* buttons and links */
   --t-body:    17px;
   --t-lead:    20px;                        /* pair column titles */
@@ -1615,33 +1619,69 @@ body {
 .fw-work { margin: 16px 0 0; }
 .fw-work-h {
   font-size: 14px; font-weight: 700; letter-spacing: 0.085em; text-transform: uppercase;
-  color: var(--ink-dim); margin-bottom: 8px;
+  color: var(--ink-dim); margin-bottom: 10px;
 }
-.fw-work-rows { display: flex; flex-direction: column; gap: 4px; }
-.fw-work-row { display: grid; grid-template-columns: 5.5ch 1fr 12ch; align-items: center; gap: 8px; }
-.fw-work-n { font-size: 14px; color: var(--ink-dim); }
-.fw-work-t { position: relative; height: 16px; border-radius: 4px; background: rgba(14, 16, 41, .05); }
-.fw-work-b { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: rgba(14, 16, 41, .22); }
-.fw-work-row.is-pass .fw-work-b { background: color-mix(in srgb, var(--teal) 55%, var(--tealln)); }
-.fw-work-row.is-fail .fw-work-b { background: color-mix(in srgb, var(--red) 42%, var(--redln)); }
+.fw-work-rows { display: flex; flex-direction: column; gap: 7px; }
+/* Four columns now: the run, the walk, the verdict in a word, and the figures. */
+.fw-work-row {
+  display: grid; grid-template-columns: 5.5ch 1fr 9ch 12ch;
+  align-items: center; gap: 10px;
+}
+.fw-work-n { font-size: 14px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.fw-work-t {
+  position: relative; height: 22px; border-radius: 7px;
+  background: rgba(14, 16, 41, .045);
+  box-shadow: inset 0 0 0 1px rgba(14, 16, 41, .06);
+}
+.fw-work-b {
+  position: absolute; inset: 0 auto 0 0; border-radius: 7px;
+  background: rgba(14, 16, 41, .22);
+}
+/* A pass walks nearly the optimal route, a fail wanders. The ramp runs from the colour of
+   the route to the colour of the detour, so the bar carries the verdict along its whole
+   length rather than only where it stops. */
+.fw-work-row.is-pass .fw-work-b {
+  background: linear-gradient(90deg, #2FA37A 0%, #48BE7C 100%);
+}
+.fw-work-row.is-fail .fw-work-b {
+  background: linear-gradient(90deg, #F2A104 0%, #DE4B2C 100%);
+}
+/* A run that never arrives has no length to draw. An empty track read as "zero blocks",
+   which is the opposite of what happened, so it is drawn as an absence instead. */
+.fw-work-row.is-none .fw-work-t {
+  background: repeating-linear-gradient(135deg,
+    rgba(14, 16, 41, .05) 0 6px, rgba(14, 16, 41, .10) 6px 12px);
+  box-shadow: inset 0 0 0 1px rgba(14, 16, 41, .12);
+}
+.fw-work-c {
+  font-size: var(--t-micro); font-weight: 680; text-align: center;
+  padding: 3px 0 4px; border-radius: 999px; letter-spacing: .02em;
+}
+.fw-work-row.is-pass .fw-work-c { background: rgba(47, 163, 122, .16); color: #1C6B4F; }
+.fw-work-row.is-fail .fw-work-c { background: rgba(222, 75, 44, .14); color: #A33318; }
+.fw-work-row.is-none .fw-work-c { background: rgba(14, 16, 41, .07); color: var(--ink-dim); }
 /* The optimum and the efficiency limit, drawn on every run so the two thresholds are the
    same two lines every time rather than a sentence under the figure. */
-.fw-work-opt, .fw-work-lim { position: absolute; top: -2px; bottom: -2px; width: 0; }
+.fw-work-opt, .fw-work-lim { position: absolute; top: -3px; bottom: -3px; width: 0; }
 .fw-work-opt { border-left: 2px solid var(--ink); }
-.fw-work-lim { border-left: 2px dashed rgba(14, 16, 41, .45); }
-.fw-work-v {
-  font-size: 14px; color: var(--ink-soft); text-align: right;
-  font-variant-numeric: tabular-nums; white-space: nowrap;
-}
+.fw-work-lim { border-left: 2px dashed rgba(14, 16, 41, .5); }
 .fw-work-key { margin-top: 8px; font-size: 14px; color: var(--ink-dim); }
 .fw-work-out {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px; margin-top: 12px;
 }
 .fw-work-cell {
-  padding: 8px 12px; border-radius: 12px;
-  background: rgba(255,255,255,.55); border: 1px solid var(--line);
+  padding: 9px 12px 10px; border-radius: 12px;
+  background: color-mix(in srgb, var(--pillar-agentic) 7%, #fff);
+  border: 1px solid color-mix(in srgb, var(--pillar-agentic) 26%, var(--line));
 }
+/* All three of these are agentic-capability metrics computed from the SAME five runs, so
+   they take that pillar's one colour. Tinting them green, blue and amber made them look
+   like one metric from each of the three pillars, which is a claim about the figure that
+   is simply untrue. They separate by depth instead, left to right, because that is the
+   direction the requirement tightens: arrived, then passed once, then passed every time. */
+.fw-work-cell:nth-child(2) { background: color-mix(in srgb, var(--pillar-agentic) 12%, #fff); }
+.fw-work-cell:nth-child(3) { background: color-mix(in srgb, var(--pillar-agentic) 18%, #fff); }
 .fw-work-cell b {
   display: block; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--ink-dim); font-weight: 700;
@@ -2385,7 +2425,13 @@ body {
      state: all six walks and every table row present at once, rather than a grid that
      never advances past step 0 and shows nothing at all. */
   .fw-map { opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; }
-  .fw-maps { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .fw-maps { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; 
+  /* Columns were pinned and rows were not, so the reveal's step-0 value
+     `var(--map-tall) 0fr` survived: three walks at full height and three at
+     four pixels. The three that collapsed are the FAILURES, which is the half
+     of the comparison the section exists to show. */
+  grid-template-rows: auto auto !important;
+}
   .fw-pillars.is-staged tbody tr, .fw-pillars.is-staged .fw-p-metrics th { opacity: 1 !important; }
   /* Transforms are motion too, and these two survived the sweep. */
   .fw-globe.is-on, .fw-shell-split .fw-video, .fw-shell-split .fw-art { transform: none !important; }
@@ -2425,7 +2471,7 @@ body {
 .fw-open-author b { font-weight: 750; }
 .fw-open-author sup, .fw-open-aff sup {
   /* An em here resolved to 10.5px, under the 12px floor. */
-  font-size: 12px; font-weight: 700; color: var(--soft);
+  font-size: 14px; font-weight: 700; color: var(--soft);
   vertical-align: super; line-height: 0; margin-left: 1.0px;
 }
 .fw-open-sep { color: var(--soft); margin-left: -4px; }
@@ -2437,10 +2483,13 @@ body {
   gap: 0 16px; min-width: 0;
 }
 .fw-open-affrow { font-size: 14px; }
-.fw-open-notes { font-size: 12px; color: var(--muted); }
+.fw-open-notes { font-size: 14px; color: var(--muted); }
 .fw-open-aff {
   /* Not a flex line: a <sup> inside one becomes a flex item and loses its raise, so the
-     markers dropped to the baseline and read as "1 Centific" rather than as a reference. */
+     marker dropped to the baseline and read as part of the affiliation name rather than
+     as a reference to it. (Kept generic on purpose: this file is shipped byte-identical
+     into the anonymous build, so an example spelled out here is a de-anonymising leak in
+     the one file both variants share.) */
   display: inline; font-size: inherit; font-weight: 600; color: var(--text);
 }
 .fw-open-affrow > .fw-open-aff { white-space: nowrap; }
@@ -2494,7 +2543,7 @@ body {
   font-size: 14px; font-weight: 800; color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
-.fw-open-hpm { font-weight: 600; color: var(--muted); margin-left: 3.0px; font-size: 12px; }
+.fw-open-hpm { font-weight: 600; color: var(--muted); margin-left: 3.0px; font-size: 14px; }
 .fw-open-htrack {
   grid-area: track;
   position: relative;
@@ -2522,7 +2571,7 @@ body {
 }
 .fw-open-pnote {
   margin-top: 8px;
-  font-size: 12px; color: var(--sub); line-height: 1.4;
+  font-size: 14px; color: var(--sub); line-height: 1.4;
 }
 
 
@@ -2547,7 +2596,7 @@ body {
 .fw-mx-spans { grid-template-columns: var(--wcol) repeat(var(--n), minmax(var(--cell), 1fr)) 72px; }
 .fw-mx-span {
   grid-column: calc(var(--from) + 1) / calc(var(--to) + 1);
-  font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   color: var(--muted);
   border-bottom: 1px solid var(--grid);
   padding-bottom: 4px; margin-bottom: 4px;
@@ -2555,7 +2604,7 @@ body {
 .fw-mx-span.is-nav { color: var(--sub); }
 /* Column headings run horizontally. Nothing on this page is rotated. */
 .fw-mx-th {
-  font-size: 12px; font-weight: 700; line-height: 1.15; color: var(--sub);
+  font-size: 14px; font-weight: 700; line-height: 1.15; color: var(--sub);
   hyphens: auto; overflow-wrap: anywhere;
   align-self: end; padding-bottom: 4px;
 }
@@ -2588,7 +2637,7 @@ body {
   background: var(--muted); opacity: .25;
 }
 .fw-mx-marg span, .fw-mx-colt span {
-  font-size: 12px; font-weight: 700; color: var(--sub);
+  font-size: 14px; font-weight: 700; color: var(--sub);
   font-variant-numeric: tabular-nums;
 }
 .fw-mx-foot { align-items: start; padding-top: 4px; border-top: 1px solid var(--grid); }
@@ -2599,7 +2648,7 @@ body {
 }
 .fw-mx-total { font-size: 14px; font-weight: 800; color: var(--ink); }
 .fw-mx-cap { margin-top: 12px; font-size: 17px; line-height: 1.55; color: var(--sub); max-width: 72ch; }
-.fw-mx-note { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.fw-mx-note { margin-top: 8px; font-size: 14px; color: var(--muted); }
 
 
 /* Duration violins. One colour, one shared axis, the cap drawn rather than implied.
@@ -2641,7 +2690,7 @@ body {
   background: var(--ink); opacity: .6; border-radius: 1px;
 }
 .fw-vio-gut {
-  font-size: 12px; color: var(--sub); font-variant-numeric: tabular-nums;
+  font-size: 14px; color: var(--sub); font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .fw-vio-axis {
@@ -2652,7 +2701,7 @@ body {
 }
 .fw-vio-tick {
   position: absolute; bottom: 2px; transform: translateX(-50%);
-  font-size: 12px; color: var(--muted);
+  font-size: 14px; color: var(--muted);
 }
 .fw-vio-capline {
   position: absolute; top: 0; bottom: -428px; width: 0;
@@ -2661,11 +2710,11 @@ body {
 .fw-vio-capline b {
   position: absolute; top: -18px; left: 6px;
   max-width: 64px;
-  font-size: 12px; font-weight: 700; color: var(--sub); white-space: nowrap;
+  font-size: 14px; font-weight: 700; color: var(--sub); white-space: nowrap;
 }
 .fw-vio-annot {
   margin: 4px 0 0 clamp(112px, calc(10vw + 16px), 148px);
-  font-size: 12px; font-weight: 700; color: var(--ink);
+  font-size: 14px; font-weight: 700; color: var(--ink);
 }
 .fw-vio-cap { margin-top: 16px; font-size: 17px; line-height: 1.55; color: var(--sub); max-width: 76ch; }
 
@@ -2676,7 +2725,7 @@ body {
   .fw-vio-plot { height: 24px; }
   .fw-vio-svg, .fw-vio-stub { display: none; }
   .fw-vio-med { height: 14px; width: 3px; background: var(--ink); border-radius: 2px; }
-  .fw-vio-gut { grid-column: 1 / -1; font-size: 12px; }
+  .fw-vio-gut { grid-column: 1 / -1; font-size: 14px; }
   .fw-vio-axis { margin-left: 92px; margin-right: 0; }
   .fw-vio-capline { bottom: -300px; }
 }
@@ -2726,7 +2775,7 @@ body {
 }
 .fw-pil-full { font-size: 14px; font-weight: 700; color: var(--ink); margin-top: 2.0px; }
 .fw-pil-says { margin: 8px 0 0; font-size: 14px; line-height: 1.45; color: var(--sub); }
-.fw-pil-range { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.fw-pil-range { margin-top: 8px; font-size: 14px; color: var(--muted); }
 
 /* The claim the whole suite exists to protect. */
 .fw-callout {
@@ -2783,7 +2832,7 @@ body {
 }
 .fw-pl-bar:focus-visible { outline: 2px solid var(--sys, var(--ink)); outline-offset: 3px; }
 .fw-pl-time {
-  font-size: 12px; color: var(--sub); font-variant-numeric: tabular-nums;
+  font-size: 14px; color: var(--sub); font-variant-numeric: tabular-nums;
   white-space: nowrap; min-width: 76px; text-align: right;
 }
 
@@ -2792,7 +2841,7 @@ body {
 .fw-sm { margin: 0; width: 100%; }
 .fw-sm-lede { margin: 0 0 16px; font-size: 20px; line-height: 1.45; color: var(--sub); }
 .fw-sm-gl {
-  margin: 0 0 8px; font-size: 12px; font-weight: 700;
+  margin: 0 0 8px; font-size: 14px; font-weight: 700;
   letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
 }
 .fw-sm-grp.is-apart { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--grid); }
@@ -2807,17 +2856,17 @@ body {
   align-items: center; column-gap: 8px; margin-bottom: 4px;
 }
 .fw-sm-row:has(.fw-sm-sys) { grid-template-columns: 142px minmax(0, 1fr) 46px; }
-.fw-sm-sys { font-size: 12px; font-weight: 700; color: var(--sub); white-space: nowrap; }
+.fw-sm-sys { font-size: 14px; font-weight: 700; color: var(--sub); white-space: nowrap; }
 .fw-sm-track { height: 8px; border-radius: 3px; background: var(--grid); position: relative; }
 .fw-sm-bar {
   position: absolute; inset: 0 auto 0 0; min-width: 3px;
   border-radius: 3px; background: var(--sys, var(--ink));
 }
 .fw-sm-val {
-  font-size: 12px; font-weight: 700; color: var(--ink);
+  font-size: 14px; font-weight: 700; color: var(--ink);
   font-variant-numeric: tabular-nums; text-align: right;
 }
-.fw-sm-note { margin-top: 16px; font-size: 12px; color: var(--muted); max-width: 76ch; }
+.fw-sm-note { margin-top: 16px; font-size: 14px; color: var(--muted); max-width: 76ch; }
 @media (max-width: 900px) { .fw-sm-wrap { grid-template-columns: 1fr; } }
 
 
@@ -2844,7 +2893,7 @@ body {
 }
 .fw-open-headw {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: 12px; font-weight: 700; color: var(--sys, var(--sub)); white-space: nowrap;
+  font-size: 14px; font-weight: 700; color: var(--sys, var(--sub)); white-space: nowrap;
 }
 .fw-open-headw .fw-vmark { width: 14px; height: 14px; }
 
@@ -2921,13 +2970,11 @@ body {
   display: flex; align-items: center; gap: 12px;
   flex: 1 1 auto; min-height: 0; margin-top: 4px;
 }
-.fw-ring { position: relative; flex: 0 0 auto; aspect-ratio: 1; height: 100%; max-height: 132px; }
+.fw-ring { position: relative; flex: 0 0 auto; aspect-ratio: 1; height: 100%; max-height: 118px; }
 .fw-ring-svg { width: 100%; height: 100%; display: block; }
 /* The five enterprise worlds share one ink; Pathfinding, which differs in size and in
    kind, is the lighter arc. Colour here would collide with the system palette. */
-.fw-ring-seg { stroke: var(--ink); opacity: .82; }
-.fw-ring-seg:nth-of-type(even) { opacity: .62; }
-.fw-ring-seg.is-last { stroke: var(--muted); opacity: 1; }
+.fw-ring-seg { stroke: var(--wc, var(--ink)); opacity: 1; }
 .fw-ring-mid {
   position: absolute; inset: 0; display: grid; place-content: center; text-align: center;
   pointer-events: none;
@@ -2936,7 +2983,7 @@ body {
   display: block; font-size: 20px; font-weight: 800; color: var(--ink);
   font-variant-numeric: tabular-nums; line-height: 1;
 }
-.fw-ring-mid span { font-size: 12px; color: var(--sub); letter-spacing: -0.01em; }
+.fw-ring-mid span { font-size: 14px; color: var(--sub); letter-spacing: -0.01em; }
 .fw-ring-key {
   display: flex; flex-direction: column; gap: 2px; min-width: 0;
   /* Capped, so a count sits beside its world instead of drifting to the far edge of the
@@ -2944,14 +2991,24 @@ body {
   flex: 0 1 auto; max-width: 236px; width: 100%;
 }
 .fw-ring-krow {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
-  font-size: 12px; color: var(--sub); white-space: nowrap;
+  /* A swatch and a name. The counts that used to sit on the right are all 675 except one,
+     so as a column they said "these are equal" six times over and buried the one that is
+     not; the ring already shows that, and the tooltip and the accessible name still carry
+     the exact figures for anyone who wants them. */
+  display: flex; align-items: center; justify-content: flex-start; gap: 8px;
+  /* 1.28, not the inherited body leading. Six rows at 14px with normal leading is 12px
+     taller than the tile, and the sixth row - Pathfinding, the world the ring exists to
+     single out - was cut in half at the card's bottom edge. */
+  font-size: 14px; line-height: 1.22; color: var(--sub); white-space: nowrap;
 }
-.fw-ring-krow b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.fw-ring-sw {
+  flex: 0 0 auto; width: 11px; height: 11px; border-radius: 3px;
+  background: var(--wc, var(--ink));
+}
 .fw-ring-kname { overflow: hidden; text-overflow: ellipsis; }
 
 .fw-ring-khead {
-  font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  font-size: 14px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
   color: var(--muted); margin-bottom: 2.0px;
 }
 
@@ -2984,11 +3041,11 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
 
 .fw-p-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
 .fw-p-filter-l {
-  font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  font-size: 14px; font-weight: 700; letter-spacing: .06em;
   text-transform: uppercase; color: var(--muted);
 }
 .fw-p-chip {
-  font-size: 12px; font-weight: 700; cursor: pointer;
+  font-size: 14px; font-weight: 700; cursor: pointer;
   padding: 4px 12px; border-radius: 999px;
   border: 1px solid var(--grid); background: var(--surface); color: var(--sub);
 }
@@ -3042,7 +3099,7 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
    The clone opens over the page so the live charts behind keep their state. */
 .fw-zoom-btn {
   position: absolute; top: 0; right: 0;
-  font-size: 12px; font-weight: 700; cursor: pointer;
+  font-size: 14px; font-weight: 700; cursor: pointer;
   padding: 4px 12px; border-radius: 999px;
   border: 1px solid var(--grid); background: var(--surface); color: var(--sub);
 }
@@ -3090,11 +3147,11 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
   padding-left: 8px;
   border-left: 4px solid var(--sys, var(--ink));
 }
-.fw-lead-pillar { font-size: 12px; color: var(--muted); grid-column: 1 / -1; }
+.fw-lead-pillar { font-size: 14px; color: var(--muted); grid-column: 1 / -1; }
 .fw-lead-metric { font-size: 14px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
 .fw-lead-who {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: 12px; font-weight: 700; color: var(--sys, var(--sub)); white-space: nowrap;
+  font-size: 14px; font-weight: 700; color: var(--sys, var(--sub)); white-space: nowrap;
 }
 .fw-lead-who .fw-vmark { width: 14px; height: 14px; }
 
@@ -3121,7 +3178,7 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
   font-variant-numeric: tabular-nums; line-height: 1.1;
 }
 .fw-open-stats.is-strip .fw-open-i span {
-  font-size: 12px; color: var(--muted); line-height: 1.2;
+  font-size: 14px; color: var(--muted); line-height: 1.2;
 }
 /* The ring's own total is the fourth figure, so it is set at the same size as the three
    above it rather than shouting over them. */
@@ -3164,3 +3221,446 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
 .fw-shell-split[data-block="band"] .fw-bar-row {
   grid-template-columns: 190px minmax(0, 1fr) 104px;
 }
+
+/* ------------------------------------------------------------------ call tapes
+   A recorded enterprise call: the marker rail, two speech lanes, the effects band, the
+   window the shipped audio covers, the transport and the transcript. The colours are the
+   paper's three pillar hues plus two reds for the two ways a handover goes wrong; nothing
+   here introduces a sixth family. Every marker also carries a title and a legend entry,
+   because a reader who cannot separate the hues must still be able to read the tape. */
+:root {
+  --mk-smooth:     #0B7A56;
+  --mk-contested:  #B36800;   /* both spoke at once */
+  --mk-failed:     #C0392B;   /* the handover did not complete */
+  --mk-interrupt:  #4285F4;   /* one cut into the other */
+  --mk-back:       #6d6f87;   /* mm-hm */
+  --mk-self:       var(--viod); /* the agent corrected itself */
+  --tp-fx:         #C9CBDA;
+}
+/* THE SIX WORLDS: a warm ramp, yellow through orange and red to purple.
+   ---------------------------------------------------------------------------------
+   Hue alone was not enough. The first pass put yellow and orange ten degrees apart at the
+   same lightness, which on a ring with a hairline gap reads as one slice. So the ramp
+   steps DOWN in lightness as it walks round the wheel: where two neighbours are close in
+   hue they are far apart in luminance (yellow to orange is 1.64:1), and where they are
+   close in luminance their hues are 30 to 49 degrees apart. Both ends hold on white.
+
+   Pathfinding sits at the dark end, which is also the honest place for it: 450
+   conversations rather than 675, the only world run in two channels. */
+:root {
+  --world-banking:     #F7D445;
+  --world-insurance:   #FA8C0F;
+  --world-travel:      #D33422;
+  --world-healthcare:  #B62B6C;
+  --world-logistics:   #8F389F;
+  --world-pathfinding: #4F277C;
+}
+/* The system hues are FILLS. As text on the page ground mint is 2.18:1 and orange 2.46:1,
+   so any label that took the raw fill was effectively invisible. These are the same five
+   hues darkened to the point where they pass 4.5:1 on white, computed rather than picked:
+   mint 4.57, blue 4.54, orange 4.51; grok and gpt already pass and are unchanged. */
+:root {
+  --sys-grok-t:   var(--sys-grok);
+  --sys-gpt-t:    var(--sys-gpt);
+  --sys-mini-t:   #2C8464;
+  --sys-gemini-t: #3974D4;
+  --sys-nova-t:   #AE6500;
+}
+
+.fw-tapes {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr));
+  margin-top: 14px;
+}
+.fw-tp {
+  margin: 0; padding: 13px 14px 12px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+  border-top: 3px solid var(--mk-smooth);
+  display: flex; flex-direction: column; gap: 9px;
+}
+.fw-tp.is-bad { border-top-color: var(--mk-failed); }
+.fw-tp-cap { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.fw-tp-type { font-size: 15px; font-weight: 640; color: var(--ink); }
+.fw-tp-verdict {
+  font-size: 14px; font-weight: 640; letter-spacing: .02em;
+  padding: 2px 8px; border-radius: 999px;
+  background: var(--magbg); color: var(--magd);
+}
+.fw-tp.is-bad .fw-tp-verdict { background: var(--redbg); color: var(--red); }
+.fw-tp-model {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; font-weight: 600; color: var(--sys-t, var(--ink2));
+}
+.fw-tp-model img, .fw-tp-model svg { width: 15px; height: 15px; border-radius: 3px; }
+.fw-tp-line { margin: 0; font-size: 14px; line-height: 1.45; color: var(--soft); }
+.fw-tp-box { font-size: 14px; color: var(--grey); }
+
+/* ---- the tape itself */
+.fw-tp-tape {
+  position: relative; height: 54px; margin-top: 2px;
+  background: var(--bg-base); border-radius: 6px; overflow: hidden;
+}
+.fw-tp-rail { position: absolute; left: 58px; right: 4px; top: 0; height: 11px; }
+.fw-tp-rail i {
+  position: absolute; top: 1px; width: 2px; height: 9px; margin-left: -1px;
+  background: var(--mk); border-radius: 1px;
+}
+.fw-tp-rail i.fw-tp-tool {
+  top: 2px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%;
+  background: none; border: 1.6px solid var(--ink2);
+}
+.fw-tp-rail i.fw-tp-tool.is-err { border-color: var(--red); background: var(--red); }
+.fw-tp-lane { position: absolute; left: 0; right: 0; height: 13px; line-height: 13px; }
+.fw-tp-lane.is-agent { top: 13px; }
+.fw-tp-lane.is-user  { top: 28px; }
+/* The lane name gets its own gutter. Printed over the track it sat on top of the first
+   forty seconds of speech, which on a five minute call is the whole opening exchange. */
+.fw-tp-lane-n {
+  position: absolute; left: 6px; top: 0; width: 46px; z-index: 2;
+  font-size: 14px; line-height: inherit; font-weight: 600; letter-spacing: .02em;
+  color: var(--grey); pointer-events: none; text-align: right;
+  white-space: nowrap; overflow: hidden;
+}
+.fw-tp-track { position: absolute; top: 0; bottom: 0; left: 58px; right: 4px; }
+.fw-tp-track i { position: absolute; top: 2px; height: 9px; border-radius: 2px; }
+.fw-tp-lane.is-agent .fw-tp-track i { background: var(--pillar-agentic); }
+.fw-tp-lane.is-user  .fw-tp-track i { background: var(--pillar-dynamics); }
+.fw-tp-fx { position: absolute; left: 58px; right: 4px; top: 44px; height: 6px; }
+.fw-tp-fx i { position: absolute; top: 1px; height: 4px; background: var(--tp-fx); border-radius: 1px; }
+.fw-tp-fx i.is-burst_noise { background: color-mix(in srgb, var(--viod) 45%, #fff); }
+.fw-tp-fx i.is-out_of_turn_speech { background: color-mix(in srgb, var(--ambd) 45%, #fff); }
+/* The window the audio covers. A bracket, not a fill: the tape underneath has to stay
+   readable through it, and a filled block reads as "this part is different" rather than
+   as "this is the part you can hear". */
+.fw-tp-win {
+  position: absolute; top: 11px; bottom: 8px; pointer-events: none;
+  border-left: 2px solid var(--ink2); border-right: 2px solid var(--ink2);
+  background: color-mix(in srgb, var(--ink2) 7%, transparent);
+}
+.fw-tp-head {
+  position: absolute; top: 11px; bottom: 6px; width: 2px; margin-left: -1px;
+  background: var(--ink); opacity: 0; transition: opacity .18s ease; pointer-events: none;
+}
+.fw-tp.is-playing .fw-tp-head { opacity: 1; }
+.fw-tp-scale {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-size: 14px; color: var(--grey); font-variant-numeric: tabular-nums;
+}
+.fw-tp-scale-w { color: var(--ink2); font-weight: 600; }
+
+/* ---- transport */
+.fw-tp-pl { display: flex; align-items: center; gap: 9px; }
+.fw-tp-btn {
+  flex: none; width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+  display: grid; place-items: center; cursor: pointer;
+}
+.fw-tp-btn svg { width: 17px; height: 17px; fill: currentColor; }
+.fw-tp-btn:hover { border-color: var(--ink2); }
+.fw-tp-bar { flex: 1 1 auto; min-width: 0; accent-color: var(--ink2); height: 20px; }
+.fw-tp-time {
+  flex: none; font-size: 14px; color: var(--grey);
+  font-variant-numeric: tabular-nums; min-width: 92px; text-align: right;
+}
+
+/* ---- transcript */
+.fw-tp-turns {
+  max-height: 190px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px;
+  padding-right: 4px;
+}
+.fw-tp-turn {
+  display: grid; grid-template-columns: 52px minmax(0, 1fr) 40px; gap: 8px;
+  align-items: baseline; text-align: left;
+  background: none; border: 0; border-radius: 6px; padding: 4px 6px; cursor: pointer;
+  font: inherit; font-size: 14px; line-height: 1.42; color: var(--text);
+}
+.fw-tp-turn:hover { background: var(--bg-base); }
+.fw-tp-turn.is-now { background: color-mix(in srgb, var(--ink2) 8%, transparent); }
+.fw-tp-who { font-size: 14px; font-weight: 640; color: var(--pillar-agentic); }
+.fw-tp-turn.is-user .fw-tp-who { color: var(--pillar-dynamics-t); }
+.fw-tp-at {
+  font-size: 14px; color: var(--grey); font-variant-numeric: tabular-nums; text-align: right;
+}
+.fw-tp-legend {
+  display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px;
+  font-size: 14px; color: var(--soft);
+}
+.fw-tp-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.fw-tp-legend i { width: 10px; height: 10px; border-radius: 2px; background: var(--mk); }
+.fw-tp-legend i.is-tool { border-radius: 50%; background: none; border: 1.6px solid var(--ink2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fw-tp-head { transition: none; }
+}
+@media (max-width: 700px) {
+  .fw-tapes { grid-template-columns: 1fr; }
+  .fw-tp-turns { max-height: 150px; }
+  .fw-tp-model { margin-left: 0; }
+}
+/* The window bracket and the playhead live in the same coordinate space as the tracks,
+   so all five layers agree on where a given second sits. */
+.fw-tp-over { position: absolute; left: 58px; right: 4px; top: 0; bottom: 0; pointer-events: none; }
+.fw-tp-over .fw-tp-win, .fw-tp-over .fw-tp-head { position: absolute; }
+
+/* ------------------------------------------------------------------ print
+   Without this the page prints as one screen, repeated. The stage is position:fixed and
+   only the live panel carries opacity, so results.html printed to 44 identical pages of
+   the Pathfinding chart and twelve of its thirteen sections never appeared at all.
+
+   Printing is the one context where the scroll flight cannot be the medium: there is no
+   scroll, so every panel has to stand still, in order, at full strength. */
+@media print {
+  html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
+  .fw-skip, .topbar, .fw-rail, .fw-hint, .fw-auto, .fw-nav, .fw-globes { display: none !important; }
+  /* The film is a scrub surface; on paper it is one arbitrary frame. */
+  .fw-video, .fw-art, .fw-sky, .fw-veil, .fw-scrim, .fw-zoom-btn { display: none !important; }
+  .fw-stage {
+    position: static !important; height: auto !important; width: auto !important;
+  }
+  .fw-copy {
+    position: static !important; inset: auto !important; width: auto !important;
+    max-width: none !important; padding: 0 !important; display: block !important;
+  }
+  .fw-spacer { display: none !important; }
+  .fw-panel {
+    position: static !important; opacity: 1 !important; visibility: visible !important;
+    transform: none !important; filter: none !important; will-change: auto !important;
+    width: auto !important; max-width: none !important; margin: 0 0 22mm !important;
+    padding: 0 !important; break-inside: avoid; page-break-inside: avoid;
+  }
+  .fw-panel[hidden] { display: block !important; }
+  /* Evidence that scrolls on screen has to unroll on paper, or it prints one column wide. */
+  .fw-pillars-wrap, .fw-mx-scroll, .fw-tp-turns {
+    overflow: visible !important; max-height: none !important;
+  }
+  .fw-tp, .fw-card, .fw-navcard, .fw-sm-pan, figure, table {
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  /* A play button on paper is a black circle that says nothing. */
+  .fw-tp-pl, .fw-pl, .fw-tp-head, .fw-p-filter, .fw-p-sortbtn { display: none !important; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 14px; color: #555; }
+}
+
+/* ------------------------------------------------------------------ step controls
+   Two buttons that move the reader exactly one stop. They sit against the right edge,
+   vertically centred, because that is where a thumb and a cursor both already are and it
+   is the one column of the page that never carries content at any block or viewport.
+
+   Quiet until wanted: low-contrast at rest, full strength on hover or focus. A scroll page
+   should still read as a scroll page. */
+.fw-step {
+  position: fixed; z-index: 40;
+  right: clamp(10px, 1.6vw, 22px); top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  opacity: .58; transition: opacity .2s ease;
+}
+.fw-step:hover, .fw-step:focus-within { opacity: 1; }
+.fw-step-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
+  -webkit-backdrop-filter: saturate(1.4) blur(8px);
+  backdrop-filter: saturate(1.4) blur(8px);
+  color: var(--ink); padding: 0;
+}
+.fw-step-btn svg { width: 22px; height: 22px; display: block; }
+.fw-step-btn.is-up svg { transform: rotate(180deg); }
+.fw-step-btn:hover:not(:disabled) { border-color: var(--ink2); background: var(--paper); }
+.fw-step-btn:disabled { opacity: .3; cursor: default; }
+.fw-step-now {
+  font-size: 14px; font-variant-numeric: tabular-nums; color: var(--grey);
+  letter-spacing: .01em;
+}
+/* On a phone the right edge is where the thumb is, so it stays - but it drops to the lower
+   third, out of the way of the text the reader is actually on. */
+@media (max-width: 700px) {
+  .fw-step { top: auto; bottom: 18px; transform: none; flex-direction: row; gap: 8px; }
+  .fw-step-btn { width: 46px; height: 46px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fw-step { transition: none; }
+}
+@media print { .fw-step { display: none !important; } }
+
+/* ---- the tile as a control, and the call it opens */
+.fw-tp { cursor: pointer; transition: border-color .16s ease, box-shadow .16s ease; }
+.fw-tp:hover { box-shadow: 0 3px 14px rgba(23, 23, 31, .09); }
+.fw-tp:hover .fw-tp-cue, .fw-tp:focus-visible .fw-tp-cue { color: var(--ink2); }
+.fw-tp:focus-visible { outline: 2px solid var(--ink2); outline-offset: 3px; }
+.fw-tp-cue {
+  display: flex; align-items: center; gap: 6px; margin-top: 2px;
+  font-size: 14px; font-weight: 600; color: var(--grey);
+}
+.fw-tp-cue-a { transition: transform .16s ease; }
+.fw-tp:hover .fw-tp-cue-a { transform: translateX(3px); }
+
+.fw-call-card { max-width: min(1080px, 94vw); }
+.fw-call-head { display: block; }
+.fw-call-headrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fw-call-headrow .fw-tp-verdict.is-bad { background: var(--redbg); color: var(--red); }
+.fw-call-body { display: flex; flex-direction: column; gap: 14px; }
+/* The open call is where the transcript is READ, so it gets real height rather than the
+   tile's 190px window. */
+.fw-call-body .fw-tp-turns { max-height: min(46vh, 520px); }
+.fw-call-body .fw-tp-tape { height: 74px; }
+.fw-call-body .fw-tp-lane { height: 18px; line-height: 18px; }
+.fw-call-body .fw-tp-lane.is-agent { top: 15px; }
+.fw-call-body .fw-tp-lane.is-user { top: 36px; }
+.fw-call-body .fw-tp-track i { top: 3px; height: 12px; }
+.fw-call-body .fw-tp-fx { top: 62px; }
+/* A turn the shipped excerpt does not cover is still part of the conversation, so it is
+   dimmed rather than hidden - and it does not offer a seek it cannot honour. */
+.fw-tp-turn.is-outside { opacity: .62; cursor: default; }
+.fw-tp-turn.is-outside:hover { background: none; }
+.fw-call-stats {
+  display: flex; flex-wrap: wrap; gap: 6px 26px;
+  padding-top: 12px; border-top: 1px solid var(--line);
+}
+.fw-call-stat { display: flex; align-items: baseline; gap: 7px; font-size: 14px; }
+.fw-call-stat-k { color: var(--grey); }
+.fw-call-stat b { color: var(--ink); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  .fw-tp, .fw-tp-cue-a { transition: none; }
+}
+
+/* The call dialog is NOT the walk dialog's dark card.
+   ---------------------------------------------------------------------------------
+   The walk overlay is dark because the map renderer draws its own dark ground and a light
+   frame around it reads as a mistake. A conversation is type: the tape, the transcript and
+   the readout are all designed against the page's light surface, and inherited into the
+   dark card the transcript was grey-on-near-black and the readout's values disappeared
+   entirely. Same dialog, same focus trap, its own ground. */
+.fw-call .fw-call-card {
+  background: var(--paper);
+  color: var(--ink);
+  height: auto; max-height: min(880px, 92vh);
+  box-shadow: 0 24px 70px rgba(23, 23, 31, .30);
+}
+.fw-call .fw-call-head {
+  position: relative;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  padding: 14px 56px 12px 18px;      /* room on the right for the close control */
+}
+.fw-call .fw-walk-title { font-size: 18px; font-weight: 650; color: var(--ink); }
+.fw-call .fw-walk-sub { font-size: 14px; color: var(--soft); margin-top: 3px; }
+.fw-call .fw-call-headrow .fw-tp-model { margin-left: auto; }
+.fw-call .fw-walk-x {
+  position: absolute; top: 12px; right: 12px;
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+  font-size: 20px; line-height: 1; cursor: pointer;
+}
+.fw-call .fw-walk-x:hover { border-color: var(--ink2); }
+.fw-call .fw-call-body { padding: 16px 18px 18px; overflow-y: auto; }
+
+/* ---------------------------------------------------------------- the onward link
+   One per page, at the end, naming the next page by what it contains rather than by
+   "next". A reader who has finished the samples wants "How this was scored", not an
+   arrow. Sized as a real target on a phone (56px tall) rather than a text link. */
+.fw-next {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  grid-template-areas: "k a" "l a";
+  align-items: center;
+  gap: 0 18px;
+  margin-top: 28px;
+  padding: 14px 22px 15px;
+  min-height: 56px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.fw-next:hover {
+  border-color: var(--accent);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .10);
+  transform: translateY(-1px);
+}
+.fw-next:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.fw-next-k {
+  grid-area: k;
+  font-size: var(--t-micro);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.fw-next-l { grid-area: l; font-size: 19px; font-weight: 620; line-height: 1.25; }
+.fw-next-a { grid-area: a; display: flex; color: var(--accent); }
+.fw-next-a svg { width: 26px; height: 26px; }
+.fw-next-n { grid-column: 1 / -1; font-size: var(--t-micro); color: var(--ink-3); margin-top: 4px; }
+@media (prefers-reduced-motion: reduce) { .fw-next { transition: none; } .fw-next:hover { transform: none; } }
+@media (max-width: 700px) { .fw-next { width: 100%; } }
+
+/* ------------------------------------------------------------------- the harness figure
+   Three columns: who is speaking, the shared channel, and what is being tested. The middle
+   column is the argument - both lanes are lit at the same moment, which is the thing a
+   turn-by-turn diagram cannot show. */
+.fw-hn { margin: 18px 0 0; }
+.fw-hn-cols {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .82fr) minmax(0, 1fr);
+  gap: 18px; align-items: start;
+}
+.fw-hn-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.fw-hn-head-k {
+  font-size: var(--t-micro); font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--ink-dim);
+}
+.fw-hn-head-t { font-size: var(--t-micro); color: var(--ink-3); }
+.fw-hn-box {
+  padding: 10px 13px 11px; border-radius: 12px; margin-bottom: 8px;
+  background: #fff; border: 1px solid var(--line);
+}
+.fw-hn-side.is-caller .fw-hn-box { border-left: 3px solid var(--pillar-dynamics); }
+.fw-hn-side.is-agent .fw-hn-box { border-left: 3px solid var(--pillar-agentic); }
+.fw-hn-role { font-size: 16px; font-weight: 640; line-height: 1.25; }
+.fw-hn-side.is-caller .fw-hn-role { color: var(--pillar-dynamics); }
+.fw-hn-side.is-agent .fw-hn-role { color: var(--pillar-agentic); }
+.fw-hn-model {
+  font-size: var(--t-micro); color: var(--ink-soft); margin-top: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.fw-hn-says { font-size: var(--t-micro); color: var(--ink-soft); margin: 6px 0 0; line-height: 1.42; }
+.fw-hn-sys {
+  font-size: var(--t-micro); padding: 5px 9px; border-radius: 8px; margin-top: 6px;
+  background: rgba(14, 16, 41, .04); color: var(--ink-soft);
+}
+.fw-hn-sys.is-lead {
+  background: color-mix(in srgb, var(--pillar-agentic) 12%, #fff);
+  color: var(--ink); font-weight: 620;
+}
+.fw-hn-mid { padding-top: 26px; }
+.fw-hn-mid-h { font-size: var(--t-micro); color: var(--ink-3); text-align: center; margin-bottom: 8px; }
+.fw-hn-lane { display: grid; grid-template-columns: 5.5em 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+.fw-hn-lane-n { font-size: var(--t-micro); color: var(--ink-dim); }
+.fw-hn-lane-t { height: 14px; border-radius: 5px; background: rgba(14, 16, 41, .06); position: relative; }
+/* Deliberately overlapping: the caller's bar starts before the agent's ends. That overlap
+   is what the benchmark measures, so the figure has to show it rather than imply it. */
+.fw-hn-lane.is-c .fw-hn-lane-t::after,
+.fw-hn-lane.is-a .fw-hn-lane-t::after {
+  content: ''; position: absolute; top: 0; bottom: 0; border-radius: 5px;
+}
+.fw-hn-lane.is-c .fw-hn-lane-t::after { left: 46%; right: 4%; background: var(--pillar-dynamics); }
+.fw-hn-lane.is-a .fw-hn-lane-t::after { left: 8%; right: 38%; background: var(--pillar-agentic); }
+.fw-hn-tick { font-size: var(--t-micro); color: var(--ink-3); text-align: center; margin-top: 2px; }
+.fw-hn-mid-n { font-size: var(--t-micro); color: var(--ink-soft); margin: 10px 0 0; line-height: 1.42; text-align: center; }
+.fw-hn-more {
+  display: inline-block; margin-top: 12px; font-size: var(--t-micro);
+  color: var(--pillar-agentic); text-decoration: none; border-bottom: 1px solid currentColor;
+}
+.fw-hn-more:hover { opacity: .78; }
+@media (max-width: 900px) { .fw-hn-cols { grid-template-columns: 1fr; } .fw-hn-mid { padding-top: 4px; } }
+
+/* A run tile that opens is a control, and has to look like one. Same treatment the walk
+   tiles carry: a pointer, a lift on hover, and a focus ring that is visible on the paper
+   ground rather than only on white. */
+.fw-run[role="button"] { cursor: pointer; }
+.fw-run[role="button"]:hover {
+  border-color: var(--accent, var(--rule));
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .09);
+}
+.fw-run[role="button"]:focus-visible { outline: 3px solid var(--accent, var(--ink)); outline-offset: 3px; }
