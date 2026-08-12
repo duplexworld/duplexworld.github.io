@@ -595,6 +595,10 @@
   .topbar { padding: 8px 0 8px; }
   .wordmark { padding-left: 12px; font-size: 17px; }
   .wordmark .sub { display: none; }
+  /* The phone header hides BENCHMARK, which shortens the line box, so the desktop
+     correction overshoots by exactly the amount it corrects. Measured at 390: centred on
+     the line is already centred on the words here. */
+  .wordmark-logo { transform: none; }
   .fw-nav {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

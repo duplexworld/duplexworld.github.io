@@ -1361,8 +1361,19 @@ body {
 .wordmark-logo {
   width: 22px; height: 22px; flex: none;
   object-fit: contain; object-position: center;
-  margin-right: 2.0px;
-  vertical-align: -5px;
+  margin-right: 2px;
+  /* Centred on the lettering, not hung from its baseline.
+     The row aligns on the text baseline so "Duplex World" and "BENCHMARK" sit on one
+     line, which is right for two runs of type and wrong for a picture: baseline puts a
+     22px image's bottom edge on the baseline, which left its centre 6.5px above the
+     centre of the words. `vertical-align` was trying to correct that and does nothing at
+     all here, because a flex container ignores it. */
+  align-self: center;
+  /* Centring on the flex LINE leaves it 1.5px below the words' own centre, because the
+     line is taller than the type: the descender space belongs to the text, not to the
+     picture. Corrected with a transform rather than a margin: a margin moves the line
+     too, so the image and the text chase each other and never meet. */
+  transform: translateY(-1.5px);
 }
 
 /* THE KEYNOTE MATRIX. Three by three, the mark in the middle cell and eight tiles around
