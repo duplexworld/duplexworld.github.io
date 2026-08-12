@@ -701,6 +701,28 @@
      opened a 249px hole between the world's name and its numbers. */
   .fw-shell-split .fw-panel { padding-top: calc(86px + min(94vw, 520px) * 0.60); }
   .fw-shell-split[data-block="out"] .fw-panel { padding-top: 24px; }
+  /* A BAND has no stage to clear, so it starts under the header. It was still reserving
+     306px for a film that is not there - a screen of empty page above every world. */
+  .fw-shell-split[data-block="band"] .fw-panel { padding-top: 76px; }
+  /* The copy column hangs at --film-h, which the flight computes from the stage. A band
+     has no stage, but the variable keeps its last value, so every world opened with half
+     a screen of nothing above its name. */
+  .fw-shell-split[data-block="band"] .fw-copy {
+    padding-top: 0;
+    /* Still absolute - going static threw the column out of its own left offset and cut
+       the content off the left edge - just no longer hung off the stage's height. */
+    top: 0;
+  }
+  /* The film's opacity is written INLINE every frame, so a stylesheet rule cannot switch
+     it off; the width rule above then gave it a size again and the dive reappeared at the
+     top of every world. Zero width is the one thing the inline style does not set. */
+  .fw-shell-split[data-block="band"] .fw-video,
+  .fw-shell-split[data-block="band"] .fw-art {
+    width: 0 !important; height: 0 !important; opacity: 0 !important;
+  }
+  /* The world's name is on the plate. The screen-reader heading is unhidden on phones for
+     sections that have no plate; where there is one it printed the name twice. */
+  .fw-shell-split[data-block="band"] .fw-title.fw-sr { display: none; }
   /* Specific enough to beat the desktop grid that fixes the name column at 8.2em and
      truncates it. On a phone the name gets the full width and the bar sits under it. */
   .fw-shell-split .fw-bar-row {
@@ -933,10 +955,14 @@
 .fw-shell-split[data-block="cinema"] .fw-mark { display: none; }
 .fw-shell-split[data-block="cinema"] .fw-panel {
   left: 0; width: 100%; max-width: 100%;
-  display: grid; place-items: end start;
+  /* Centred on the screen rather than sitting on its floor: the film fills the frame, so
+     a line at the bottom edge reads as a subtitle under a picture. In the middle it reads
+     as the point of it. */
+  display: grid; place-items: center;
   min-height: 100vh;
-  padding: 0 clamp(24px, 6vw, 96px) clamp(64px, 12vh, 128px);
+  padding: 0 clamp(24px, 6vw, 96px);
   pointer-events: none;
+  text-align: center;
 }
 /* The copy column is positioned at --left on every other block, which on a cinema is the
    full width of the window - so the words were laid out 1526px into a 1440px viewport,
@@ -953,9 +979,10 @@
   padding-top: 0;
 }
 .fw-cine {
-  max-width: min(880px, 76vw);
+  max-width: min(920px, 84vw);
   pointer-events: auto;
   position: relative;
+  text-align: center;
 }
 /* A scrim, because the film underneath is bright, detailed and different at every stop:
    dark type on a snow globe is legible in one frame and gone in the next. The gradient is
@@ -963,12 +990,11 @@
    rather than on a black bar. */
 .fw-shell-split[data-block="cinema"] .fw-panel::before {
   content: "";
-  position: absolute; inset: auto 0 0 0; height: 62vh;
-  background: linear-gradient(to top,
-    var(--bg-base) 0%,
-    color-mix(in srgb, var(--bg-base) 92%, transparent) 34%,
-    color-mix(in srgb, var(--bg-base) 62%, transparent) 62%,
-    transparent 100%);
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center,
+    color-mix(in srgb, var(--bg-base) 88%, transparent) 0%,
+    color-mix(in srgb, var(--bg-base) 72%, transparent) 42%,
+    transparent 72%);
   pointer-events: none;
   z-index: -1;
 }
@@ -980,7 +1006,7 @@
   text-wrap: balance;
 }
 .fw-cine-say {
-  margin: 16px 0 0;
+  margin: 16px auto 0;
   font-size: clamp(17px, 1.7vw, 24px);
   line-height: 1.4; color: var(--sub);
   max-width: 52ch;

@@ -106,6 +106,20 @@ body {
   gap: 16px;
   padding: 14px clamp(16px, 3vw, 34px);
   pointer-events: none;
+  /* A ground of its own. The bar was fully transparent, so everything that scrolled
+     underneath printed straight through the nav: on a phone the author names and the
+     wordmark occupied the same pixels. Translucent rather than solid, with a blur behind
+     it, so the page still reads as continuous under the bar. */
+  background: color-mix(in srgb, var(--bg-base) 78%, transparent);
+  -webkit-backdrop-filter: saturate(1.6) blur(14px);
+  backdrop-filter: saturate(1.6) blur(14px);
+  border-bottom: 1px solid transparent;
+  transition: border-color .2s ease;
+}
+/* Only once something has actually gone under it. */
+.is-scrolled .topbar { border-bottom-color: var(--grid); }
+@supports not (backdrop-filter: blur(2px)) {
+  .topbar { background: var(--bg-base); }
 }
 .topbar > * { pointer-events: auto; }
 

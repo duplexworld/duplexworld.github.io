@@ -3764,6 +3764,13 @@ function mountFlight(root, config) {
     });
   }
 
+  // The header shows a hairline only once something has passed under it, which is what
+  // stops the bar looking like a box on a page that has not moved.
+  const markScrolled = () => {
+    document.documentElement.classList.toggle('is-scrolled', window.scrollY > 8);
+  };
+  window.addEventListener('scroll', markScrolled, { passive: true });
+  markScrolled();
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onResize);
   window.addEventListener('orientationchange', () => setTimeout(() => { lastW = vw(); layout(); }, 120));
