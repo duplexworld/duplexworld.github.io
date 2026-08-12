@@ -469,6 +469,38 @@ function mountFlight(root, config) {
     body.textContent = s.body || '';
     p.append(eyebrow, h, body);
     if (!s.body) body.remove();
+    /* A stop can carry the byline instead of a paragraph. The opening block is the usual
+       home for authorship, but index.html has no opening - it goes straight into the
+       flight - so the landing stop names the authors where its standfirst used to sit.
+       Renders nothing in the anonymous build, because buildByline() returns null there. */
+    if (s.byline) {
+      const stopBy = buildByline();
+      if (stopBy) { stopBy.classList.add('fw-body-by'); p.appendChild(stopBy); }
+    }
+    /* The corpus ring and the six globes, on a stop rather than in an opening cell. Same
+       builders overview.html uses, so the two pages cannot draw different figures. */
+    if (s.ring) {
+      const rw = el('div', 'fw-stop-fig');
+      rw.appendChild(buildRing(s.ring));
+      p.appendChild(rw);
+    }
+    if (s.worlds) {
+      const gw = el('div', 'fw-stop-fig');
+      gw.appendChild(buildWorlds(s.worlds));
+      p.appendChild(gw);
+    }
+    /* The three-by-three, as a STOP. The Experience page ends on it rather than handing the
+       reader off to a page of its own, so the mark it closes on is the same mark the grid is
+       built around. Same builder the opening uses. */
+    if (s.cells) {
+      const cw = el('div', 'fw-stop-cells');
+      // A shim, NOT the stop itself: `mark` on a stop already means the world name plate
+      // ({name, line}), and buildCells wants an image path. Passing the stop straight in
+      // would have the grid read the plate object as a src.
+      cw.appendChild(buildCells({ cells: s.cells, mark: s.cellsMark,
+                                  markAlt: s.cellsMarkAlt }));
+      p.appendChild(cw);
+    }
     // The world plate is drawn on the stage, which on a phone is a picture with no room
     // beside it, so there the plate stands down and its two lines run in the panel where
     // the reader already is. The name is the heading that is only screen-reader hidden on
@@ -778,8 +810,18 @@ function mountFlight(root, config) {
           const b = el('div', 'fw-hn-box');
           const nm = el('div', 'fw-hn-role');
           nm.textContent = it.role;
+          /* The model's own vendor mark beside its name. Both columns of this figure are
+             lists of models, and the whole page identifies a system by its logo everywhere
+             else - the tables, the tiles, the bars - so the one figure that actually names
+             the stack was the only place a reader had to go on the string alone.
+             vendorMark falls back to a neutral dot for a vendor with no mark shipped, so an
+             unknown model degrades to what it already looked like rather than breaking. */
           const md = el('div', 'fw-hn-model');
-          md.textContent = it.model;
+          const mk = el('span', 'fw-hn-mark');
+          mk.innerHTML = vendorMark(it.model);
+          const mt = el('span', '');
+          mt.textContent = it.model;
+          md.append(mk, mt);
           b.append(nm, md);
           if (it.says) {
             const sy = el('p', 'fw-hn-says');
@@ -837,7 +879,14 @@ function mountFlight(root, config) {
       }
       (HN.systems || []).forEach((nm, k) => {
         const row = el('div', 'fw-hn-sys' + (k === 0 ? ' is-lead' : ''));
-        row.textContent = nm;
+        const mk = el('span', 'fw-hn-mark');
+        mk.innerHTML = vendorMark(nm);
+        const t = el('span', '');
+        t.textContent = nm;
+        // The system's own colour on its own name, the same mapping the bars and the
+        // tables use, so the five read as the same five throughout.
+        t.style.color = sysTextColor(nm);
+        row.append(mk, t);
         abox.appendChild(row);
       });
       ag.appendChild(abox);
@@ -1442,11 +1491,17 @@ function mountFlight(root, config) {
           if (r.audio) {
           // Two sources, because one format does not reach every browser: Safari does not
           // play Ogg-Opus at all, and a single .opus source fails there with a bare
-          // "source not supported" and no visible reason. AAC is offered first for that
-          // reason; anything that prefers Opus takes the smaller file.
+          // "source not supported" and no visible reason.
+          //
+          // Opus FIRST, then AAC, for the same reason openCall lists them that way: Chrome
+          // reports Opus as "probably" and takes the first it can play, so listing AAC
+          // first made every Chrome reader download the larger file - measured at +57%
+          // across the set - while Safari, which cannot decode Ogg at all, falls through
+          // to the AAC either way. This player was left on the old order after openCall
+          // was corrected, so the tile on samples.html was still pulling the bigger file.
           const primary = artSrc(r.audio)[0] || r.audio;
           const aac = primary.replace(/\.opus$/i, '.m4a');
-          [[aac, 'audio/mp4'], [primary, 'audio/ogg; codecs=opus']].forEach(([u, ty]) => {
+          [[primary, 'audio/ogg; codecs=opus'], [aac, 'audio/mp4']].forEach(([u, ty]) => {
             const so = document.createElement('source');
             so.src = u;
             so.type = ty;
@@ -1623,6 +1678,15 @@ function mountFlight(root, config) {
        and nothing else until the section is approached, because eighteen timelines built
        at mount would be eighteen transcripts in the DOM behind a hidden panel. */
     if (s.tapes && s.tapes.length) {
+      /* The lede belongs to any grid of tiles, not only to a grid of cards. It was read
+         solely inside the `cards` branch, so a tapes stop that set one rendered nothing at
+         all and the section arrived with no explanation above it. Same for the footnote
+         below the grid. */
+      if (s.cardsLede) {
+        const le = el('p', 'fw-cards-lede');
+        le.textContent = s.cardsLede;
+        p.appendChild(le);
+      }
       const grid = el('div', 'fw-tapes');
       s.tapes.forEach((t) => {
         const D0 = t;
@@ -1699,6 +1763,11 @@ function mountFlight(root, config) {
       fw.append(fi, ft);
       lg.appendChild(fw);
       p.appendChild(lg);
+      if (s.cardsFoot) {
+        const fo = el('p', 'fw-cards-foot');
+        fo.textContent = s.cardsFoot;
+        p.appendChild(fo);
+      }
       tapeStops.push({ i, cfg: s.tapes, grid });
     }
 
@@ -2563,6 +2632,380 @@ function mountFlight(root, config) {
      is not in the sections list at all - it is a section of the document, and the flight
      begins underneath it. `measure()` adds its height to the lead, which is what keeps
      every stop's geometry correct below it. */
+  /* THE THREE-BY-THREE GRID, built in one place.
+     ---------------------------------------------------------------------------------
+     The overview's whole argument is this grid: the corpus, the six worlds, the eleven
+     types and the three pillar headlines, with the mark in the middle cell. It was an
+     opening-only feature, so it could only ever be the FIRST screen of a page. Extracted
+     so a stop can carry it too, which is what lets the Experience page end on it instead
+     of sending the reader to a separate page for it. */
+  function buildCells(O) {
+  const g = el('div', 'fw-open-grid');
+  const cell = (cls) => { const c = el('div', 'fw-open-cell ' + cls); g.appendChild(c); return c; };
+  (O.cells || []).forEach((c, k) => {
+    // The mark is the middle cell of the three by three, so it is inserted at index 4.
+    if (k === 4) {
+      const mid = cell('is-mark');
+      if (O.mark) mid.appendChild(artImg(O.mark, O.markAlt || '', 'fw-open-mark'));
+    }
+    const box = cell(c.wide ? 'is-wide' : '');
+    if (c.label) {
+      const l = el('div', 'fw-open-lab');
+      l.textContent = c.label;
+      box.appendChild(l);
+    }
+    if (c.text) {
+      const t = el('p', 'fw-open-text');
+      t.textContent = c.text;
+      box.appendChild(t);
+    }
+    /* Figures. Where a tile also carries a ring, they run as a STRIP across the top -
+       numeral over label, three abreast - so the tile reads as one thing: four numbers
+       and the shape they divide into. Stacked as rows they were a list sitting above an
+       unrelated chart. */
+    if ((c.items || []).length) {
+      const strip = el('div', 'fw-open-stats' + (c.ring ? ' is-strip' : ''));
+      c.items.forEach((it) => {
+        const row = el('div', 'fw-open-i');
+        const a = el('b', '');
+        a.textContent = it[0];
+        const b = el('span', '');
+        b.textContent = it[1] || '';
+        row.append(a, b);
+        strip.appendChild(row);
+      });
+      box.appendChild(strip);
+    }
+    if (c.chips) {
+      const cw = el('div', 'fw-open-chips');
+      c.chips.forEach((x) => {
+        const ch = el('span', 'fw-open-chip');
+        ch.textContent = x;
+        cw.appendChild(ch);
+      });
+      box.appendChild(cw);
+    }
+    /* Conversations by world, as a ring.
+       -----------------------------------------------------------------------------
+       Six slices and no legend: a legend would make this eleven lookups, and the whole
+       finding is a shape - five equal worlds and one smaller. Sorted largest first
+       clockwise from twelve, with Pathfinding last because it is the one that differs.
+       One hue: the slices are worlds, and on this page colour means a system. */
+    /* Which system holds each pillar. Three rows, each naming a pillar, its number and
+       the system that leads it - the three plots on this screen, said once in words. */
+    if (c.leads) {
+      const wrap = el('div', 'fw-leads');
+      c.leads.forEach(([pillar, metric, who]) => {
+        const row = el('div', 'fw-lead');
+        row.style.setProperty('--sys', sysColor(who));
+        const p1 = el('span', 'fw-lead-pillar');
+        p1.textContent = pillar;
+        const m1 = el('b', 'fw-lead-metric');
+        m1.textContent = metric;
+        const w1 = el('span', 'fw-lead-who');
+        w1.innerHTML = vendorMark(who);
+        const wn = el('span', '');
+        wn.textContent = who;
+        w1.appendChild(wn);
+        row.append(p1, m1, w1);
+        wrap.appendChild(row);
+      });
+      box.appendChild(wrap);
+    }
+    if (c.ring) box.appendChild(buildRing(c.ring));
+    if (c.figure) {
+      const im = artImg(c.figure, c.figureAlt || '', 'fw-open-fig');
+      box.appendChild(im);
+    }
+    if (c.worlds) box.appendChild(buildWorlds(c.worlds));
+    /* The headline: the number, and which system holds it. Three of these across the
+       bottom row are the paper's thesis - a different system leads each pillar - and
+       without the name the reader has to read three charts to find that out. */
+    if (c.head) {
+      const hd = el('div', 'fw-open-head');
+      const v = el('div', 'fw-open-headv');
+      v.textContent = c.head.v;
+      const w = el('div', 'fw-open-headw');
+      w.innerHTML = vendorMark(c.head.who);
+      const nm = el('span', '');
+      nm.textContent = c.head.who;
+      w.appendChild(nm);
+      w.style.setProperty('--sys', sysColor(c.head.who));
+      hd.append(v, w);
+      box.appendChild(hd);
+    }
+    if (c.plot) {
+      const P = c.plot;
+      box.classList.add('is-plot');
+      box.style.setProperty('--tint', P.accent || 'var(--magenta)');
+      /* HORIZONTAL bars, direct labelled, with the paper's interval on every one.
+         -------------------------------------------------------------------------
+         These were vertical columns with the five system names rotated 45 degrees and
+         truncated from the front, which is worse than no label: "...altime-2.1-mini"
+         names nothing. Five ranked categories with long names is exactly the case a
+         horizontal bar chart exists for - the name sits flush left, at full length,
+         unrotated. The interval is drawn because the paper never states one of these
+         numbers without it, and a bare bar claims a precision the study does not. */
+      const rws = P.rows.slice().sort((a, b) => b[1] - a[1]);
+      const base = Number.isFinite(P.base) ? P.base : 0;
+      const reach = Math.max(...rws.map((r) => r[1] + (r[2] || 0)));
+      const top = Math.max(Number.isFinite(P.max) ? P.max : 0, reach);
+      const span = Math.max(1e-6, top - base);
+      const dp = P.dp === undefined ? 3 : P.dp;
+      const pc = (x) => (100 * Math.max(0, Math.min(1, (x - base) / span))).toFixed(2) + '%';
+      const rowsEl = el('div', 'fw-open-hrows');
+      rws.forEach(([nm, v, pm]) => {
+        const r = el('div', 'fw-open-hrow');
+        r.style.setProperty('--sys', sysColor(nm));
+        const lab = el('div', 'fw-open-hname');
+        lab.innerHTML = vendorMark(nm);
+        const nt = el('span', '');
+        nt.textContent = (P.short && P.short[nm]) || nm;
+        lab.appendChild(nt);
+        const track = el('div', 'fw-open-htrack');
+        const bar = el('div', 'fw-open-hbar');
+        bar.style.width = pc(v);
+        track.appendChild(bar);
+        // The interval, drawn to scale. Nova's 0.011 is a three pixel bar by the
+        // stylesheet's floor, so without this it reads as missing data.
+        if (pm) {
+          const ci = el('div', 'fw-open-hci');
+          ci.style.left = pc(Math.max(base, v - pm));
+          ci.style.width = pc(Math.min(top, v + pm)) === ci.style.left ? '2px'
+            : (100 * (Math.min(top, v + pm) - Math.max(base, v - pm)) / span).toFixed(2) + '%';
+          track.appendChild(ci);
+        }
+        const val = el('div', 'fw-open-hval');
+        val.textContent = v.toFixed(dp);
+        if (pm) {
+          const s = el('span', 'fw-open-hpm');
+          s.textContent = '\u00b1' + pm.toFixed(3).replace(/^0/, '');
+          val.appendChild(s);
+        }
+        r.append(lab, track, val);
+        rowsEl.appendChild(r);
+      });
+      box.appendChild(rowsEl);
+      if (P.note) {
+        const nt = el('div', 'fw-open-pnote');
+        nt.textContent = P.note;
+        box.appendChild(nt);
+      }
+    }
+  });
+    return g;
+  }
+
+  /* THE CORPUS RING and THE SIX GLOBES, built in one place.
+     ---------------------------------------------------------------------------------
+     Both began as opening-CELL features, which is why they only ever appeared on
+     overview.html: index.html has no opening block at all. Extracted so a flight stop can
+     carry either one, and so the two pages draw the identical figure from the identical
+     code rather than a second version of it that can drift. */
+  function buildRing(R) {
+      // Keyed off the world's own name so the config stays a plain list of pairs and the
+      // colours live in the sheet with the rest of the palette.
+      let holderLabel = '';
+      const wcol = (nm) => 'var(--world-' + String(nm).toLowerCase().replace(/[^a-z]/g, '')
+        + ', var(--ink))';
+      const total = R.slices.reduce((a, s) => a + s[1], 0);
+      const wrap = el('div', 'fw-ring');
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 100 100');
+      svg.setAttribute('class', 'fw-ring-svg');
+      const C = 50, r = 38, circ = 2 * Math.PI * r;
+      let acc = 0;
+      R.slices.forEach(([nm, v], k) => {
+        const seg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        seg.setAttribute('cx', C); seg.setAttribute('cy', C); seg.setAttribute('r', r);
+        seg.setAttribute('fill', 'none');
+        seg.setAttribute('stroke-width', 13);
+        // A hairline gap so six slices read as six, without a second colour.
+        const len = circ * v / total;
+        seg.setAttribute('stroke-dasharray', Math.max(0, len - 1.2) + ' ' + (circ - len + 1.2));
+        seg.setAttribute('stroke-dashoffset', -circ * acc / total);
+        seg.setAttribute('transform', 'rotate(-90 50 50)');
+        seg.setAttribute('class', 'fw-ring-seg');
+        seg.style.setProperty('--wc', wcol(nm));
+        const ti = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+        ti.textContent = nm + ': ' + v + ' conversations, '
+          + (100 * v / total).toFixed(1) + '% of the corpus';
+        seg.appendChild(ti);
+        svg.appendChild(seg);
+        acc += v;
+      });
+      wrap.appendChild(svg);
+      const mid = el('div', 'fw-ring-mid');
+      const mv = el('b', '');
+      mv.textContent = R.centre;
+      const ms = el('span', '');
+      ms.textContent = R.centreSub || '';
+      mid.append(mv, ms);
+      wrap.appendChild(mid);
+      // Direct labels, laid around the ring rather than in a legend.
+      const key = el('div', 'fw-ring-key');
+      if (R.keyHead) {
+        const kh = el('div', 'fw-ring-khead');
+        kh.textContent = R.keyHead;
+        key.appendChild(kh);
+      }
+      R.slices.forEach(([nm, v]) => {
+        const row = el('div', 'fw-ring-krow');
+        const sw = el('span', 'fw-ring-sw');
+        sw.style.setProperty('--wc', wcol(nm));
+        sw.setAttribute('aria-hidden', 'true');
+        const n = el('span', 'fw-ring-kname');
+        n.textContent = nm;
+        row.append(sw, n);
+        // The figure is off the face of the chart now, so it has to stay reachable.
+        row.title = nm + ': ' + v + ' conversations, '
+          + (100 * v / total).toFixed(1) + '% of the corpus';
+        key.appendChild(row);
+      });
+      /* Colour is now the only thing tying a legend row to its slice, so the numbers have
+         to survive somewhere a screen reader and a colour-blind reader can both reach.
+         This is that place. */
+      holderLabel = (R.keyHead || 'Conversations by world') + '. '
+        + R.slices.map(([nm, v]) => nm + ' ' + v).join(', ')
+        + '. ' + R.centre + ' ' + (R.centreSub || '') + '.';
+      const holder = el('div', 'fw-ring-wrap');
+      holder.append(wrap, key);
+      holder.setAttribute('role', 'img');
+      holder.setAttribute('aria-label', holderLabel);
+      return holder;
+  }
+
+  function buildWorlds(list) {
+    const ww = el('div', 'fw-open-worlds');
+    (list || []).forEach(([nm, src]) => {
+      const w = el('div', 'fw-open-w');
+      w.appendChild(artImg(src, '', 'fw-open-wimg'));
+      const l = el('span', '');
+      l.textContent = nm;
+      w.appendChild(l);
+      ww.appendChild(w);
+    });
+    return ww;
+  }
+
+  /* THE BYLINE, built in one place.
+     ---------------------------------------------------------------------------------
+     Two callers now want it: the opening block, which is where a paper puts authorship,
+     and any stop that sets `byline: true`, which is how index.html carries it without
+     growing a whole title screen. Built here rather than twice so the two cannot drift.
+
+     Read from a global rather than from a page config on purpose. The page's default
+     state is ANONYMOUS: with nothing set this returns null and nothing is rendered, so a
+     build cannot acquire a byline by accident. The public build injects the global, which
+     is the same mechanism and the same safety property the outbound links had. */
+  function buildByline() {
+    const A = window.__DW_AUTHORS;
+    if (!A || !A.people || !A.people.length) return null;
+    const by = el('div', 'fw-open-by');
+    const line = el('div', 'fw-open-authors');
+    A.people.forEach((p, k) => {
+      const s = el('span', 'fw-open-author');
+      const nm = el('b', '');
+      nm.textContent = p.name;
+      s.appendChild(nm);
+      if (p.sup) {
+        const sup = el('sup', '');
+        sup.textContent = p.sup;
+        s.appendChild(sup);
+      }
+      line.appendChild(s);
+      if (k < A.people.length - 1) {
+        const sep = el('span', 'fw-open-sep');
+        sep.textContent = ',';
+        line.appendChild(sep);
+      }
+    });
+    by.appendChild(line);
+    /* Three rows, not one wrapping soup.
+       -------------------------------------------------------------------------------
+       Flowed as a single wrap row, the affiliations, the contact and the two notes
+       packed themselves wherever they fitted: the notes ended up hard against the right
+       edge of the screen, a column away from the names they annotate, and the monospace
+       address sat on a different baseline from the links beside it. Grouped, each row
+       is one kind of thing and they share a baseline. */
+    const affRow = el('div', 'fw-open-affrow');
+    const noteRow = el('div', 'fw-open-notes');
+    (A.affiliations || []).forEach((af) => {
+      const r = el('div', 'fw-open-aff');
+      const sup = el('sup', '');
+      sup.textContent = af.sup || '';
+      r.appendChild(sup);
+      // A link when there is one, plain text when there is not: the anonymous build
+      // never gets here, so an outbound href on this line is safe by construction.
+      if (af.href) {
+        const a = el('a', 'fw-open-afflink');
+        a.href = af.href;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = af.name;
+        r.appendChild(a);
+      } else {
+        const sp = el('span', '');
+        sp.textContent = af.name;
+        r.appendChild(sp);
+      }
+      affRow.appendChild(r);
+    });
+    if (A.email) {
+      const e = el('span', 'fw-open-mail');
+      e.textContent = A.email;
+      affRow.appendChild(e);
+    }
+    (A.notes || []).forEach((nt) => {
+      const d = el('span', 'fw-open-note');
+      d.textContent = nt;
+      noteRow.appendChild(d);
+    });
+    if (affRow.children.length) by.appendChild(affRow);
+    if (noteRow.children.length) by.appendChild(noteRow);
+    /* The paper buttons, last, under the notes. Read from their own global for the same
+       reason the names are: the anonymous build is never handed one, so it cannot grow an
+       outbound link by accident. An <a> rather than a button, because it is a navigation
+       the reader may well want to open in a new tab. */
+    const P = window.__DW_PAPER;
+    if (P && P.length) {
+      const row = el('div', 'fw-open-links');
+      P.forEach((lk) => {
+        if (!lk || !lk.href) return;
+        const a = el('a', 'fw-paperbtn is-' + (lk.kind || 'link'));
+        a.href = lk.href;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        // A document mark, drawn rather than fetched: the page ships no icon font and an
+        // <img> here would be a request for 300 bytes of glyph.
+        const NS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('class', 'fw-paperbtn-i');
+        svg.setAttribute('viewBox', '0 0 16 16');
+        svg.setAttribute('aria-hidden', 'true');
+        const pth = document.createElementNS(NS, 'path');
+        pth.setAttribute('d', 'M4 1.5h5L12.5 5v9.5h-8.5z');
+        pth.setAttribute('fill', 'none');
+        pth.setAttribute('stroke', 'currentColor');
+        pth.setAttribute('stroke-width', '1.3');
+        pth.setAttribute('stroke-linejoin', 'round');
+        const fold = document.createElementNS(NS, 'path');
+        fold.setAttribute('d', 'M9 1.5V5h3.5');
+        fold.setAttribute('fill', 'none');
+        fold.setAttribute('stroke', 'currentColor');
+        fold.setAttribute('stroke-width', '1.3');
+        fold.setAttribute('stroke-linejoin', 'round');
+        svg.append(pth, fold);
+        const t = el('span', 'fw-paperbtn-t');
+        t.textContent = lk.label || 'Paper';
+        a.append(svg, t);
+        row.appendChild(a);
+      });
+      if (row.children.length) by.appendChild(row);
+    }
+    return by;
+  }
+
   let openEl = null;
   if (config.opening) {
     const O = config.opening;
@@ -2573,314 +3016,11 @@ function mountFlight(root, config) {
       h.textContent = O.title;
       inner.appendChild(h);
     }
-    /* Authorship, under the title, where a paper puts it.
-       -----------------------------------------------------------------------------
-       Read from a global rather than from this config on purpose. The page's default
-       state is ANONYMOUS: with nothing set, nothing is rendered, so a build cannot
-       acquire a byline by accident. The public build injects the global, which is the
-       same mechanism and the same safety property the outbound links had. */
-    const A = window.__DW_AUTHORS;
-    if (A && A.people && A.people.length) {
-      const by = el('div', 'fw-open-by');
-      const line = el('div', 'fw-open-authors');
-      A.people.forEach((p, k) => {
-        const s = el('span', 'fw-open-author');
-        const nm = el('b', '');
-        nm.textContent = p.name;
-        s.appendChild(nm);
-        if (p.sup) {
-          const sup = el('sup', '');
-          sup.textContent = p.sup;
-          s.appendChild(sup);
-        }
-        line.appendChild(s);
-        if (k < A.people.length - 1) {
-          const sep = el('span', 'fw-open-sep');
-          sep.textContent = ',';
-          line.appendChild(sep);
-        }
-      });
-      by.appendChild(line);
-      /* Three rows, not one wrapping soup.
-         -------------------------------------------------------------------------------
-         Flowed as a single wrap row, the affiliations, the contact and the two notes
-         packed themselves wherever they fitted: the notes ended up hard against the right
-         edge of the screen, a column away from the names they annotate, and the monospace
-         address sat on a different baseline from the links beside it. Grouped, each row
-         is one kind of thing and they share a baseline. */
-      const affRow = el('div', 'fw-open-affrow');
-      const noteRow = el('div', 'fw-open-notes');
-      (A.affiliations || []).forEach((af) => {
-        const r = el('div', 'fw-open-aff');
-        const sup = el('sup', '');
-        sup.textContent = af.sup || '';
-        r.appendChild(sup);
-        // A link when there is one, plain text when there is not: the anonymous build
-        // never gets here, so an outbound href on this line is safe by construction.
-        if (af.href) {
-          const a = el('a', 'fw-open-afflink');
-          a.href = af.href;
-          a.target = '_blank';
-          a.rel = 'noopener';
-          a.textContent = af.name;
-          r.appendChild(a);
-        } else {
-          const sp = el('span', '');
-          sp.textContent = af.name;
-          r.appendChild(sp);
-        }
-        affRow.appendChild(r);
-      });
-      if (A.email) {
-        const e = el('span', 'fw-open-mail');
-        e.textContent = A.email;
-        affRow.appendChild(e);
-      }
-      (A.notes || []).forEach((nt) => {
-        const d = el('span', 'fw-open-note');
-        d.textContent = nt;
-        noteRow.appendChild(d);
-      });
-      if (affRow.children.length) by.appendChild(affRow);
-      if (noteRow.children.length) by.appendChild(noteRow);
-      inner.appendChild(by);
-    }
-    const g = el('div', 'fw-open-grid');
-    const cell = (cls) => { const c = el('div', 'fw-open-cell ' + cls); g.appendChild(c); return c; };
-    (O.cells || []).forEach((c, k) => {
-      // The mark is the middle cell of the three by three, so it is inserted at index 4.
-      if (k === 4) {
-        const mid = cell('is-mark');
-        if (O.mark) mid.appendChild(artImg(O.mark, O.markAlt || '', 'fw-open-mark'));
-      }
-      const box = cell(c.wide ? 'is-wide' : '');
-      if (c.label) {
-        const l = el('div', 'fw-open-lab');
-        l.textContent = c.label;
-        box.appendChild(l);
-      }
-      if (c.text) {
-        const t = el('p', 'fw-open-text');
-        t.textContent = c.text;
-        box.appendChild(t);
-      }
-      /* Figures. Where a tile also carries a ring, they run as a STRIP across the top -
-         numeral over label, three abreast - so the tile reads as one thing: four numbers
-         and the shape they divide into. Stacked as rows they were a list sitting above an
-         unrelated chart. */
-      if ((c.items || []).length) {
-        const strip = el('div', 'fw-open-stats' + (c.ring ? ' is-strip' : ''));
-        c.items.forEach((it) => {
-          const row = el('div', 'fw-open-i');
-          const a = el('b', '');
-          a.textContent = it[0];
-          const b = el('span', '');
-          b.textContent = it[1] || '';
-          row.append(a, b);
-          strip.appendChild(row);
-        });
-        box.appendChild(strip);
-      }
-      if (c.chips) {
-        const cw = el('div', 'fw-open-chips');
-        c.chips.forEach((x) => {
-          const ch = el('span', 'fw-open-chip');
-          ch.textContent = x;
-          cw.appendChild(ch);
-        });
-        box.appendChild(cw);
-      }
-      /* Conversations by world, as a ring.
-         -----------------------------------------------------------------------------
-         Six slices and no legend: a legend would make this eleven lookups, and the whole
-         finding is a shape - five equal worlds and one smaller. Sorted largest first
-         clockwise from twelve, with Pathfinding last because it is the one that differs.
-         One hue: the slices are worlds, and on this page colour means a system. */
-      /* Which system holds each pillar. Three rows, each naming a pillar, its number and
-         the system that leads it - the three plots on this screen, said once in words. */
-      if (c.leads) {
-        const wrap = el('div', 'fw-leads');
-        c.leads.forEach(([pillar, metric, who]) => {
-          const row = el('div', 'fw-lead');
-          row.style.setProperty('--sys', sysColor(who));
-          const p1 = el('span', 'fw-lead-pillar');
-          p1.textContent = pillar;
-          const m1 = el('b', 'fw-lead-metric');
-          m1.textContent = metric;
-          const w1 = el('span', 'fw-lead-who');
-          w1.innerHTML = vendorMark(who);
-          const wn = el('span', '');
-          wn.textContent = who;
-          w1.appendChild(wn);
-          row.append(p1, m1, w1);
-          wrap.appendChild(row);
-        });
-        box.appendChild(wrap);
-      }
-      if (c.ring) {
-        const R = c.ring;
-        // Keyed off the world's own name so the config stays a plain list of pairs and the
-        // colours live in the sheet with the rest of the palette.
-        let holderLabel = '';
-        const wcol = (nm) => 'var(--world-' + String(nm).toLowerCase().replace(/[^a-z]/g, '')
-          + ', var(--ink))';
-        const total = R.slices.reduce((a, s) => a + s[1], 0);
-        const wrap = el('div', 'fw-ring');
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 100 100');
-        svg.setAttribute('class', 'fw-ring-svg');
-        const C = 50, r = 38, circ = 2 * Math.PI * r;
-        let acc = 0;
-        R.slices.forEach(([nm, v], k) => {
-          const seg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          seg.setAttribute('cx', C); seg.setAttribute('cy', C); seg.setAttribute('r', r);
-          seg.setAttribute('fill', 'none');
-          seg.setAttribute('stroke-width', 13);
-          // A hairline gap so six slices read as six, without a second colour.
-          const len = circ * v / total;
-          seg.setAttribute('stroke-dasharray', Math.max(0, len - 1.2) + ' ' + (circ - len + 1.2));
-          seg.setAttribute('stroke-dashoffset', -circ * acc / total);
-          seg.setAttribute('transform', 'rotate(-90 50 50)');
-          seg.setAttribute('class', 'fw-ring-seg');
-          seg.style.setProperty('--wc', wcol(nm));
-          const ti = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-          ti.textContent = nm + ': ' + v + ' conversations, '
-            + (100 * v / total).toFixed(1) + '% of the corpus';
-          seg.appendChild(ti);
-          svg.appendChild(seg);
-          acc += v;
-        });
-        wrap.appendChild(svg);
-        const mid = el('div', 'fw-ring-mid');
-        const mv = el('b', '');
-        mv.textContent = R.centre;
-        const ms = el('span', '');
-        ms.textContent = R.centreSub || '';
-        mid.append(mv, ms);
-        wrap.appendChild(mid);
-        // Direct labels, laid around the ring rather than in a legend.
-        const key = el('div', 'fw-ring-key');
-        if (R.keyHead) {
-          const kh = el('div', 'fw-ring-khead');
-          kh.textContent = R.keyHead;
-          key.appendChild(kh);
-        }
-        R.slices.forEach(([nm, v]) => {
-          const row = el('div', 'fw-ring-krow');
-          const sw = el('span', 'fw-ring-sw');
-          sw.style.setProperty('--wc', wcol(nm));
-          sw.setAttribute('aria-hidden', 'true');
-          const n = el('span', 'fw-ring-kname');
-          n.textContent = nm;
-          row.append(sw, n);
-          // The figure is off the face of the chart now, so it has to stay reachable.
-          row.title = nm + ': ' + v + ' conversations, '
-            + (100 * v / total).toFixed(1) + '% of the corpus';
-          key.appendChild(row);
-        });
-        /* Colour is now the only thing tying a legend row to its slice, so the numbers have
-           to survive somewhere a screen reader and a colour-blind reader can both reach.
-           This is that place. */
-        holderLabel = (R.keyHead || 'Conversations by world') + '. '
-          + R.slices.map(([nm, v]) => nm + ' ' + v).join(', ')
-          + '. ' + R.centre + ' ' + (R.centreSub || '') + '.';
-        const holder = el('div', 'fw-ring-wrap');
-        holder.append(wrap, key);
-        holder.setAttribute('role', 'img');
-        holder.setAttribute('aria-label', holderLabel);
-        box.appendChild(holder);
-      }
-      if (c.figure) {
-        const im = artImg(c.figure, c.figureAlt || '', 'fw-open-fig');
-        box.appendChild(im);
-      }
-      if (c.worlds) {
-        const ww = el('div', 'fw-open-worlds');
-        c.worlds.forEach(([nm, src]) => {
-          const w = el('div', 'fw-open-w');
-          w.appendChild(artImg(src, '', 'fw-open-wimg'));
-          const l = el('span', '');
-          l.textContent = nm;
-          w.appendChild(l);
-          ww.appendChild(w);
-        });
-        box.appendChild(ww);
-      }
-      /* The headline: the number, and which system holds it. Three of these across the
-         bottom row are the paper's thesis - a different system leads each pillar - and
-         without the name the reader has to read three charts to find that out. */
-      if (c.head) {
-        const hd = el('div', 'fw-open-head');
-        const v = el('div', 'fw-open-headv');
-        v.textContent = c.head.v;
-        const w = el('div', 'fw-open-headw');
-        w.innerHTML = vendorMark(c.head.who);
-        const nm = el('span', '');
-        nm.textContent = c.head.who;
-        w.appendChild(nm);
-        w.style.setProperty('--sys', sysColor(c.head.who));
-        hd.append(v, w);
-        box.appendChild(hd);
-      }
-      if (c.plot) {
-        const P = c.plot;
-        box.classList.add('is-plot');
-        box.style.setProperty('--tint', P.accent || 'var(--magenta)');
-        /* HORIZONTAL bars, direct labelled, with the paper's interval on every one.
-           -------------------------------------------------------------------------
-           These were vertical columns with the five system names rotated 45 degrees and
-           truncated from the front, which is worse than no label: "...altime-2.1-mini"
-           names nothing. Five ranked categories with long names is exactly the case a
-           horizontal bar chart exists for - the name sits flush left, at full length,
-           unrotated. The interval is drawn because the paper never states one of these
-           numbers without it, and a bare bar claims a precision the study does not. */
-        const rws = P.rows.slice().sort((a, b) => b[1] - a[1]);
-        const base = Number.isFinite(P.base) ? P.base : 0;
-        const reach = Math.max(...rws.map((r) => r[1] + (r[2] || 0)));
-        const top = Math.max(Number.isFinite(P.max) ? P.max : 0, reach);
-        const span = Math.max(1e-6, top - base);
-        const dp = P.dp === undefined ? 3 : P.dp;
-        const pc = (x) => (100 * Math.max(0, Math.min(1, (x - base) / span))).toFixed(2) + '%';
-        const rowsEl = el('div', 'fw-open-hrows');
-        rws.forEach(([nm, v, pm]) => {
-          const r = el('div', 'fw-open-hrow');
-          r.style.setProperty('--sys', sysColor(nm));
-          const lab = el('div', 'fw-open-hname');
-          lab.innerHTML = vendorMark(nm);
-          const nt = el('span', '');
-          nt.textContent = (P.short && P.short[nm]) || nm;
-          lab.appendChild(nt);
-          const track = el('div', 'fw-open-htrack');
-          const bar = el('div', 'fw-open-hbar');
-          bar.style.width = pc(v);
-          track.appendChild(bar);
-          // The interval, drawn to scale. Nova's 0.011 is a three pixel bar by the
-          // stylesheet's floor, so without this it reads as missing data.
-          if (pm) {
-            const ci = el('div', 'fw-open-hci');
-            ci.style.left = pc(Math.max(base, v - pm));
-            ci.style.width = pc(Math.min(top, v + pm)) === ci.style.left ? '2px'
-              : (100 * (Math.min(top, v + pm) - Math.max(base, v - pm)) / span).toFixed(2) + '%';
-            track.appendChild(ci);
-          }
-          const val = el('div', 'fw-open-hval');
-          val.textContent = v.toFixed(dp);
-          if (pm) {
-            const s = el('span', 'fw-open-hpm');
-            s.textContent = '\u00b1' + pm.toFixed(3).replace(/^0/, '');
-            val.appendChild(s);
-          }
-          r.append(lab, track, val);
-          rowsEl.appendChild(r);
-        });
-        box.appendChild(rowsEl);
-        if (P.note) {
-          const nt = el('div', 'fw-open-pnote');
-          nt.textContent = P.note;
-          box.appendChild(nt);
-        }
-      }
-    });
+    /* Authorship, under the title, where a paper puts it. Built by buildByline() so this
+       and any stop carrying `byline: true` render the identical thing. */
+    const openBy = buildByline();
+    if (openBy) inner.appendChild(openBy);
+    const g = buildCells(O);
     inner.appendChild(g);
     openEl.appendChild(inner);
     root.appendChild(openEl);
@@ -3287,7 +3427,21 @@ function mountFlight(root, config) {
               b.classList.toggle('is-now', on);
               if (on) live = b;
             });
-            if (live) live.scrollIntoView({ block: 'nearest' });
+            /* Follow the speech the way the opened call does: SMOOTHLY, and only when the
+               live turn actually changes.
+               This ran scrollIntoView({block:'nearest'}) unguarded, on every animation
+               frame, with no behaviour set. So it re-issued an instant scroll sixty times a
+               second and snapped the transcript by a whole line the moment a turn ended,
+               which is what made the enterprise tiles read as abrupt beside the Pathfinding
+               ones. Scrolling the LIST rather than calling scrollIntoView also keeps the
+               page itself still - scrollIntoView will happily scroll an ancestor, and here
+               the ancestor is the document. */
+            if (live && live !== fig.__lastLive) {
+              fig.__lastLive = live;
+              const lt = live.offsetTop - list.clientHeight * 0.42;
+              list.scrollTo({ top: Math.max(0, lt),
+                              behavior: reduce ? 'auto' : 'smooth' });
+            }
             if (fig.__tlHead && fig.__tlDur) {
               fig.__tlHead.style.left = (100 * Math.min(1, now / fig.__tlDur)).toFixed(3) + '%';
             }
@@ -3533,14 +3687,24 @@ function mountFlight(root, config) {
     /* Opus FIRST, then AAC. Both are shipped for every call. Chrome reports Opus as
        "probably" and takes the first it can play, so listing AAC first made every Chrome
        reader download the larger file - measured at +57% across the set - while Safari,
-       which cannot decode Ogg at all, falls through to the AAC either way. */
-    [[D.audio + '.opus', 'audio/ogg; codecs=opus'], [D.audio + '.m4a', 'audio/mp4']]
-      .forEach(([u, ty]) => {
-        const so = document.createElement('source');
-        so.src = (CALLS && CALLS.base ? CALLS.base : '') + u;
-        so.type = ty;
-        au.appendChild(so);
-      });
+       which cannot decode Ogg at all, falls through to the AAC either way.
+
+       The extension is STRIPPED before the two are appended. Every call payload states
+       `audio` with its extension already on it ("audio/bank_narr_ok.opus"), so appending
+       another asked for audio/bank_narr_ok.opus.opus and .opus.m4a - both 404. The tile
+       player builds its URLs from the same field by substitution rather than by appending,
+       which is why a recording played from its tile and then fell silent the moment the
+       call was opened. Stripping first also accepts a payload that carries a bare stem. */
+    const stem = String(D.audio || '').replace(/\.(opus|m4a)$/i, '');
+    if (stem) {
+      [[stem + '.opus', 'audio/ogg; codecs=opus'], [stem + '.m4a', 'audio/mp4']]
+        .forEach(([u, ty]) => {
+          const so = document.createElement('source');
+          so.src = (CALLS && CALLS.base ? CALLS.base : '') + u;
+          so.type = ty;
+          au.appendChild(so);
+        });
+    }
     pl.append(btn, bar, tm);
     fig.appendChild(pl);
     fig.appendChild(au);
@@ -3887,6 +4051,47 @@ function mountFlight(root, config) {
   }
   measure();
   measureSpill();
+  /* A band panel's height is not settled when its spill is first measured, and the spill is
+     what the travel is derived from. The tiles arrive asynchronously - a payload fetch, then
+     a timeline built from it - images decide their own height once decoded, and a webfont
+     swap reflows the copy. All of that happens AFTER the panel became visible and its spill
+     was cached, so the panel then travelled by the pre-fill amount and its tail stayed below
+     the fold for the whole band, unreachable at any scroll position.
+     Measured on samples.html at 1100px wide: panel 3984px tall, tail 1.9k px short of ever
+     being on screen. The stop-change and post-build calls to measureSpill() did not cover it
+     because neither fires when an already-built panel simply grows.
+     Observing the panels closes it: any size change drops the cache and the next frame
+     recomputes. measureSpill() only clears, so this cannot feed back into a resize loop. */
+  if (typeof ResizeObserver === 'function') {
+    const spillRO = new ResizeObserver(() => measureSpill());
+    panels.forEach((pan, i) => {
+      if (pan && S[i] && S[i].block === 'band') spillRO.observe(pan);
+    });
+  }
+  /* A STOP CAN BE LINKED TO.
+     ---------------------------------------------------------------------------------
+     The flight is one long scroll with no anchors in it, so until now the only way to name
+     a place in it was a page. That stopped being true when the at-a-glance grid became a
+     stop rather than a page of its own: the header has to be able to send a reader to it.
+     `index.html#overview` resolves to the section whose id is `overview` and scrolls to the
+     middle of its band, which is where the stop is fully lit. A hash that matches nothing
+     is left alone, so the skip link and any ordinary anchor behave as they always did. */
+  function jumpToHash(smooth) {
+    const id = String(location.hash || '').replace(/^#/, '');
+    if (!id) return false;
+    const i = S.findIndex((s) => s && s.id === id);
+    if (i < 0) return false;
+    window.scrollTo({ top: Math.max(0, centrePx(i)),
+                      behavior: (smooth && !reduce) ? 'smooth' : 'auto' });
+    return true;
+  }
+  // On load the geometry has to exist first, and images can still change it, so this runs
+  // once now and once after the next frame rather than fighting a half-measured page.
+  if (location.hash) {
+    requestAnimationFrame(() => { measure(); jumpToHash(false); });
+    window.addEventListener('load', () => { measure(); jumpToHash(false); });
+  }
+  window.addEventListener('hashchange', () => jumpToHash(true));
   function totalPx() { return total; }
   function centrePx(i) { return centres[i]; }
 
@@ -4266,7 +4471,22 @@ function mountFlight(root, config) {
           // a half-faded panel. Finishing early means the last card and the callout are
           // fully lit and stationary for the rest of the band.
           const RUN = 0.72;
-          const prog = Math.max(0, Math.min(1, (pos - (c - half)) / (2 * half * RUN)));
+          /* The travel has to begin where the reader can actually BE.
+             `pos` is the viewport CENTRE, so its smallest possible value is half a
+             viewport: for the first stop, whose band starts at 0, a third of the band is
+             at scroll positions that do not exist. The panel was therefore already part
+             way through its travel on the first frame. Measured on samples.html at 1600x900
+             once it became the opening stop: at scrollY 0 the panel was translated -260px
+             and its heading sat 164px above the top of the screen, unreachable at any
+             scroll position on the page.
+             Clamping the start to the first reachable position costs nothing anywhere else
+             - for every other stop `c - half` is already past half a viewport, so this is
+             identity - and it does not move where the travel finishes. */
+          const from = Math.max(c - half, vh() / 2);
+          const to = (c - half) + 2 * half * RUN;
+          const prog = to > from
+            ? Math.max(0, Math.min(1, (pos - from) / (to - from)))
+            : 0;
           bandTravel[i] = spill > 8 ? -spill * prog : 0;
         }
       }

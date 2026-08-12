@@ -54,7 +54,8 @@ window.__DW_ICONS = {
 };
 </script>
 <script src="data.js"></script>
-<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};</script>
+<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};
+window.__DW_PAPER = [{"label": "arXiv", "href": "https://arxiv.org/abs/2608.10716", "kind": "arxiv"}, {"label": "PDF", "href": "https://arxiv.org/pdf/2608.10716", "kind": "pdf"}];</script>
 <script src="flight.js"></script>
 <script>
 mountFlight(document.getElementById('world'), {
@@ -83,7 +84,7 @@ mountFlight(document.getElementById('world'), {
     { label: 'Voice samples', href: 'samples.html' },
     { label: 'Metrics', href: 'metrics.html' },
     { label: 'Results', href: 'results.html' },
-    { label: 'Overview', href: 'overview.html' },
+    { label: 'Overview', href: 'index.html#overview' },
   ],
   globes: [
     // Indices, so they drift the moment a stop is inserted: every one of these was two
@@ -96,7 +97,7 @@ mountFlight(document.getElementById('world'), {
     { label: 'Insurance',   src: 'img/insurance.webp',   stop: 4 },
     { label: 'Logistics',   src: 'img/logistics.webp',   stop: 5 },
   ],
-  video: { src: 'flight.mp4', poster: 'img/poster.webp',
+  video: { src: 'flight.mp4', srcSmall: 'flight-small.mp4', poster: 'img/poster.webp',
     // One entry per section, in section order. A length mismatch is not a soft
     // failure: the config is rejected and the film is dropped for the page.
     // Non-decreasing, which the validator requires and the flight needs: the camera
@@ -117,7 +118,7 @@ mountFlight(document.getElementById('world'), {
         metric: 'Pass@1',
         max: 0.7,
         rows: [
-          { system: 'Voice Think Fast', v: 0.533, pm: 0.133 },
+          { system: 'Grok Voice Think Fast 1.0', v: 0.533, pm: 0.133 },
           { system: 'Gemini-3.1-Flash-Live', v: 0.489, pm: 0.133 },
           { system: 'GPT-Realtime-2.1', v: 0.200, pm: 0.111 },
           { system: 'GPT-Realtime-2.1-mini', v: 0.089, pm: 0.078 },
@@ -130,38 +131,23 @@ mountFlight(document.getElementById('world'), {
     world('banking', 'Banking',
       '',
       T3_BANKING,
-      'Banking, realistic channel, n = 135 conversations per cell. The clause corpus is withheld '
-      + 'from the system prompt, so knowing when to look something up is itself under test. The '
-      + 'lowest reward of the six worlds.'),
+      ''),
     world('healthcare', 'Healthcare',
       '',
       T3_HEALTHCARE,
-      'Healthcare, realistic channel, n = 135 conversations per cell. A fully verified subscriber '
-      + "may be refused her adult daughter's claim while a daughter named as an authorised "
-      + "representative may act on her mother's, so a caller who passes every check can still be "
-      + 'entitled to nothing. The capability isolated is refusing without leaking in the act of '
-      + 'refusing.'),
+      ''),
     world('travel', 'Travel',
       '',
       T3_TRAVEL,
-      'Travel, realistic channel, n = 135 conversations per cell. Restraint is scored by negative '
-      + 'assertion and write-counting rather than end state: the assertion asks whether a listing '
-      + 'was paused exactly once, because a duplicate write leaves the database looking identical '
-      + 'to a correct run. The highest single cell in the benchmark, and the world with the '
-      + 'heaviest over-effort.'),
+      ''),
     world('insurance', 'Insurance',
       '',
       T3_INSURANCE,
-      'Insurance, realistic channel, n = 135 conversations per cell. Authority is fixed per '
-      + 'policyholder and the refusal is institutional rather than statutory. Several such '
-      + 'regimes are enforced in the tool surface itself, which makes the unsafe behaviour '
-      + 'unrepresentable rather than merely discouraged.'),
+      ''),
     world('logistics', 'Logistics',
       '',
       T3_LOGISTICS,
-      'Logistics, realistic channel, n = 135 conversations per cell. It has the least to refuse '
-      + 'of the five enterprise worlds, and the smallest gap between reaching the right state '
-      + 'and completing the task: plus 0.093 against plus 0.381 in Banking.'),
+      ''),
     // ---------------------------------------------------------------- the way out
     // The film takes CENTRE stage and the copy steps aside. The chain's outro is the camera
     // pulling back out of the last world to the whole dome, which is the opening in reverse,
@@ -177,7 +163,7 @@ mountFlight(document.getElementById('world'), {
         metric: 'Pass@1',
         max: 0.6,
         rows: [
-          { system: 'Voice Think Fast', v: 0.490, pm: 0.039 },
+          { system: 'Grok Voice Think Fast 1.0', v: 0.490, pm: 0.039 },
           { system: 'GPT-Realtime-2.1', v: 0.433, pm: 0.035 },
           { system: 'Gemini-3.1-Flash-Live', v: 0.398, pm: 0.039 },
           { system: 'GPT-Realtime-2.1-mini', v: 0.188, pm: 0.028 },
@@ -257,7 +243,9 @@ mountFlight(document.getElementById('world'), {
       block: 'out',
       cam: { x: 0.500, y: 0.480, z: 1.02 }, scroll: 1.8, linger: 0.3,
       accent: 'var(--mag)',
-      next: { kicker: 'Next', label: 'The whole benchmark on one screen', href: 'overview.html' },
+      // The at-a-glance grid is the last stop of the Experience page now, not a page of its
+      // own, so this points back there rather than at a page nothing else links to.
+      next: { kicker: 'Next', label: 'The whole benchmark on one screen', href: 'index.html' },
     },
   ],
 });

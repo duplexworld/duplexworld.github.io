@@ -28,14 +28,19 @@
   --soft:      #55586F;
   --grey:      #6d6f87;
   /* Defined here so no element depends on a JS fallback for its colour. */
-  --accent:    #0B7A56;   /* 4.56:1 on the page ground; was 4.00 */
+  --accent:    #4F277C;   /* 10.17:1 on the page ground; the green it replaced was 4.95 */
   /* Accents are now the paper's three PILLAR hues and nothing else. The magenta and
      violet that used to sit here were decoration: they encoded nothing, appeared nowhere
      in the paper, and collided with the vendor marks drawn on top of them. Every rule
-     downstream keeps its old token name and simply resolves to a pillar colour. */
-  --mag:       #0B7A56;   --magd: #085C41;  --magbg: #E8F5F0;  --magln: #C3E4D8;
+     downstream keeps its old token name and simply resolves to a pillar colour.
+     The agentic hue is the brand purple, the same #4F277C the art and the film already
+     carry and that --world-pathfinding has always used, rather than a green that
+     appeared in neither. (Deliberately unnamed here: this file ships byte-identical into
+     both variants, so spelling the organisation out is a de-anonymising leak - the guard
+     in make_site.py rejects the build for it, which is how this comment got reworded.) */
+  --mag:       #4F277C;   --magd: #3B1C5E;  --magbg: #F0EBF6;  --magln: #D5C8E4;
   --vio:       #4285F4;   --viod: #1F63D6;  --viobg: #E9F1FE;  --violn: #C9DDFB;
-  --teal:      #0B7A56;   --teald: #085C41; --tealbg: #E8F5F0; --tealln: #C3E4D8;
+  --teal:      #4F277C;   --teald: #3B1C5E; --tealbg: #F0EBF6; --tealln: #D5C8E4;
   --amb:       #F28C00;   --ambd: #B36800;  --ambbg: #FFF3E2;  --ambln: #F6D6A6;
   --red:       #C0392B;   --redbg: #FDEDEB; --redln: #F2C9C3;
   --paper:     #ffffff;
@@ -112,9 +117,15 @@ body {
   pointer-events: none;
   /* A ground of its own. The bar was fully transparent, so everything that scrolled
      underneath printed straight through the nav: on a phone the author names and the
-     wordmark occupied the same pixels. Translucent rather than solid, with a blur behind
-     it, so the page still reads as continuous under the bar. */
-  background: color-mix(in srgb, var(--bg-base) 78%, transparent);
+     wordmark occupied the same pixels.
+     Now OPAQUE rather than 78% translucent. A band panel taller than the viewport travels
+     through its band - that is what makes its tail reachable - so its heading necessarily
+     passes behind this bar on the way up. Measured: the at-a-glance heading reaches -12px
+     and four of the results headings reach between 7px and 61px against a 64px bar. At 78%
+     they ghosted through it half-legible, which reads as content dissolving rather than as
+     content scrolling past. Solid, it simply goes behind the bar, which is what a fixed
+     header is for. The blur stays for the rounded ends. */
+  background: var(--bg-base);
   -webkit-backdrop-filter: saturate(1.6) blur(14px);
   backdrop-filter: saturate(1.6) blur(14px);
   border-bottom: 1px solid transparent;
@@ -371,6 +382,11 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .fw-auto-icon { transition: none; }
+  /* The transcript highlights tween so a turn change does not snap. A reader who has asked
+     for less motion wants the state, not the tween: the class still lands, it just lands
+     instantly. The JS follow-scroll makes the same choice off the same query. */
+  .fw-turn, .fw-turn.is-now,
+  .fw-tp-turn, .fw-tp-turn.is-now { transition: none; }
 }
 
 /* ------------------------------------------------------------- world index */
@@ -1268,12 +1284,12 @@ body {
   --sys-nova:   #F28C00;   /* Nova 2 Sonic          */
 
   /* Pillar accents. Section headers and metric cards only, never a system bar. */
-  --pillar-agentic:  #0B7A56;
+  --pillar-agentic:  #4F277C;
   --pillar-dynamics: #4285F4;
   --pillar-natural:  #F28C00;
   /* The same three hues, darkened until they clear 4.5:1 as TEXT on both grounds.
      A fill can be vivid; a 12px label in the same colour cannot. */
-  --pillar-agentic-t:  #0B7A56;
+  --pillar-agentic-t:  #4F277C;
   --pillar-dynamics-t: #376fcc;
   --pillar-natural-t:  #a66000;
 
@@ -2505,6 +2521,116 @@ body {
 }
 .fw-open-note { font-size: inherit; color: inherit; }
 
+/* The byline standing in a flight stop rather than in the opening block.
+   -----------------------------------------------------------------------------------
+   In the opening it sits under a title in a dense three-by-three grid and has to stay
+   tight. On the landing stop it is the ONLY thing under the title, on a half-width column
+   with the film beside it, so the constraint is reversed: at the opening's sizes it read
+   as a caption stranded in white space. Set a step up, with the three rows actually
+   separated, and let the names breathe on their own line. */
+.fw-body-by { margin-top: 22px; gap: 10px; }
+.fw-body-by .fw-open-authors {
+  font-size: clamp(17px, 1.45vw, 21px);
+  line-height: 1.42;
+  gap: 2px 8px;
+}
+.fw-body-by .fw-open-author sup,
+.fw-body-by .fw-open-aff sup { font-size: 12.5px; }
+.fw-body-by .fw-open-affrow { font-size: 15.5px; gap: 4px 20px; }
+.fw-body-by .fw-open-notes  { font-size: 14.5px; gap: 2px 18px; margin-top: 2px; }
+
+/* THE PAPER BUTTONS.
+   -----------------------------------------------------------------------------------
+   The shape a project page for a paper uses: a pill per destination, the label spelled
+   out, an outline rather than a fill so they sit under the byline without competing with
+   the title above them. */
+.fw-open-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.fw-paperbtn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px;
+  font-size: 15px; font-weight: 640; line-height: 1;
+  color: var(--paper); text-decoration: none;
+  background: var(--pillar-agentic);
+  border: 1px solid var(--pillar-agentic);
+  border-radius: 999px;
+  transition: background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+.fw-paperbtn:hover {
+  background: var(--magd); border-color: var(--magd);
+  box-shadow: 0 3px 14px rgba(23, 23, 31, .16);
+}
+.fw-paperbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+/* The second and later destinations are the same journey, so they are the quieter
+   variant: same pill, outline only. */
+.fw-paperbtn.is-pdf {
+  color: var(--pillar-agentic); background: transparent;
+}
+.fw-paperbtn.is-pdf:hover {
+  color: var(--paper); background: var(--pillar-agentic);
+}
+.fw-paperbtn-i { width: 15px; height: 15px; flex: none; }
+
+/* A figure carried by a flight STOP rather than by an opening cell.
+   -----------------------------------------------------------------------------------
+   The opening packs nine cells into a grid, so the ring and the globes are sized to fit a
+   ninth of a screen. A stop gives the same figure a whole copy column with the film beside
+   it, so at the cell sizes they read as thumbnails of themselves. Scaled up here rather
+   than in the shared rules, which the opening still needs at its own size. */
+.fw-stop-fig { margin-top: 20px; }
+.fw-stop-fig .fw-ring-wrap { gap: 22px; margin-top: 0; }
+.fw-stop-fig .fw-ring { max-height: 190px; }
+.fw-stop-fig .fw-ring-khead { font-size: 14px; }
+.fw-stop-fig .fw-ring-kname { font-size: 14.5px; }
+.fw-stop-fig .fw-open-worlds {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 18px;
+}
+.fw-stop-fig .fw-open-wimg { width: clamp(36px, 3.4vw, 56px); }
+.fw-stop-fig .fw-open-w span { font-size: 15px; }
+@media (max-width: 900px) {
+  .fw-stop-fig .fw-open-worlds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fw-stop-fig .fw-ring-wrap { flex-wrap: wrap; }
+}
+
+/* The three-by-three grid carried by a STOP rather than by the opening block.
+   -----------------------------------------------------------------------------------
+   In the opening it owns a whole viewport under a title, so it is sized to fill one. On a
+   stop it sits under an eyebrow and a title inside a band panel that also has to travel,
+   so it takes its height from its content instead of stretching to the screen. */
+.fw-stop-cells { margin-top: 18px; }
+.fw-stop-cells .fw-open-grid { height: auto; min-height: 0; }
+/* THE GRID NEEDS THE BAND, NOT THE COPY MEASURE.
+   -----------------------------------------------------------------------------------
+   Measured at 1600px wide: as a page opening the grid is 1523px across and 527px tall; as
+   a stop it came out 650px across and 1068px tall. The copy column is a reading measure -
+   right for a paragraph, wrong for a three-by-three of charts - and a band stop still
+   inherits it, so three 502px columns became three 211px ones and the grid paid for the
+   lost width in height. That doubled height is also what put its tail past the fold.
+   Lifted only for the panel that actually carries this grid, so every other band stop
+   keeps the measure its prose wants. */
+.fw-shell-split[data-block="band"] .fw-copy:has(.fw-stop-cells) { max-width: none; }
+
+/* WIDE BAND STOPS TAKE THE BAND.
+   -----------------------------------------------------------------------------------
+   A band stop stands the stage down precisely because its content does not fit beside a
+   film, and then the panel capped it at 1200px anyway. Measured across the site at 1600px
+   wide, every one of these sat at 1200 with 352px of empty band beside it, and the gap
+   grows with the screen: 672px unused at 1920.
+   The cap is right for PROSE - a paragraph at 1500px is unreadable - so it stays the
+   default and is lifted only for the blocks that are figures rather than text: the map
+   tiles, the call tiles and their timelines, the eleven-column results tables, the card
+   grids and the at-a-glance grid. The three Pathfinding maps were the worst of it, at
+   1152px for three tiles side by side. */
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-stop-cells),
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-maps),
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-tapes),
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-runs),
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-cards),
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-navcards),
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-pillars) {
+  max-width: min(1560px, calc(100vw - 48px));
+}
+
 /* Shown only where the stage cannot carry it. See the phone block in alt-split.css. */
 .fw-phone-only { display: none; }
 
@@ -3087,11 +3213,18 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
   background: var(--ink);
   transform: translateX(-1px);
 }
-/* The turn being spoken. */
+/* The turn being spoken. Faded in and out rather than switched: a transcript follows the
+   audio turn by turn, so an untweened background snapped once per turn and read as a
+   flicker running down the page. The out-transition is slower than the in, because a turn
+   that has just finished should recede rather than vanish under the one that follows. */
+.fw-turn {
+  transition: background .34s ease, outline-color .34s ease;
+}
 .fw-turn.is-now {
   background: color-mix(in oklab, var(--pillar-agentic) 12%, transparent);
   border-radius: 8px;
   outline: 1px solid color-mix(in oklab, var(--pillar-agentic) 30%, transparent);
+  transition: background .16s ease, outline-color .16s ease;
 }
 
 
@@ -3375,7 +3508,14 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
   font: inherit; font-size: 14px; line-height: 1.42; color: var(--text);
 }
 .fw-tp-turn:hover { background: var(--bg-base); }
-.fw-tp-turn.is-now { background: color-mix(in srgb, var(--ink2) 8%, transparent); }
+/* Same tween as the full transcript above, and for the same reason: this one runs inside a
+   190px scroller, so an instant swap moved the eye twice at once - the highlight jumping
+   and the list scrolling under it. */
+.fw-tp-turn { transition: background .34s ease; }
+.fw-tp-turn.is-now {
+  background: color-mix(in srgb, var(--ink2) 8%, transparent);
+  transition: background .16s ease;
+}
 .fw-tp-who { font-size: 14px; font-weight: 640; color: var(--pillar-agentic); }
 .fw-tp-turn.is-user .fw-tp-who { color: var(--pillar-dynamics-t); }
 .fw-tp-at {
@@ -3623,11 +3763,19 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
 .fw-hn-model {
   font-size: var(--t-micro); color: var(--ink-soft); margin-top: 2px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  display: flex; align-items: center; gap: 7px;
 }
+/* The vendor mark beside a model name, in both columns of the harness. Sized to the cap
+   height of the monospace it sits against rather than to the line box, so the logo and the
+   name share a baseline instead of the logo riding high. */
+.fw-hn-mark { display: inline-flex; flex: none; width: 15px; height: 15px; }
+.fw-hn-mark img, .fw-hn-mark svg { width: 100%; height: 100%; display: block; }
+.fw-hn-mark svg { color: var(--muted); }
 .fw-hn-says { font-size: var(--t-micro); color: var(--ink-soft); margin: 6px 0 0; line-height: 1.42; }
 .fw-hn-sys {
   font-size: var(--t-micro); padding: 5px 9px; border-radius: 8px; margin-top: 6px;
   background: rgba(14, 16, 41, .04); color: var(--ink-soft);
+  display: flex; align-items: center; gap: 8px;
 }
 .fw-hn-sys.is-lead {
   background: color-mix(in srgb, var(--pillar-agentic) 12%, #fff);

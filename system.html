@@ -197,16 +197,22 @@ body.fw-sys {
 
 <a class="fw-skip" href="#sys">Skip to the diagram</a>
 
-<header class="topbar is-scrolled" data-nav-host>
+<!-- The header is hand-written here because this page does not mount a flight, and the
+     flight is what builds the bar everywhere else. That is exactly why it went stale: it
+     was a COPY, so it kept a seven-item nav from an earlier structure while the real one
+     moved on. It listed types.html, which is not in make_site.py's PAGES and therefore
+     404s on the live site; it omitted Setup entirely; and it pinned `is-scrolled`, which
+     is a scroll STATE, so this page alone rendered its bar in the scrolled style from the
+     first frame. Kept in sync with the `nav:` array the six flight pages pass. -->
+<header class="topbar" data-nav-host>
   <a class="wordmark" href="index.html"><img class="wordmark-logo" src="img/hero.webp" alt="">Duplex&nbsp;World <span class="sub">benchmark</span></a>
 <nav class="fw-nav" aria-label="Sections">
   <a class="fw-nav-item" href="index.html">Experience</a>
-  <a class="fw-nav-item" href="overview.html">Overview</a>
-  <a class="fw-nav-item" href="types.html">Conversation types</a>
+  <a class="fw-nav-item" href="setup.html">Setup</a>
   <a class="fw-nav-item" href="samples.html">Voice samples</a>
-  <a class="fw-nav-item" href="system.html" aria-current="page">How it works</a>
   <a class="fw-nav-item" href="metrics.html">Metrics</a>
   <a class="fw-nav-item" href="results.html">Results</a>
+  <a class="fw-nav-item" href="index.html#overview">Overview</a>
 </nav>
 </header>
 
@@ -291,7 +297,7 @@ body.fw-sys {
       colour: 'var(--ambd)' },
   ];
   var SYSTEMS = [
-    { name: 'Voice Think Fast', vendor: 'grok' },
+    { name: 'Grok Voice Think Fast 1.0', vendor: 'grok' },
     { name: 'GPT-Realtime-2.1', vendor: 'openai' },
     { name: 'Gemini-3.1-Flash-Live', vendor: 'gemini' },
     { name: 'GPT-Realtime-2.1-mini', vendor: 'openai' },

@@ -54,7 +54,8 @@ window.__DW_ICONS = {
 };
 </script>
 <script src="data.js"></script>
-<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};</script>
+<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};
+window.__DW_PAPER = [{"label": "arXiv", "href": "https://arxiv.org/abs/2608.10716", "kind": "arxiv"}, {"label": "PDF", "href": "https://arxiv.org/pdf/2608.10716", "kind": "pdf"}];</script>
 <script src="flight.js"></script>
 <script>
 mountFlight(document.getElementById('world'), {
@@ -106,15 +107,15 @@ mountFlight(document.getElementById('world'), {
         'Identity verification', 'Guided procedure', 'Mid-call correction',
         'Suspension', 'Narrative intake', 'Rerouting', 'All-day assistance',
       ] },
-      { label: 'Pass@1', head: { v: '0.490', who: 'Voice Think Fast' },
+      { label: 'Pass@1', head: { v: '0.490', who: 'Grok Voice Think Fast 1.0' },
         plot: { accent: 'var(--pillar-agentic)', dp: 3, max: 0.55, rows: [
-        ['Voice Think Fast', 0.490, 0.039], ['GPT-Realtime-2.1', 0.433, 0.035],
+        ['Grok Voice Think Fast 1.0', 0.490, 0.039], ['GPT-Realtime-2.1', 0.433, 0.035],
         ['Gemini-3.1-Flash-Live', 0.398, 0.039], ['GPT-Realtime-2.1-mini', 0.188, 0.028],
         ['Nova 2 Sonic', 0.011, 0.007]],
         note: '0.011: the system that holds the floor without completing tasks.' } },
       { label: 'Turn-taking', head: { v: '0.653', who: 'GPT-Realtime-2.1' },
         plot: { accent: 'var(--pillar-dynamics)', dp: 3, max: 0.72, rows: [
-        ['GPT-Realtime-2.1', 0.653, 0.018], ['Voice Think Fast', 0.635, 0.015],
+        ['GPT-Realtime-2.1', 0.653, 0.018], ['Grok Voice Think Fast 1.0', 0.635, 0.015],
         ['Nova 2 Sonic', 0.566, 0.021], ['GPT-Realtime-2.1-mini', 0.521, 0.025],
         ['Gemini-3.1-Flash-Live', 0.388, 0.012]] } },
       { label: 'DNSMOS', head: { v: '3.378', who: 'Gemini-3.1-Flash-Live' },
@@ -123,14 +124,14 @@ mountFlight(document.getElementById('world'), {
               + 'five systems sit inside a quarter of a point of each other.', base: 3.0, max: 3.45, rows: [
         ['Gemini-3.1-Flash-Live', 3.378, 0.008], ['GPT-Realtime-2.1', 3.350, 0.004],
         ['GPT-Realtime-2.1-mini', 3.334, 0.009], ['Nova 2 Sonic', 3.172, 0.015],
-        ['Voice Think Fast', 3.127, 0.007]] } },
+        ['Grok Voice Think Fast 1.0', 3.127, 0.007]] } },
       // The ninth cell. The grid was eight tiles in a nine-cell matrix, so the bottom
       // right corner was simply missing. It carries the sentence the three plots beside it
       // add up to - the paper's own thesis, already stated in the abstract tile - with the
       // system that holds each pillar. No new claim: the same three numbers, named.
       { label: 'The finding', text: 'A different system leads each of the three.',
         leads: [
-          ['Agentic capability', 'Pass@1 0.490', 'Voice Think Fast'],
+          ['Agentic capability', 'Pass@1 0.490', 'Grok Voice Think Fast 1.0'],
           ['Conversational dynamics', 'Turn-taking 0.653', 'GPT-Realtime-2.1'],
           ['Naturalness', 'DNSMOS 3.378', 'Gemini-3.1-Flash-Live'],
         ] },
@@ -142,7 +143,6 @@ mountFlight(document.getElementById('world'), {
     { label: 'Voice samples', href: 'samples.html' },
     { label: 'Metrics', href: 'metrics.html' },
     { label: 'Results', href: 'results.html' },
-    { label: 'Overview', href: 'overview.html' },
   ],
   video: { src: 'flight.mp4', srcSmall: 'flight-small.mp4', poster: 'img/poster.webp',
     // One entry per section, in section order. A length mismatch is not a soft

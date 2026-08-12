@@ -120,7 +120,15 @@ class Server(socketserver.ThreadingTCPServer):
 
 if __name__ == "__main__":
     Server.address_family = socket.AF_INET
-    with Server(("0.0.0.0", PORT), functools.partial(Handler, directory=ROOT)) as httpd:
+    # Loopback, not 0.0.0.0. This server has no auth, serves whatever directory it sits in
+    # with autoindex on, and printed "http://127.0.0.1" while actually listening on every
+    # interface - so anything that could reach the host could read the whole tree, .git
+    # included. Pass HOST=0.0.0.0 deliberately if you really want it on the network.
+    HOST = os.environ.get("HOST", "127.0.0.1")
+    with Server((HOST, PORT), functools.partial(Handler, directory=ROOT)) as httpd:
+        if HOST != "127.0.0.1":
+            print(f"WARNING: listening on {HOST}, reachable from the network, no auth",
+                  flush=True)
         print(f"duplexworld  http://127.0.0.1:{PORT}/                    the page", flush=True)
         print(f"             http://127.0.0.1:{PORT}/duplexworld.html    the single-file export",
               flush=True)

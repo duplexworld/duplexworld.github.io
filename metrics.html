@@ -54,7 +54,8 @@ window.__DW_ICONS = {
 };
 </script>
 <script src="data.js"></script>
-<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};</script>
+<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};
+window.__DW_PAPER = [{"label": "arXiv", "href": "https://arxiv.org/abs/2608.10716", "kind": "arxiv"}, {"label": "PDF", "href": "https://arxiv.org/pdf/2608.10716", "kind": "pdf"}];</script>
 <script src="flight.js"></script>
 <script>
 mountFlight(document.getElementById('world'), {
@@ -71,12 +72,16 @@ mountFlight(document.getElementById('world'), {
     { label: 'Voice samples', href: 'samples.html' },
     { label: 'Metrics', href: 'metrics.html' },
     { label: 'Results', href: 'results.html' },
-    { label: 'Overview', href: 'overview.html' },
+    { label: 'Overview', href: 'index.html#overview' },
   ],
-  video: { src: 'flight.mp4', srcSmall: 'flight-small.mp4', poster: 'img/poster.webp',
-    // One entry per section, in section order. A length mismatch is not a soft
-    // failure: the config is rejected and the film is dropped for the page.
-    stops: [7.50, 103.50] },
+  // NO FILM ON THIS PAGE, deliberately.
+  // ------------------------------------------------------------------------------------
+  // Two sections is one leg, so the film had to cross 96 of its 104 seconds in a single
+  // band: 27 film-seconds per viewport-height against the 8 or 9 the Experience page runs
+  // at. That is not a flight, it is a fast-forward, and it was pulling attention off the
+  // metric definitions this page exists to state. With `video` absent the stage falls back
+  // to the mark, which is what the reader should be looking past here anyway. Dropping it
+  // also stops the page fetching a 38.9 MB blob it had no use for.
   sections: [
     {
       id: 'pillars3', label: 'The metrics', stage: 'film', still: null,
@@ -86,6 +91,7 @@ mountFlight(document.getElementById('world'), {
       block: 'band',
       cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 5.3, linger: 0.4,
       accent: 'var(--pillar-dynamics)',
+      next: { kicker: 'Next', label: 'What the five systems scored', href: 'results.html' },
       // The definitions on their own were a glossary the paper already has. This is the
       // same five runs of one Pathfinding scenario that the numbers beside them come from,
       // so a reader watches GS, Pass@1 and Pass-cubed fall out of one set of runs and can
@@ -153,13 +159,6 @@ mountFlight(document.getElementById('world'), {
             + 'turn-taking. Any composite that averages across the pillars can be won by '
             + 'silence.',
       },
-    },
-    {
-      id: 'out', label: 'Duplex World', stage: 'film', still: null, layout: 'hero',
-      block: 'out',
-      cam: { x: 0.500, y: 0.480, z: 1.02 }, scroll: 1.8, linger: 0.3,
-      accent: 'var(--mag)',
-      next: { kicker: 'Next', label: 'What the five systems scored', href: 'results.html' },
     },
   ],
 });

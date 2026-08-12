@@ -54,7 +54,8 @@ window.__DW_ICONS = {
 };
 </script>
 <script src="data.js"></script>
-<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};</script>
+<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};
+window.__DW_PAPER = [{"label": "arXiv", "href": "https://arxiv.org/abs/2608.10716", "kind": "arxiv"}, {"label": "PDF", "href": "https://arxiv.org/pdf/2608.10716", "kind": "pdf"}];</script>
 <script src="flight.js"></script>
 <script>
 mountFlight(document.getElementById('world'), {
@@ -71,21 +72,20 @@ mountFlight(document.getElementById('world'), {
     { label: 'Voice samples', href: 'samples.html' },
     { label: 'Metrics', href: 'metrics.html' },
     { label: 'Results', href: 'results.html' },
-    { label: 'Overview', href: 'overview.html' },
+    { label: 'Overview', href: 'index.html#overview' },
   ],
   video: { src: 'flight.mp4', srcSmall: 'flight-small.mp4', poster: 'img/poster.webp',
     // One entry per section, in section order. A length mismatch is not a soft
     // failure: the config is rejected and the film is dropped for the page.
-    stops: [4.00, 24.00, 52.00, 80.00, 103.50] },
+    stops: [4.00, 19.99, 38.35, 58.49, 83.36, 103.50] },
   sections: [
     {
       id: 'welcome', label: 'Welcome', stage: 'film', still: null,
       eyebrow: 'Welcome to DuplexWorld',
       title: 'Can a voice agent help you get through the day?',
-      body: 'Not answer a question. Get you through something - across a city you cannot '
-          + 'see, through a bank\u2019s identity checks, around a road that is closed. '
-          + 'DuplexWorld is six worlds of an ordinary day, and five commercial voice '
-          + 'agents trying to be useful inside them.',
+      // The authors stand where the standfirst used to. This page has no `opening` block,
+      // so the landing stop is the only place on it that a byline can live.
+      byline: true,
       cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.6, linger: 0.4,
       accent: 'var(--mag)',
     },
@@ -98,7 +98,11 @@ mountFlight(document.getElementById('world'), {
           + 'writes the words, a second decides when to speak, a third says them out loud '
           + '- and it is allowed to talk over the agent, because that is where voice '
           + 'agents actually break.',
-      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.6, linger: 0.4,
+      // The three models are named here in a sentence; the Setup page draws them as the
+      // harness they actually are. A reader who wants that should not have to find it in
+      // the bar.
+      cta: [{ label: 'See the harness', href: 'setup.html' }],
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.8, linger: 0.4,
       accent: 'var(--pillar-dynamics)',
     },
     {
@@ -106,11 +110,15 @@ mountFlight(document.getElementById('world'), {
       eyebrow: 'Six worlds of one day',
       title: 'Banking, insurance, travel, healthcare, logistics - and a city you have to '
            + 'walk across.',
-      body: 'Five of the six are enterprise calls, the kind that already exist. The sixth '
-          + 'is new: a walker with no map and a copilot who cannot see the street, working '
-          + 'out a route together over the phone. That one is the task nobody has run a '
-          + 'voice agent through before.',
-      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.6, linger: 0.4,
+      // The same six globes the overview page carries, drawn by the same builder. Naming
+      // six worlds in a sentence and then showing nothing was the one stop on this page
+      // where the copy did all the work.
+      worlds: [
+        ['Pathfinding', 'img/pathfinding.webp'], ['Banking', 'img/banking.webp'],
+        ['Healthcare', 'img/healthcare.webp'], ['Travel', 'img/travel.webp'],
+        ['Insurance', 'img/insurance.webp'], ['Logistics', 'img/logistics.webp'],
+      ],
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 3.4, linger: 0.4,
       accent: 'var(--viod)',
     },
     {
@@ -120,8 +128,101 @@ mountFlight(document.getElementById('world'), {
       body: 'Eleven conversation types, 156 scenarios, five speech-to-speech systems, one '
           + 'twelve-metric suite in three pillars. Every pairing is run five times, and '
           + 'for the walking world in two acoustic channels - a quiet one and a street.',
-      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.6, linger: 0.4,
+      // The corpus ring from the overview page. The two totals in the title are the two
+      // numbers this shape divides up, so it belongs beside them rather than four pages
+      // later. Same slices, same builder, so the two pages cannot disagree.
+      ring: {
+        centre: '3,825', centreSub: 'total', keyHead: 'Conversations by world',
+        slices: [
+          ['Banking', 675], ['Insurance', 675], ['Travel', 675],
+          ['Healthcare', 675], ['Logistics', 675], ['Pathfinding', 450],
+        ],
+      },
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 3.4, linger: 0.4,
       accent: 'var(--pillar-agentic)',
+    },
+    {
+      /* THE OVERVIEW, as the last stop of this page rather than a page of its own.
+         ---------------------------------------------------------------------------------
+         Everything above is the argument one beat at a time; this is all of it at once, with
+         the mark in the middle cell. It used to live at overview.html, which meant the one
+         screen that summarises the benchmark was the one screen a reader had to leave the
+         Experience to find. The cells are the overview's own, unchanged, so the two cannot
+         say different things.
+         Full width: eleven type chips and three system plots do not fit beside a film. */
+      id: 'overview', label: 'At a glance', stage: 'film', still: null, block: 'band',
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 5.0, linger: 0.42,
+      accent: 'var(--pillar-agentic)',
+      eyebrow: 'DuplexWorld at a glance',
+      title: 'The whole benchmark, on one screen.',
+      cellsMark: 'img/hero.webp',
+      cellsMarkAlt: 'The DuplexWorld mark: the six worlds under one dome',
+    cells: [
+      { label: 'Abstract', wide: true, text:
+        'Six worlds of an ordinary day, eleven conversation types and one twelve-metric '
+        + 'suite in three pillars, held under a single harness. Across 3,825 scored '
+        + 'conversations, none of the five commercial speech-to-speech systems evaluated '
+        + 'exceeds Pass@1 0.490, turn-taking 0.653 or DNSMOS 3.378 pooled over the worlds. '
+        + 'A different system leads each of the three.' },
+      // Figure 2(a)'s third panel, lifted from the submission at print resolution rather
+      // than redrawn: it is a density per world and the paper does not publish the
+      // durations behind it, so drawing our own would be inventing the shape.
+      // The submission's own Figure 1 panel, cropped from the arXiv page rather than
+      // redrawn: it already carries the two totals as rings, so the stat rows that used to
+      // sit above it were saying the same thing twice.
+      // Conversations by world, as a ring. Six slices, five of them equal by design, so
+      // there is one shape to read rather than eleven: the point is that the five
+      // enterprise worlds are balanced and Pathfinding is two thirds their size.
+      // Labelled directly on the arc, no legend, and the counts are stated.
+      // Four figures and one shape. The labels are parallel so the row scans as a set
+      // rather than as three sentences of different lengths.
+      { label: 'The corpus', items: [
+        ['387 h', 'of speech'], ['156', 'scenarios'], ['5', 'systems'],
+      ], ring: {
+        centre: '3,825', centreSub: 'total', keyHead: 'Conversations by world',
+        slices: [
+          ['Banking', 675], ['Insurance', 675], ['Travel', 675],
+          ['Healthcare', 675], ['Logistics', 675], ['Pathfinding', 450],
+        ] } },
+      { label: 'Six worlds', worlds: [
+        ['Pathfinding', 'img/pathfinding.webp'], ['Banking', 'img/banking.webp'],
+        ['Healthcare', 'img/healthcare.webp'], ['Travel', 'img/travel.webp'],
+        ['Insurance', 'img/insurance.webp'], ['Logistics', 'img/logistics.webp'],
+      ] },
+      { label: 'Eleven conversation types', chips: [
+        'Single intent', 'Multi intent', 'Policy refusal', 'Record disambiguation',
+        'Identity verification', 'Guided procedure', 'Mid-call correction',
+        'Suspension', 'Narrative intake', 'Rerouting', 'All-day assistance',
+      ] },
+      { label: 'Pass@1', head: { v: '0.490', who: 'Grok Voice Think Fast 1.0' },
+        plot: { accent: 'var(--pillar-agentic)', dp: 3, max: 0.55, rows: [
+        ['Grok Voice Think Fast 1.0', 0.490, 0.039], ['GPT-Realtime-2.1', 0.433, 0.035],
+        ['Gemini-3.1-Flash-Live', 0.398, 0.039], ['GPT-Realtime-2.1-mini', 0.188, 0.028],
+        ['Nova 2 Sonic', 0.011, 0.007]],
+        note: '0.011: the system that holds the floor without completing tasks.' } },
+      { label: 'Turn-taking', head: { v: '0.653', who: 'GPT-Realtime-2.1' },
+        plot: { accent: 'var(--pillar-dynamics)', dp: 3, max: 0.72, rows: [
+        ['GPT-Realtime-2.1', 0.653, 0.018], ['Grok Voice Think Fast 1.0', 0.635, 0.015],
+        ['Nova 2 Sonic', 0.566, 0.021], ['GPT-Realtime-2.1-mini', 0.521, 0.025],
+        ['Gemini-3.1-Flash-Live', 0.388, 0.012]] } },
+      { label: 'DNSMOS', head: { v: '3.378', who: 'Gemini-3.1-Flash-Live' },
+        plot: { accent: 'var(--pillar-natural)', dp: 2,
+          note: 'This axis starts at 3.0, not 0: DNSMOS is a 1-to-5 opinion score and the '
+              + 'five systems sit inside a quarter of a point of each other.', base: 3.0, max: 3.45, rows: [
+        ['Gemini-3.1-Flash-Live', 3.378, 0.008], ['GPT-Realtime-2.1', 3.350, 0.004],
+        ['GPT-Realtime-2.1-mini', 3.334, 0.009], ['Nova 2 Sonic', 3.172, 0.015],
+        ['Grok Voice Think Fast 1.0', 3.127, 0.007]] } },
+      // The ninth cell. The grid was eight tiles in a nine-cell matrix, so the bottom
+      // right corner was simply missing. It carries the sentence the three plots beside it
+      // add up to - the paper's own thesis, already stated in the abstract tile - with the
+      // system that holds each pillar. No new claim: the same three numbers, named.
+      { label: 'The finding', text: 'A different system leads each of the three.',
+        leads: [
+          ['Agentic capability', 'Pass@1 0.490', 'Grok Voice Think Fast 1.0'],
+          ['Conversational dynamics', 'Turn-taking 0.653', 'GPT-Realtime-2.1'],
+          ['Naturalness', 'DNSMOS 3.378', 'Gemini-3.1-Flash-Live'],
+        ] },
+    ],
     },
     {
       id: 'out', label: 'Duplex World', stage: 'film', still: null, layout: 'hero',

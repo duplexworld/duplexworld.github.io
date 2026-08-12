@@ -54,7 +54,8 @@ window.__DW_ICONS = {
 };
 </script>
 <script src="data.js"></script>
-<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};</script>
+<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};
+window.__DW_PAPER = [{"label": "arXiv", "href": "https://arxiv.org/abs/2608.10716", "kind": "arxiv"}, {"label": "PDF", "href": "https://arxiv.org/pdf/2608.10716", "kind": "pdf"}];</script>
 <script src="flight.js"></script>
 <script>
 mountFlight(document.getElementById('world'), {
@@ -83,11 +84,14 @@ mountFlight(document.getElementById('world'), {
     { label: 'Voice samples', href: 'samples.html' },
     { label: 'Metrics', href: 'metrics.html' },
     { label: 'Results', href: 'results.html' },
-    { label: 'Overview', href: 'overview.html' },
+    { label: 'Overview', href: 'index.html#overview' },
   ],
-  video: { src: 'flight.mp4', poster: 'img/poster.webp',
+  video: { src: 'flight.mp4', srcSmall: 'flight-small.mp4', poster: 'img/poster.webp',
     // One entry per section, in section order. A length mismatch is not a soft
     // failure: the config is rejected and the film is dropped for the page.
+    // One per section, non-decreasing. The pass/fail pairs stop was added between the
+    // samples and the outro, so it needs its own keyframe: without it the array is one
+    // short, videoOK_config rejects the whole thing and the page loses its film silently.
     stops: [5.20, 103.50] },
   sections: [
     {
@@ -123,7 +127,7 @@ mountFlight(document.getElementById('world'), {
           world: 'Pathfinding', model: 'GPT-Realtime-2.1-mini',
           voice: 'voice_base_lost.json' },
         { map: 'blocked_bad', outcome: 'bad', type: 'Rerouting, failed', world: 'Pathfinding',
-          model: 'Voice Think Fast', voice: 'voice_blocked_bad.json' },
+          model: 'Grok Voice Think Fast 1.0', voice: 'voice_blocked_bad.json' },
         // Turns 19-23: the charge surfaces inside the digression and the agent has to act
         // on it without over-reacting before the caller says it is not theirs.
         { call: 'bank_narr_ok', from: 19, to: 23, outcome: 'ok',
@@ -147,14 +151,79 @@ mountFlight(document.getElementById('world'), {
           audio: 'audio/bank_susp_ok.opus' },
       ],
     },
-    // ---------------------------------------------------------------- the three pillars
     {
-      id: 'out', label: 'Duplex World', stage: 'film', still: null, layout: 'hero',
-      block: 'out',
-      cam: { x: 0.500, y: 0.480, z: 1.02 }, scroll: 1.8, linger: 0.3,
-      accent: 'var(--mag)',
+      id: 'pairs', label: 'Pass and fail', block: 'band', stage: 'art', still: null,
+      art: 'img/audio-turn.mp4',
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 5.0, linger: 0.4,
+      accent: 'var(--pillar-agentic)',
+      eyebrow: 'The same shape, done and not done',
+      title: 'Nine conversation types, each one passed and failed.',
+      cardsLede: 'One passing and one failing call for every enterprise conversation '
+               + 'type. Eight of the nine pairs hold the system fixed, so what separates '
+               + 'the two tiles is the run and not the vendor. Open a tile for the whole '
+               + 'call: its two-lane speech activity timeline, every tool call, every '
+               + 'audio effect the harness applied, and the full transcript.',
+      cardsFoot: 'Nine here, eleven in the corpus: rerouting and all-day assistance arise '
+               + 'only in Pathfinding, and both are above.',
       next: { kicker: 'Next', label: 'How this was scored', href: 'metrics.html' },
+      tapes: [
+        { key: 'si_ok', type: 'Single intent', verdict: 'ok',
+          world: 'Banking', model: 'Gemini-3.1-Flash-Live',
+          line: 'One request, carried to the end: verified, actioned, confirmed back.' },
+        { key: 'si_bad', type: 'Single intent', verdict: 'bad',
+          world: 'Banking', model: 'Nova 2 Sonic',
+          line: 'The same request. The call is over in a minute and nothing was done.' },
+        { key: 'mi_ok', type: 'Multi intent', verdict: 'ok',
+          world: 'Travel', model: 'Gemini-3.1-Flash-Live',
+          line: 'Three things asked for at once, and all three finished.' },
+        { key: 'mi_bad', type: 'Multi intent', verdict: 'bad',
+          world: 'Travel', model: 'Gemini-3.1-Flash-Live',
+          line: 'The same three. The last one is dropped and never comes back.' },
+        { key: 'pr_ok', type: 'Policy refusal', verdict: 'ok',
+          world: 'Travel', model: 'GPT-Realtime-2.1',
+          line: 'Asked for something it may not do, it declines and says what it can do.' },
+        { key: 'pr_bad', type: 'Policy refusal', verdict: 'bad',
+          world: 'Travel', model: 'GPT-Realtime-2.1',
+          line: 'The same request. This time the agent ends the call itself.' },
+        { key: 'rd_ok', type: 'Record disambiguation', verdict: 'ok',
+          world: 'Travel', model: 'GPT-Realtime-2.1',
+          line: 'Two records match what the caller said. The agent settles which one.' },
+        { key: 'rd_bad', type: 'Record disambiguation', verdict: 'bad',
+          world: 'Travel', model: 'GPT-Realtime-2.1',
+          line: 'The same two records. It picks one and never asks.' },
+        { key: 'iv_ok', type: 'Identity verification', verdict: 'ok',
+          world: 'Travel', model: 'Gemini-3.1-Flash-Live',
+          line: 'Authority established before anything is touched, in the right order.' },
+        { key: 'iv_bad', type: 'Identity verification', verdict: 'bad',
+          world: 'Travel', model: 'Gemini-3.1-Flash-Live',
+          line: 'Same model, same caller. The check does not land where it has to.' },
+        { key: 'gp_ok', type: 'Guided procedure', verdict: 'ok',
+          world: 'Travel', model: 'Gemini-3.1-Flash-Live',
+          line: 'A procedure the caller performs, one step at a time, over the phone.' },
+        { key: 'gp_bad', type: 'Guided procedure', verdict: 'bad',
+          world: 'Travel', model: 'Gemini-3.1-Flash-Live',
+          line: 'The same steps. The caller is left holding a step that never completes.' },
+        { key: 'mc_ok', type: 'Mid-call correction', verdict: 'ok',
+          world: 'Travel', model: 'GPT-Realtime-2.1',
+          line: 'The caller changes a detail already acted on. The change propagates.' },
+        { key: 'mc_bad', type: 'Mid-call correction', verdict: 'bad',
+          world: 'Travel', model: 'GPT-Realtime-2.1',
+          line: 'The same correction, acknowledged out loud and not carried through.' },
+        { key: 'su_ok', type: 'Suspension', verdict: 'ok',
+          world: 'Banking', model: 'GPT-Realtime-2.1-mini',
+          line: 'The caller breaks off mid-task and comes back. The thread survives the gap.' },
+        { key: 'su_bad', type: 'Suspension', verdict: 'bad',
+          world: 'Banking', model: 'GPT-Realtime-2.1-mini',
+          line: 'The same break. What was already established has to be established again.' },
+        { key: 'ni_ok', type: 'Narrative intake', verdict: 'ok',
+          world: 'Banking', model: 'GPT-Realtime-2.1-mini',
+          line: 'A long, unstructured account, reduced to the fields the case needs.' },
+        { key: 'ni_bad', type: 'Narrative intake', verdict: 'bad',
+          world: 'Banking', model: 'GPT-Realtime-2.1-mini',
+          line: 'Same model, same task. Twenty minutes in, still collecting, and the clock ends it.' },
+      ],
     },
+    // ---------------------------------------------------------------- the three pillars
   ],
 });
 </script>

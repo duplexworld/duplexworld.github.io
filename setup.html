@@ -54,7 +54,8 @@ window.__DW_ICONS = {
 };
 </script>
 <script src="data.js"></script>
-<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};</script>
+<script>window.__DW_AUTHORS = {"people": [{"name": "Aryan Vijay Bhosale", "sup": "1,2*"}, {"name": "Harshit Rajgarhia", "sup": "1*"}, {"name": "Akhil Pothanapalli", "sup": "1*"}, {"name": "Asif Shaik", "sup": "1"}, {"name": "Abhishek Mukherji", "sup": "1†"}, {"name": "Dinesh Manocha", "sup": "2†"}], "affiliations": [{"sup": "1", "name": "Centific Global Solutions Inc.", "href": "https://www.centific.com/research/applied-ai-research"}, {"sup": "2", "name": "University of Maryland", "href": "https://www.cs.umd.edu/"}], "email": "{aryan.bhosale, harshit.rajgarhia}@centific.com", "notes": ["Work done during an internship at Centific.", "* Equal contribution.  † Equal advising."]};
+window.__DW_PAPER = [{"label": "arXiv", "href": "https://arxiv.org/abs/2608.10716", "kind": "arxiv"}, {"label": "PDF", "href": "https://arxiv.org/pdf/2608.10716", "kind": "pdf"}];</script>
 <script src="flight.js"></script>
 <script>
 mountFlight(document.getElementById('world'), {
@@ -71,26 +72,20 @@ mountFlight(document.getElementById('world'), {
     { label: 'Voice samples', href: 'samples.html' },
     { label: 'Metrics', href: 'metrics.html' },
     { label: 'Results', href: 'results.html' },
-    { label: 'Overview', href: 'overview.html' },
+    { label: 'Overview', href: 'index.html#overview' },
   ],
   video: { src: 'flight.mp4', srcSmall: 'flight-small.mp4', poster: 'img/poster.webp',
     // One entry per section, in section order. A length mismatch is not a soft
     // failure: the config is rejected and the film is dropped for the page.
-    stops: [2.00, 3.00, 2.00, 4.00, 103.50] },
+    // Non-decreasing, which the validator requires and the flight needs: the camera only
+    // ever moves forward through the film. This page shipped [2, 3, 2, 4, 103.5], which
+    // steps BACK from 3 to 2, so videoOK_config rejected the whole config and the page has
+    // been running with no film at all - the stage fell back to the computed camera and
+    // nobody noticed because that fallback looks deliberate.
+    stops: [2.00, 41.65, 80.24, 103.50] },
   sections: [
     {
-      id: 'task', label: 'The setup', stage: 'film', still: null,
-      eyebrow: 'The setup',
-      title: 'One map, two people, and only one of them can see it.',
-      body: 'The walking world is the new task, so it is the one worth understanding '
-          + 'first. The copilot holds a map and cannot see the street. The walker is on '
-          + 'the street and has no map. Everything has to be established out loud, and '
-          + 'every route below is a real recorded run.',
-      cam: { x: 0.346, y: 0.601, z: 1.40 }, scroll: 2.6, linger: 0.4,
-      accent: 'var(--mag)',
-    },
-    {
-      id: 'harness', label: 'The harness', stage: 'film', still: null, block: 'band',
+      id: 'harness', label: 'The harness', stage: 'film', still: null,
       cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.8, linger: 0.4,
       accent: 'var(--pillar-dynamics)',
       eyebrow: 'The harness',
@@ -118,7 +113,7 @@ mountFlight(document.getElementById('world'), {
         agentRole: 'Hears audio, answers in audio',
         agentSays: 'One of five commercial speech-to-speech systems. It is never told '
                  + 'whose turn it is.',
-        systems: ['Voice Think Fast', 'GPT-Realtime-2.1', 'Gemini-3.1-Flash-Live',
+        systems: ['Grok Voice Think Fast 1.0', 'GPT-Realtime-2.1', 'Gemini-3.1-Flash-Live',
                   'GPT-Realtime-2.1-mini', 'Nova 2 Sonic'],
         more: { label: 'Watch one call run, tick by tick', href: 'system.html' },
       },
