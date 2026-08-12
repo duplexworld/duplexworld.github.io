@@ -1340,6 +1340,30 @@ function mountFlight(root, config) {
     /* A world's own header: its globe, its name, and the one line that says what the
        world isolates. On the half-width layout this lived on the stage as a plate; on a
        band there is no stage, and the name was ending up under its own chart. */
+    /* The cinema stop: one line over the picture, and nothing else.
+       ---------------------------------------------------------------------------
+       Every other block on this site puts type BESIDE the film because it has numbers to
+       carry. This one has none: the film is the argument and the words are its caption,
+       so they sit on it, large, and get out of the way. */
+    if (s.big) {
+      const w = el('div', 'fw-cine');
+      const h = el('h2', 'fw-cine-big');
+      h.textContent = s.big;
+      w.appendChild(h);
+      if (s.say) {
+        const q = el('p', 'fw-cine-say');
+        q.textContent = s.say;
+        w.appendChild(q);
+      }
+      (s.go || []).forEach(([label, href]) => {
+        const a = el('a', 'fw-cine-go');
+        a.href = href;
+        a.textContent = label;
+        w.appendChild(a);
+      });
+      p.appendChild(w);
+    }
+
     if (s.plate) {
       const hd = el('header', 'fw-plate');
       if (s.plate.img) hd.appendChild(artImg(s.plate.img, '', 'fw-plate-globe'));
@@ -2058,6 +2082,15 @@ function mountFlight(root, config) {
         }
       });
       by.appendChild(line);
+      /* Three rows, not one wrapping soup.
+         -------------------------------------------------------------------------------
+         Flowed as a single wrap row, the affiliations, the contact and the two notes
+         packed themselves wherever they fitted: the notes ended up hard against the right
+         edge of the screen, a column away from the names they annotate, and the monospace
+         address sat on a different baseline from the links beside it. Grouped, each row
+         is one kind of thing and they share a baseline. */
+      const affRow = el('div', 'fw-open-affrow');
+      const noteRow = el('div', 'fw-open-notes');
       (A.affiliations || []).forEach((af) => {
         const r = el('div', 'fw-open-aff');
         const sup = el('sup', '');
@@ -2077,18 +2110,20 @@ function mountFlight(root, config) {
           sp.textContent = af.name;
           r.appendChild(sp);
         }
-        by.appendChild(r);
+        affRow.appendChild(r);
       });
       if (A.email) {
-        const e = el('div', 'fw-open-mail');
+        const e = el('span', 'fw-open-mail');
         e.textContent = A.email;
-        by.appendChild(e);
+        affRow.appendChild(e);
       }
       (A.notes || []).forEach((nt) => {
-        const d = el('div', 'fw-open-note');
+        const d = el('span', 'fw-open-note');
         d.textContent = nt;
-        by.appendChild(d);
+        noteRow.appendChild(d);
       });
+      if (affRow.children.length) by.appendChild(affRow);
+      if (noteRow.children.length) by.appendChild(noteRow);
       inner.appendChild(by);
     }
     const g = el('div', 'fw-open-grid');

@@ -590,6 +590,9 @@
    maps) gets its own horizontal scroll instead of being squeezed to illegibility.
    ========================================================================== */
 @media (max-width: 700px) {
+  /* On a phone the opening scrolls, so nothing there needs clipping: the tile grows
+     to hold its own paragraph. */
+  .fw-open-cell { overflow: visible; }
   /* The header. The nav ran off the right edge with no way to reach the last item;
      it now scrolls sideways under the thumb, which is what a phone expects. */
   .topbar { padding: 8px 0 8px; }
@@ -622,7 +625,12 @@
     grid-auto-rows: auto;
     gap: 8px;
   }
-  .fw-open-cell { min-height: 0; }
+  /* Higher specificity than the base rule's overflow:hidden, which was still clipping the
+     abstract by four pixels even though the phone opening scrolls. */
+  .fw-open .fw-open-cell { min-height: 0; overflow: visible; }
+  /* The abstract carries its own overflow:hidden for the fixed-height desktop tile. On a
+     phone the opening scrolls, so it has nothing to be clipped by and nothing to hide. */
+  .fw-open .fw-open-text { overflow: visible; }
   .fw-open-title { font-size: clamp(20px, 7.6vw, 32px); }
   .fw-open-authors { font-size: 14px; }
   /* The mark is the middle cell of a three by three that no longer exists. Stacked, it
@@ -817,7 +825,11 @@
    Rather than cut the words, the type and the spacing step down with the viewport. Two
    thresholds, because a 982px MacBook needs a little and a 768px laptop needs a lot. */
 @media (max-height: 1000px) {
-  .fw-open { padding-top: clamp(58px, 7vh, 88px); }
+  .fw-open { padding-top: clamp(52px, 6.2vh, 80px); }
+  /* The three byline rows are a row of type each; on a short screen they set at the micro
+     size and lose their gaps, which is the last few pixels the tiles need. */
+  .fw-open-affrow { font-size: 12px; }
+  .fw-open-by { gap: 0; line-height: 1.28; }
   /* The byline is five stacked lines - two affiliations, an email and two notes - and on
      a short screen those lines come straight out of the charts below. Flowed inline they
      are one or two lines and say exactly the same thing. This only exists in the public
@@ -875,8 +887,11 @@
 /* A byline is two more lines above the matrix, so the rows rebalance when one is present.
    Only the public build has one; the anonymous build keeps the original shares. */
 .fw-open:has(.fw-open-by) .fw-open-grid {
-  grid-template-rows: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 1.06fr);
+  grid-template-rows: minmax(0, 0.98fr) minmax(0, 1.08fr) minmax(0, 1.10fr);
 }
+/* Grouping the byline into three rows costs about a line of height. It comes out of the
+   title's own margin, not out of the charts, which have none to give. */
+.fw-open:has(.fw-open-by) .fw-open-title { margin-bottom: 4px; }
 
 
 /* A Pathfinding tile in voice mode has three things to show, not one: the map, the two
@@ -895,3 +910,86 @@
 .fw-run:has(.wm-voice) { min-height: 620px; }
 
 
+
+
+/* THE EXPERIENCE PAGE
+   ---------------------------------------------------------------------------------
+   A cinema. The film fills the screen and one line sits on it; there is no second column
+   because there is nothing to put in it. Everything else on this site earns its place by
+   carrying a number - here the picture is the argument. */
+.fw-shell-split[data-block="cinema"] { --left: 100vw; }
+.fw-shell-split[data-block="cinema"] .fw-video,
+.fw-shell-split[data-block="cinema"] .fw-art {
+  left: 50%;
+  top: 0;
+  width: 100vw !important;
+  height: 100vh;
+  object-fit: cover;
+  /* No feather: a full-bleed frame has no edge to hide. */
+  -webkit-mask-image: none; mask-image: none;
+  border-radius: 0;
+}
+.fw-shell-split[data-block="cinema"] .fw-globes,
+.fw-shell-split[data-block="cinema"] .fw-mark { display: none; }
+.fw-shell-split[data-block="cinema"] .fw-panel {
+  left: 0; width: 100%; max-width: 100%;
+  display: grid; place-items: end start;
+  min-height: 100vh;
+  padding: 0 clamp(24px, 6vw, 96px) clamp(64px, 12vh, 128px);
+  pointer-events: none;
+}
+/* The copy column is positioned at --left on every other block, which on a cinema is the
+   full width of the window - so the words were laid out 1526px into a 1440px viewport,
+   present and perfectly styled and entirely off the screen. */
+/* The stage is fixed and the copy is not, so on every other block the two never meet.
+   With the film at full bleed they occupy the same pixels, and the words were painting
+   underneath it - present, correctly placed, invisible. */
+.fw-shell-split[data-block="cinema"] .fw-panel { position: relative; z-index: 12; }
+.fw-shell-split[data-block="cinema"] .fw-copy {
+  position: static;
+  z-index: 12;
+  left: 0; right: auto;
+  width: 100%; max-width: 100%;
+  padding-top: 0;
+}
+.fw-cine {
+  max-width: min(880px, 76vw);
+  pointer-events: auto;
+  position: relative;
+}
+/* A scrim, because the film underneath is bright, detailed and different at every stop:
+   dark type on a snow globe is legible in one frame and gone in the next. The gradient is
+   the page's own ground, so the words sit on the same surface the rest of the site uses
+   rather than on a black bar. */
+.fw-shell-split[data-block="cinema"] .fw-panel::before {
+  content: "";
+  position: absolute; inset: auto 0 0 0; height: 62vh;
+  background: linear-gradient(to top,
+    var(--bg-base) 0%,
+    color-mix(in srgb, var(--bg-base) 92%, transparent) 34%,
+    color-mix(in srgb, var(--bg-base) 62%, transparent) 62%,
+    transparent 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+.fw-cine-big {
+  margin: 0;
+  font-size: clamp(32px, 5.6vw, 64px);
+  font-weight: 800; letter-spacing: -0.025em; line-height: 1.02;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.fw-cine-say {
+  margin: 16px 0 0;
+  font-size: clamp(17px, 1.7vw, 24px);
+  line-height: 1.4; color: var(--sub);
+  max-width: 52ch;
+}
+.fw-cine-go {
+  display: inline-block; margin: 24px 16px 0 0;
+  font-size: 17px; font-weight: 700; text-decoration: none;
+  color: #fff; background: var(--ink);
+  padding: 12px 24px; border-radius: 999px;
+}
+.fw-cine-go:hover { background: var(--pillar-agentic); }
+.fw-cine-go:focus-visible { outline: 2px solid var(--pillar-agentic); outline-offset: 3px; }

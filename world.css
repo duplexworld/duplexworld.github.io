@@ -1329,6 +1329,10 @@ body {
 }
 .fw-nav-item {
   font: inherit;
+  /* No rule under the words. Half the bar is buttons and half is anchors now that the
+     nav spans four pages, and the anchors were arriving with the browser's default
+     underline - so the same bar read as two different kinds of control. */
+  text-decoration: none;
   font-size: var(--t-ctrl);
   font-weight: 600;
   color: var(--ink-dim);
@@ -2387,12 +2391,16 @@ body {
    renders it, because nothing injects the global it reads. Set tight and quiet - it is
    front matter, not a heading, and the title above it is already doing the shouting. */
 .fw-open-by {
-  margin: 8px 0 0;
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  gap: 2.0px 16px;
+  /* A column of three rows: names, then who they are and how to reach them, then what the
+     marks mean. As one wrapping row these packed themselves wherever they fitted - the
+     notes ended up a column away from the names they annotate, beside the affiliations
+     rather than under them. */
+  margin: 6px 0 0;
+  display: flex; flex-direction: column;
+  gap: 1px;
+  line-height: 1.32;
 }
-/* The author line owns its own row; everything after it flows. */
-.fw-open-authors { flex-basis: 100%; }
+.fw-open-authors { width: 100%; }
 .fw-open-authors {
   display: flex; flex-wrap: wrap; align-items: baseline;
   gap: 0 4px;
@@ -2407,17 +2415,32 @@ body {
   vertical-align: super; line-height: 0; margin-left: 1.0px;
 }
 .fw-open-sep { color: var(--soft); margin-left: -4px; }
-.fw-open-aff {
-  font-size: clamp(14px, 0.82vw, 14px); font-weight: 600; color: var(--text);
+/* Row 2 and row 3. Each is one kind of thing, at one size, on one baseline - which is
+   what stops the notes drifting up beside the affiliations. */
+.fw-open-affrow,
+.fw-open-notes {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 0 16px; min-width: 0;
 }
+.fw-open-affrow { font-size: 14px; }
+.fw-open-notes { font-size: 12px; color: var(--muted); }
+.fw-open-aff {
+  /* Not a flex line: a <sup> inside one becomes a flex item and loses its raise, so the
+     markers dropped to the baseline and read as "1 Centific" rather than as a reference. */
+  display: inline; font-size: inherit; font-weight: 600; color: var(--text);
+}
+.fw-open-affrow > .fw-open-aff { white-space: nowrap; }
 .fw-open-aff sup { margin-right: 3.0px; margin-left: 0; }
 .fw-open-afflink { color: var(--vio); text-decoration: none; border-bottom: 1px solid var(--violn); }
 .fw-open-afflink:hover { color: var(--viod); border-bottom-color: var(--viod); }
 .fw-open-mail {
-  font-size: clamp(14px, 0.8vw, 14px); color: var(--soft);
+  /* A monospace face has a smaller x-height than the text beside it, so at the same
+     nominal size it reads a notch small and sits low. A touch larger puts the two on one
+     optical line. */
+  font-size: 1.04em; color: var(--sub);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
-.fw-open-note { font-size: 14px; color: var(--grey); }
+.fw-open-note { font-size: inherit; color: inherit; }
 
 /* Shown only where the stage cannot carry it. See the phone block in alt-split.css. */
 .fw-phone-only { display: none; }
