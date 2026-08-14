@@ -470,7 +470,14 @@ function mountFlight(root, config) {
     // A world stop's heading is its name plate, which lives on the other half of the
     // screen; without this, five results blocks shipped an empty <h2> and had no heading at
     // all in the accessibility tree.
-    const h = el(s.layout === 'hero' && i === 0 ? 'h1' : 'h2', 'fw-title');
+    /* THE FIRST STOP'S TITLE IS THE PAGE'S H1.
+       It used to be an h1 only on a hero-layout opening stop, which no page on this site
+       actually has any more, so five of the eight shipped pages had no h1 at all - a
+       document with no name, as far as an outline, a screen reader or a search engine is
+       concerned. The title of the first stop IS the page's subject, whether or not it is
+       drawn: several pages carry it as `fw-sr`, which is visually hidden and read aloud,
+       and that is exactly the right thing for it to be. */
+    const h = el(i === 0 ? 'h1' : 'h2', 'fw-title');
     // A section with no title and no world plate still needs a heading, or its h3s sit
     // under a blank h2. The eyebrow is the heading in those sections - it is what a
     // sighted reader reads as one - so it becomes the heading text and is hidden
@@ -528,7 +535,14 @@ function mountFlight(root, config) {
        back up to the bar to find where the argument continues. One link, named, at the end
        of the page it follows from. Rendered as an anchor rather than a button so it is a
        real navigation the browser can open in a new tab and a screen reader announces as a
-       link. */
+       link.
+       "At the end of the page it follows from" is why it is HELD on a full-width band and
+       appended last. A band's panel is the whole page - the samples page is one panel with
+       twenty-six tiles in it - so appending here put "Next: how this was scored" above the
+       first recording, which is the top of the page rather than the end of it. On every
+       other kind of stop the panel is a paragraph and a figure, and the link belongs where
+       it already was. */
+    let nextCard = null;
     if (s.next && s.next.href) {
       const nx = el('a', 'fw-next');
       nx.href = s.next.href;
@@ -546,7 +560,8 @@ function mountFlight(root, config) {
         nn.textContent = s.next.note;
         nx.appendChild(nn);
       }
-      p.appendChild(nx);
+      if (s.block === 'band') nextCard = nx;
+      else p.appendChild(nx);
     }
 
     /* The opening summary: the abstract, and the three figures it is claiming.
@@ -919,6 +934,124 @@ function mountFlight(root, config) {
         fig.appendChild(a);
       }
       p.appendChild(fig);
+    }
+
+    /* ONE REAL EXCHANGE, drawn from a shipped recording.
+       ---------------------------------------------------------------------------------
+       The harness diagram says the caller and the agent hold the channel at once, and then
+       the page moves on. It is the claim the whole benchmark rests on and it was the one
+       thing on the page with nothing behind it - a reader is asked to take "both are
+       speaking" on trust, three paragraphs before any audio.
+       So: the opening seconds of an actual scored call, fetched from the same payload the
+       samples page plays, drawn as the two lanes it is. Nothing is typed here. The lines,
+       the times and the size of the overlap are read out of the file, so this cannot drift
+       from the recording and cannot be prettier than the recording is. */
+    if (s.example && s.example.call) {
+      const EX = s.example;
+      const fig = el('figure', 'fw-ex');
+      const lede = el('figcaption', 'fw-ex-lede');
+      lede.textContent = EX.lede || 'The first seconds of one scored call.';
+      fig.appendChild(lede);
+      const body = el('div', 'fw-ex-body');
+      body.textContent = 'loading one call';
+      fig.appendChild(body);
+      p.appendChild(fig);
+
+      /* `config.calls`, not the CALLS const. CALLS is declared two thousand lines below this
+         one and the panels are built before that line runs, so reading it here is a
+         temporal dead zone reference - which the per-section catch turns into "this section
+         did not render" and nothing else. Same object, read from the config directly. */
+      const base = ((config.calls || {}).base) || '../';
+      fetch(base + EX.call + '.json')
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+        .then((d) => {
+          const all = (d.utterances || []).filter((u) => typeof u.s === 'number');
+          const span = EX.seconds || 90;
+          const us = all.filter((u) => u.s < span);
+          if (us.length < 2) throw new Error('too few turns');
+          body.textContent = '';
+
+          // The two lanes, on one shared clock, drawn to scale.
+          const lanes = el('div', 'fw-ex-lanes');
+          [['agent', 'Agent'], ['user', 'Caller']].forEach(([who, label]) => {
+            const row = el('div', 'fw-ex-lane');
+            const lk = el('span', 'fw-ex-lane-k');
+            lk.textContent = label;
+            row.appendChild(lk);
+            const track = el('div', 'fw-ex-track');
+            us.filter((u) => u.who === who).forEach((u) => {
+              const b = el('span', 'fw-ex-bar is-' + who);
+              b.style.left = (100 * u.s / span).toFixed(2) + '%';
+              b.style.width = (100 * Math.max(0.4, Math.min(span, u.e) - u.s) / span).toFixed(2) + '%';
+              b.title = label + ', ' + u.s.toFixed(1) + 's to ' + u.e.toFixed(1) + 's';
+              track.appendChild(b);
+            });
+            row.appendChild(track);
+            lanes.appendChild(row);
+          });
+
+          /* THE OVERLAPS, measured rather than asserted. Every pair of turns where one
+             speaker begins before the other has finished, marked on the clock they share. */
+          const overs = [];
+          for (let i = 1; i < us.length; i++) {
+            const a = us[i - 1], b = us[i];
+            if (b.who !== a.who && b.s < a.e) overs.push({ s: b.s, e: Math.min(a.e, b.e) });
+          }
+          const shade = el('div', 'fw-ex-overs');
+          overs.forEach((o) => {
+            const m = el('span', 'fw-ex-over');
+            m.style.left = (100 * o.s / span).toFixed(2) + '%';
+            m.style.width = (100 * Math.max(0.25, o.e - o.s) / span).toFixed(2) + '%';
+            m.title = 'both speaking, ' + (o.e - o.s).toFixed(1) + 's';
+            shade.appendChild(m);
+          });
+          lanes.appendChild(shade);
+          body.appendChild(lanes);
+
+          const axis = el('div', 'fw-ex-axis');
+          ['0s', Math.round(span / 2) + 's', span + 's'].forEach((x) => {
+            const sp = el('span');
+            sp.textContent = x;
+            axis.appendChild(sp);
+          });
+          body.appendChild(axis);
+
+          // The turns themselves, so the strip above is a picture of something the reader
+          // has actually read rather than an abstraction of one.
+          const talk = el('div', 'fw-ex-talk');
+          us.slice(0, EX.turns || 2).forEach((u) => {
+            const line = el('p', 'fw-ex-line is-' + u.who);
+            const wl = el('span', 'fw-ex-who');
+            wl.textContent = u.who === 'agent' ? 'Agent' : 'Caller';
+            line.appendChild(wl);
+            const txt = String(u.text || '');
+            line.appendChild(document.createTextNode(
+              txt.length > 190 ? txt.slice(0, 189).replace(/\s+\S*$/, '') + '…' : txt));
+            talk.appendChild(line);
+          });
+          body.appendChild(talk);
+
+          const worst = overs.reduce((m, o) => Math.max(m, o.e - o.s), 0);
+          const foot = el('p', 'fw-ex-foot');
+          foot.textContent = overs.length
+            ? overs.length + (overs.length === 1 ? ' moment' : ' moments') + ' in the first '
+              + span + ' seconds where both are speaking, the longest ' + worst.toFixed(1)
+              + ' seconds. Neither side is told whose turn it is.'
+            : 'No overlap in the first ' + span + ' seconds of this call.';
+          body.appendChild(foot);
+
+          if (EX.more && EX.more.href) {
+            const a = el('a', 'fw-hn-more');
+            a.href = EX.more.href;
+            a.textContent = EX.more.label || 'Watch a whole call, tick by tick';
+            body.appendChild(a);
+          }
+          measureSpill();
+        })
+        .catch((e) => {
+          console.warn('flight: example call "' + EX.call + '" did not load:', e.message);
+          body.textContent = 'This example call did not load.';
+        });
     }
 
     if (s.worked) {
@@ -1453,9 +1586,15 @@ function mountFlight(root, config) {
     if (s.runs && s.runs.length) {
       const grid = el('div', 'fw-runs');
       grid.style.setProperty('--n', String(s.runs.length));
-      s.runs.forEach((r) => {
+      // `steps` on the section stages this grid the way it stages the walks on the setup
+      // page: one tile filling the frame, then two, then three. Marked here so the sheet
+      // can tell which tile is meant to be up at which step; without `steps` the class is
+      // absent and every tile is up from the first frame, exactly as before.
+      if (s.steps > 1) grid.classList.add('is-staged');
+      s.runs.forEach((r, ri) => {
         const fig = el('figure', 'fw-run is-' + (r.outcome || 'ok'));
         fig.dataset.kind = r.map ? 'map' : 'call';
+        fig.dataset.at = String(ri);
         const head = el('figcaption', 'fw-run-head');
         const ty = el('span', 'fw-run-type');
         ty.textContent = r.type || '';
@@ -2132,8 +2271,23 @@ function mountFlight(root, config) {
         ml.textContent = M.label;
         p.appendChild(ml);
       }
+      /* A line of prose over the tiles. `lede` at the SECTION level only renders beside
+         navCards or small multiples, so a maps stop without cards had no way to say
+         anything at all - the second walks stop shipped with its sentence dropped on the
+         floor and no error. This is the same paragraph, owned by the figure it introduces. */
+      if (M.lede) {
+        const ml = el('p', 'fw-navlede');
+        ml.textContent = M.lede;
+        p.appendChild(ml);
+      }
       const grid = el('div', 'fw-maps');
       grid.style.setProperty('--cols', String(M.cols || 3));
+      /* `all` opts a stop OUT of the staged reveal.
+         The reveal is driven by `data-step` on the root, which is one number for the whole
+         page, so a second maps stop cannot start where the first one finished - it would
+         replay the same one-then-two-then-three build the reader has just watched. A stop
+         that already has its predecessor's tiles on screen says so, and shows the lot. */
+      if (M.all) grid.classList.add('is-all');
       (M.cells || []).forEach((c, idx) => {
         const fig = el('figure', 'fw-map is-' + (c.outcome || 'ok'));
         fig.dataset.at = String(c.at === undefined ? idx : c.at);
@@ -2373,6 +2527,9 @@ function mountFlight(root, config) {
       });
       p.appendChild(cw);
     }
+    // The onward link, held back at the top of this function on a full-width band so it
+    // lands after the band's own content rather than before it.
+    if (nextCard) p.appendChild(nextCard);
     // A table stacked under prose is the single tallest thing this page can produce, and on
     // the stacked shell panel height is taken straight out of the film. Set beside the prose
     // instead it costs nothing: measured at 1560x900 the results panel drops from 1106px to
@@ -2425,7 +2582,7 @@ function mountFlight(root, config) {
     b.innerHTML = '<span class="fw-dot-mark"></span><span class="fw-dot-label"></span>';
     b.querySelector('.fw-dot-label').textContent = s.label;
     b.addEventListener('click', () => {
-      window.scrollTo({ top: centrePx(i) - vh() / 2, behavior: reduce ? 'instant' : 'smooth' });
+      window.scrollTo({ top: landingPx(i), behavior: reduce ? 'instant' : 'smooth' });
       // Wait for the panel to become operable rather than guessing at 600ms. Over a long
       // jump it is still inert at that point, and focus() on an inert element is a silent
       // no-op - the reader gets a scroll, no focus move and no announcement.
@@ -2465,7 +2622,7 @@ function mountFlight(root, config) {
     b.addEventListener('click', () => {
       const c = centrePx(stopIdx);
       if (Number.isFinite(c)) {
-        window.scrollTo({ top: c - vh() / 2, behavior: reduce ? 'instant' : 'smooth' });
+        window.scrollTo({ top: landingPx(stopIdx), behavior: reduce ? 'instant' : 'smooth' });
       }
     });
     b.__stop = stopIdx;
@@ -2511,7 +2668,7 @@ function mountFlight(root, config) {
     b.addEventListener('click', () => {
       const c = centrePx(from);
       if (Number.isFinite(c)) {
-        window.scrollTo({ top: c - vh() / 2, behavior: reduce ? 'instant' : 'smooth' });
+        window.scrollTo({ top: landingPx(from), behavior: reduce ? 'instant' : 'smooth' });
       }
     });
     b.__from = from;
@@ -2562,7 +2719,7 @@ function mountFlight(root, config) {
      from the first stop has to return to it rather than to a scroll position that merely
      looks like the top. Hence target 0 is the document top whenever there is an opening. */
   function stepTargets() {
-    const t = S.map((s, i) => Math.max(0, centrePx(i) - vh() / 2));
+    const t = S.map((s, i) => landingPx(i));
     return openEl ? [0].concat(t) : t;
   }
   /* Which stop the reader is ON, for the readout and the disabled states: the nearest
@@ -3107,10 +3264,16 @@ function mountFlight(root, config) {
         if (ms.i !== stop) return;
         ms.grid.querySelectorAll('.fw-map').forEach((fig) => {
           const key = fig.dataset.key;
-          if (mapLive[key] || !mapPayloads[key]) return;
+          // Keyed by STOP and key, not by key. Two maps stops that show the same walk - the
+          // three solved runs appear on both the solved stop and the solved-and-unsolved one
+          // - collided in this table: the second stop found the first stop's instance under
+          // its own key, decided the tile was already mounted, and left six tiles reading
+          // "loading the walk" forever.
+          const id = ms.i + '/' + key;
+          if (mapLive[id] || !mapPayloads[key]) return;
           const box = fig.querySelector('.fw-map-box');
           box.innerHTML = '';
-          mapLive[key] = window.renderGeoDemo({ GEO: mapPayloads[key], host: box, compact: true });
+          mapLive[id] = window.renderGeoDemo({ GEO: mapPayloads[key], host: box, compact: true });
         });
       });
     });
@@ -3120,10 +3283,10 @@ function mountFlight(root, config) {
     mapStops.forEach((ms) => {
       if (ms.i === except) return;
       ms.grid.querySelectorAll('.fw-map').forEach((fig) => {
-        const key = fig.dataset.key;
-        const inst = mapLive[key];
+        const id = ms.i + '/' + fig.dataset.key;
+        const inst = mapLive[id];
         if (!inst) return;
-        delete mapLive[key];
+        delete mapLive[id];
         try { inst.destroy(); } catch (e) { /* already gone */ }
         const box = fig.querySelector('.fw-map-box');
         const wait = el('div', 'fw-map-wait');
@@ -3138,7 +3301,15 @@ function mountFlight(root, config) {
   // as the panel's own fade.
   function mapsOnStopChange(stop) {
     if (!mapStops.length) return;
-    const near = mapStops.find((ms) => Math.abs(ms.i - stop) <= 1);
+    /* The stop ITSELF first, and only then the nearest neighbour. `find` returns the first
+       match in config order, so with two adjacent maps stops the one before always won:
+       standing on the second, the flight mounted the first and unmounted the one on screen.
+       Exact match, then nearest, breaks that without changing anything on a page that has
+       only one maps stop. */
+    const near = mapStops.find((ms) => ms.i === stop)
+      || mapStops
+        .filter((ms) => Math.abs(ms.i - stop) <= 1)
+        .sort((a, b) => Math.abs(a.i - stop) - Math.abs(b.i - stop))[0];
     if (near) mountMaps(near.i);
     unmountMaps(near ? near.i : -1);
   }
@@ -3532,7 +3703,14 @@ function mountFlight(root, config) {
         if (!a.paused) a.pause();
       });
     }
-    const near = runStops.find((rs) => Math.abs(rs.i - stop) <= 1);
+    // The stop ITSELF first, then the nearest. `find` returns the first match in config
+    // order, so with two adjacent runs stops - Pathfinding, then the enterprise calls - the
+    // earlier one always won: standing on the calls stop the flight mounted the walks and
+    // left three tiles reading "loading" with nothing to load them.
+    const near = runStops.find((rs) => rs.i === stop)
+      || runStops
+        .filter((rs) => Math.abs(rs.i - stop) <= 1)
+        .sort((a, b) => Math.abs(a.i - stop) - Math.abs(b.i - stop))[0];
     unmountRuns(near ? near.i : -1);
     if (near) mountRuns(near.i);
     // The tiles change the panel's height, and the band travel is derived from it.
@@ -3998,7 +4176,11 @@ function mountFlight(root, config) {
         if (f.__tapeStop) f.__tapeStop();
       });
     }
-    const near = tapeStops.find((ts) => Math.abs(ts.i - stop) <= 1);
+    // Exact stop first, then nearest, for the same reason the runs and maps do.
+    const near = tapeStops.find((ts) => ts.i === stop)
+      || tapeStops
+        .filter((ts) => Math.abs(ts.i - stop) <= 1)
+        .sort((a, b) => Math.abs(a.i - stop) - Math.abs(b.i - stop))[0];
     if (near) mountTapes(near.i);
   }
 
@@ -4008,8 +4190,21 @@ function mountFlight(root, config) {
   // consecutive centres. That is what makes the whole page one continuous move
   // instead of a sequence of slides: there is no moment when nothing is moving
   // except the deliberate settle inside a band.
+  /* Every stop owns a band of scroll, given in viewport heights. On a stop that carries the
+     FILM that number is the pacing of the film and is authored: it says how long the camera
+     takes over this part of the flight.
+     On a full-width band the film stands down - the video box is literally 0x0 under
+     [data-block="band"] - so the same number buys the reader nothing. It was being authored
+     the same way anyway, and the result was measurable: on the results page the five world
+     stops were 5.0 viewports each for 0.9 viewports of table, so four screens of scrolling
+     out of every five changed nothing on screen at all. 46.9 viewports of page for 13 of
+     content. That is the "empty scroll" this fits away.
+     So `scroll` is honoured on a filmed stop and REPLACED on a band by fitBands(), which
+     measures the panel and gives it the scroll its own content needs. This is why the
+     scrolling now feels the same on every page: the pages no longer each carry a hand-tuned
+     guess at a length that only one window size ever made sense at. */
   const bands = S.map((s) => s.scroll || 1.25);
-  const bandSum = bands.reduce((a, b) => a + b, 0);
+  function bandSum() { return bands.reduce((a, b) => a + b, 0); }
   function vh() { return window.innerHeight; }
   function vw() { return window.innerWidth; }
   // Every one of these is constant between resizes, and paintCopy used to recompute
@@ -4024,6 +4219,11 @@ function mountFlight(root, config) {
      reflows per animation frame on the results page. It only changes on resize, which is
      exactly when measure() runs. */
   let spills = [];
+  /* How tall each band panel actually is. Not the same question as the spill - the spill is
+     what does not fit and the height is what does - and the two are wanted for opposite
+     reasons: the spill sets how far the panel travels, the height sets where it sits when
+     it does not have to travel at all. */
+  const panelPx = [];
   /* Measured LAZILY, per panel, the first time that panel is actually on screen.
      -----------------------------------------------------------------------------------
      Measuring them all in one pass at layout looks tidier and is wrong: every panel except
@@ -4045,13 +4245,86 @@ function mountFlight(root, config) {
     spills[i] = (pan.offsetTop || 0) + pan.scrollHeight - (vh() - 24);
     return spills[i];
   }
+  /* HOW LONG A FULL-WIDTH BAND ACTUALLY NEEDS TO BE.
+     ---------------------------------------------------------------------------------
+     A band panel travels its whole overflow inside 72% of its band (see the RUN constant
+     in paintCopy). So a band of `spill / 0.72` viewports moves the copy at roughly the
+     speed of the scroll - a screen of scrolling shows a screen of new content - and a
+     band longer than that is the panel standing still while the reader scrolls.
+     On top of that, 1.05 viewports: enough for the panel to arrive, be read where it is
+     wholly still, and dissolve into the next one. The floor of 1.4 is what keeps a short
+     stop from flicking past; the ceiling is whatever the page authored, because this may
+     only ever SHORTEN a band, never stretch one.
+
+     Measured rather than assumed, because a panel's height is a function of the viewport
+     width - the same table is 0.9 viewports tall at 1600 and well over two on a laptop -
+     so a hand-tuned number is right at exactly one window size. This runs in layout(),
+     which is already the resize path, so the fit follows the window.
+
+     The panels are hidden when they are not live and a hidden element measures 0, so each
+     one is revealed with visibility:hidden for the read - the same trick fitFilm() already
+     uses on the stacked shell. `data-block` is forced to `band` for the duration because a
+     band panel measured in the split layout gets the narrow column and reports a height it
+     will never have. Both are restored before the frame ends, so nothing paints. */
+  function fitBands() {
+    const H = vh();
+    if (!H) return;
+    const keep = root.dataset.block;
+    let touched = false;
+    for (let i = 0; i < N; i++) {
+      const s = S[i];
+      const pan = panels[i];
+      if (!s || s.block !== 'band' || !pan) continue;
+      /* A STAGED stop is paced by its reveal, not by its content.
+         `steps` spends the band showing one tile, then two, then three, so the band is the
+         reveal's running time in the same way a filmed stop's band is the camera's. Fitting
+         it to the height of the finished grid put all three steps inside 1.4 viewports:
+         measured on the samples page, the reveal was already at its last step 76px into the
+         page, so the reader never saw a single sample on its own - which is the entire
+         point of staging it. The authored number stands. */
+      if (!touched) { root.dataset.block = 'band'; touched = true; }
+      const wasHidden = pan.hidden;
+      const wasOp = pan.style.opacity;
+      const wasVis = pan.style.visibility;
+      pan.hidden = false;
+      pan.style.opacity = '0';
+      pan.style.visibility = 'hidden';
+      const panelH = pan.scrollHeight;
+      const content = (pan.offsetTop || 0) + panelH;
+      pan.hidden = wasHidden;
+      pan.style.opacity = wasOp;
+      pan.style.visibility = wasVis;
+      if (!content) continue;
+      /* The panel's own height, kept for the vertical centring below. Measured HERE and
+         nowhere else: this is the one place on the band path where a hidden panel is
+         revealed, and doing it a second time would be a second forced reflow per stop. */
+      panelPx[i] = panelH;
+      const spill = Math.max(0, content - (H - 24));
+      // A staged stop is measured like any other - the centring needs its height - but its
+      // band length is the reveal's running time, not its content's, so it stops here.
+      if (s.steps > 1) continue;
+      const need = 1.05 + (spill / H) / 0.72;
+      // The authored number is not a ceiling here. It is on a FILMED stop, where it is the
+      // camera's pacing, but a band has no film to pace, so the content is the only thing
+      // that can say how long the band should be - and a band shorter than its content makes
+      // the panel race past instead. 8 is a backstop against a payload that arrives ten
+      // times bigger than anything on the page today, not a design limit.
+      bands[i] = Math.max(1.4, Math.min(8, need));
+    }
+    if (touched) {
+      if (keep == null) delete root.dataset.block;
+      else root.dataset.block = keep;
+    }
+  }
+
   function measure() {
     const H = vh();
+    fitBands();
     // The opening is in flow, so it occupies real document height ABOVE the flight. Every
     // centre has to move down by exactly that much or the first stop lands underneath it.
     const openPx = openEl ? openEl.offsetHeight : 0;
     const lead = ((VID && VID.lead) || 0) * H + openPx;
-    total = bandSum * H + lead;
+    total = bandSum() * H + lead;
     let acc = 0;
     centres = bands.map((b) => {
       // Every stop shifts down by the lead, so the gaps BETWEEN stops - which is what sets
@@ -4074,8 +4347,20 @@ function mountFlight(root, config) {
      because neither fires when an already-built panel simply grows.
      Observing the panels closes it: any size change drops the cache and the next frame
      recomputes. measureSpill() only clears, so this cannot feed back into a resize loop. */
+  /* The same lateness applies to the BAND LENGTH now that it is fitted to the content: a
+     panel that grows after the fit ran is a panel whose band is too short for it. So the
+     observer re-runs the whole layout rather than only dropping the spill cache, debounced
+     because eighteen tiles arriving one at a time is eighteen size changes.
+     This cannot feed back. fitBands() reveals and restores each panel inside ONE task, so
+     the size the observer compares against at the end of the frame is the size it already
+     reported, and a re-layout that changes nothing schedules nothing. */
+  let refitPending = 0;
   if (typeof ResizeObserver === 'function') {
-    const spillRO = new ResizeObserver(() => measureSpill());
+    const spillRO = new ResizeObserver(() => {
+      measureSpill();
+      clearTimeout(refitPending);
+      refitPending = setTimeout(() => { layout(true); }, 160);
+    });
     panels.forEach((pan, i) => {
       if (pan && S[i] && S[i].block === 'band') spillRO.observe(pan);
     });
@@ -4093,17 +4378,90 @@ function mountFlight(root, config) {
     if (!id) return false;
     const i = S.findIndex((s) => s && s.id === id);
     if (i < 0) return false;
-    window.scrollTo({ top: Math.max(0, centrePx(i)),
+    // `pos` is the viewport CENTRE (scrollY + vh/2), so landing the stop in the middle of
+    // the screen means scrolling to its centre MINUS half a viewport. Without the subtraction
+    // the header's Overview link put the reader half a screen past the stop, on the fade out
+    // of it - the grid arrived already going.
+    window.scrollTo({ top: landingPx(i),
                       behavior: (smooth && !reduce) ? 'smooth' : 'auto' });
     return true;
   }
-  // On load the geometry has to exist first, and images can still change it, so this runs
-  // once now and once after the next frame rather than fighting a half-measured page.
-  if (location.hash) {
-    requestAnimationFrame(() => { measure(); jumpToHash(false); });
-    window.addEventListener('load', () => { measure(); jumpToHash(false); });
+  /* On load the geometry has to exist first, and images can still change it, so this runs
+     once now and once after the next frame rather than fighting a half-measured page.
+     layout(), not measure(). measure() alone recomputes the centres and leaves the SPACER
+     at whatever height the last layout gave it, and now that a band's length is fitted to
+     its content the two genuinely disagree: opening index.html#overview landed on a 5,917px
+     document whose centres were laid out for 12,094, so the jump ran off the end of the page
+     and the reader arrived back at the opening statement. layout() sets both. */
+  /* A cold load with a hash is a RACE, and the hash was losing it.
+     The page keeps re-laying-out for a second or so after load - fonts swap, the film box
+     resolves, a payload lands and a band is refitted - and every one of those layouts ends
+     by restoring the reader to `lastFrac`, the fraction of the page they were last SEEN at.
+     A jump made before any frame has sampled the new position is a jump whose fraction is
+     still zero, so the next layout quietly puts the reader back at the top. Arriving at
+     index.html#overview from another page landed on the opening statement every time, while
+     clicking the same entry from inside the page worked - because there the fraction was
+     already right.
+     So the hash is held as PENDING and re-asserted by each layout until either the reader
+     takes over or the page settles. */
+  let hashPending = !!location.hash &&
+    S.some((s) => s && s.id === String(location.hash).replace(/^#/, ''));
+  const dropHash = () => { hashPending = false; };
+  if (hashPending) {
+    ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((ev) =>
+      window.addEventListener(ev, dropHash, { passive: true, once: true }));
+    setTimeout(dropHash, 2500);
+    requestAnimationFrame(() => { layout(); jumpToHash(false); });
+    window.addEventListener('load', () => { layout(); jumpToHash(false); });
   }
-  window.addEventListener('hashchange', () => jumpToHash(true));
+  window.addEventListener('hashchange', () => { dropHash(); jumpToHash(true); });
+  /* WHERE A SHORT BAND PANEL SITS.
+     The copy column pads 96px off the top of the screen and the panel hangs from there,
+     which is right for a panel that overflows - it has to start at the top or its tail never
+     arrives. For one that FITS it is just a panel in the top half of the screen with a third
+     of the viewport empty underneath: measured on the samples page, every stop left between
+     232 and 306 pixels of nothing below the content, at every scroll position, on a 757px
+     screen. A panel that fits is centred instead.
+     The cap matters on a STAGED stop, whose panel has a different height at every step - the
+     pad is computed once from one of them, so it must not be a pad that puts a taller step
+     off the bottom of the screen.
+     Written as a custom property on the column rather than a style on the panel, because the
+     panel's own transform is rewritten every frame by the travel. */
+  function syncBandPad(i) {
+    const H = vh();
+    const nh = panelPx[i] || 0;
+    const band = S[i] && S[i].block === 'band';
+    const pad = band && nh && nh < H - 40
+      ? Math.min(Math.max(76, Math.round((H - nh) / 2)), Math.round(H * 0.3))
+      : 96;
+    copyWrap.style.setProperty('--band-pad', pad + 'px');
+  }
+
+  /* WHERE A JUMP SHOULD LAND.
+     ---------------------------------------------------------------------------------
+     Every rail dot, globe, stepper arrow, hash link and goto() used to scroll to the band's
+     CENTRE, on the reasoning that the centre is where the stop is fully lit. That is true,
+     and for a tall panel it is also two thirds of the way through its own content: the
+     travel runs from the band's leading edge to 72% of it, so at the centre the panel has
+     already moved 0.5/0.72 of its overflow. Measured on the pairs stop of the samples page,
+     which overflows by 1,416px: a jump landed 983px down the panel, past the heading, in
+     the middle of a grid of call tiles with nothing on screen to say what they were.
+     So a stop that travels is entered at the TOP of its travel instead, nudged just far
+     enough in that the panel is at full opacity when it gets there - 8% of the run, which
+     is about a tenth of a screen of content, and leaves the heading where a heading goes.
+     A stop that does not travel is unchanged: its centre is its everything. */
+  function landingPx(i) {
+    const c = centrePx(i);
+    if (!Number.isFinite(c)) return 0;
+    const s = S[i];
+    const H = vh();
+    if (!s || s.block !== 'band' || spillOf(i) <= 8) return Math.max(0, c - H / 2);
+    // The exact start of the travel, which is now also the first position at which the
+    // panel is fully lit. See the note beside `from` in paintCopy.
+    const half = bands[i] * H * 0.5;
+    return Math.max(0, Math.max(c - half * 0.6, H / 2) - H / 2);
+  }
+
   function totalPx() { return total; }
   function centrePx(i) { return centres[i]; }
 
@@ -4220,7 +4578,22 @@ function mountFlight(root, config) {
     st.setProperty('--film-bot', Math.round(b.bottom) + 'px');
   }
 
-  function layout() {
+  /* `anchor` restores the reader by their offset INSIDE the live stop rather than by their
+     fraction of the whole document.
+     ---------------------------------------------------------------------------------
+     Both are "keep the reader where they were", and which one is right depends on why the
+     layout ran. On a RESIZE every band changes together and the fraction is the honest
+     answer. On a REFIT - eighteen call tiles arriving one at a time, each one making its
+     own band longer - only the bands at or below the reader change, so the fraction moves
+     the page under them: measured on the samples page as the content stepping up and then
+     back down while the tiles landed, which is what "the page keeps going up and down"
+     describes. Anchoring to the live stop leaves the thing being read exactly where it is
+     and lets the page grow underneath it. */
+  function layout(anchor) {
+    const aStop = anchor ? liveStop : -1;
+    const aOff = aStop >= 0 && Number.isFinite(centrePx(aStop))
+      ? window.scrollY - (centrePx(aStop) - vh() / 2)
+      : 0;
     measure();
     // Once per layout, deliberately: these are the only two layout reads left on the band
     // path, and doing them here means the paint loop never touches the layout engine.
@@ -4244,7 +4617,14 @@ function mountFlight(root, config) {
     // the scroll position of a reloaded page on its own - so restoring here would drag a
     // reader who reloaded mid-flight back to the opening dome.
     if (!firstLayout) {
-      window.scrollTo({ top: Math.max(0, lastFrac * totalPx() - vh() / 2), behavior: 'instant' });
+      // A hash the reader has not yet overridden outranks either restore: on a cold load the
+      // fraction is still zero and restoring it is what threw the jump away.
+      if (!(hashPending && jumpToHash(false))) {
+        const top = aStop >= 0 && Number.isFinite(centrePx(aStop))
+          ? centrePx(aStop) - vh() / 2 + aOff
+          : lastFrac * totalPx() - vh() / 2;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+      }
     }
     firstLayout = false;
     frame(true);
@@ -4465,6 +4845,17 @@ function mountFlight(root, config) {
     // curve rather than from a second one, so a layer is never still up under copy that has
     // gone, and never absent under copy that is fully lit.
     const roleVis = { logo: 0, film: 0, art: 0, none: 0 };
+    /* Which panel is winning, decided BEFORE any of them is painted. The curve below caps
+       every other panel at the light this one leaves spare, and a cap cannot be applied in
+       the same pass that discovers what it is. Only the distance matters here, so this is
+       one subtraction per section and no layout read. */
+    let leadStop = 0;
+    let leadVis = 0;
+    for (let i = 0; i < N; i++) {
+      const dd = Math.abs(pos - centrePx(i)) / (bands[i] * H * 0.5);
+      const v = dd <= 0.96 ? 1 : 1 - smooth(Math.min(1, (dd - 0.96) / 0.10));
+      if (v > leadVis) { leadVis = v; leadStop = i; }
+    }
     for (let i = 0; i < N; i++) {
       const s = S[i];
       const c = centrePx(i);
@@ -4494,7 +4885,18 @@ function mountFlight(root, config) {
              Clamping the start to the first reachable position costs nothing anywhere else
              - for every other stop `c - half` is already past half a viewport, so this is
              identity - and it does not move where the travel finishes. */
-          const from = Math.max(c - half, vh() / 2);
+          /* The travel starts 40% INTO the band, not at its leading edge.
+             At the edge the panel is only about two thirds lit - the fade has not finished -
+             so a panel that starts travelling there has already moved its head off the top
+             of the screen by the time it is readable. Every jump into a tall stop therefore
+             arrived part way down a grid of tiles with the heading gone: measured on the
+             pairs stop of the samples page, 983px down on a click and still 113px down after
+             the landing was corrected.
+             Holding still for the first 40% costs nothing - the reader is arriving, and the
+             band is fitted to the content either way - and it means the stop can be entered
+             at a position where the panel is fully lit AND untravelled, which is what
+             landingPx() now targets. */
+          const from = Math.max(c - half * 0.6, vh() / 2);
           const to = (c - half) + 2 * half * RUN;
           const prog = to > from
             ? Math.max(0, Math.min(1, (pos - from) / (to - from)))
@@ -4531,8 +4933,31 @@ function mountFlight(root, config) {
          also what a reader trying to FOLLOW a section experiences as the text going soft
          under them. At 0.94 a panel is solid for 94% of its band and hands over in the
          last 6%, which is the part the reader is leaving anyway. */
-      const HOLD = 0.94, END = 1.10;
+      /* 0.96 / 1.06, tightened again from 0.94 / 1.10. The two constants set how far apart
+         the outgoing and incoming panels are when they pass each other, and at 0.94 / 1.10
+         they passed at 0.68 opacity EACH - not a dissolve, two pages printed on top of one
+         another. Photographed on the samples page: "Nine conversation types" was legible
+         straight through three enterprise call tiles. It shows up on a band and not on a
+         prose stop because a band's panel is dense edge to edge, so there is no quiet part
+         of the screen for the other one to cross in.
+         Now they pass at 0.5 each, and the window they do it in is 0.10 of a band rather
+         than 0.16 - about a tenth of a screen of scroll on a short stop, which is short
+         enough to read as a handover rather than as an overlay. Still not a cut: END stays
+         above 1, so the screen never empties between two stops. */
+      const HOLD = 0.96, END = 1.06;
       let vis = d <= HOLD ? 1 : 1 - smooth(Math.min(1, (d - HOLD) / (END - HOLD)));
+      /* NO PANEL MAY BE BRIGHTER THAN WHAT THE ONE IN FRONT LEAVES SPARE.
+         `d` is a fraction of the band, so two neighbouring stops of DIFFERENT lengths do
+         not cross symmetrically: the shorter band's fraction runs out first and its panel
+         is already well into its fade while the longer one is still nearly solid. Measured
+         after tightening the curve, the second-brightest panel still reached 0.60 on the
+         experience and results pages while the brightest was near 0.9 - the ghost this was
+         meant to remove, just at a different pair of stops.
+         Capping every other panel at the light the leader leaves over fixes it for any pair
+         of band lengths without touching the curve: at the true crossover both are 0.5 and
+         nothing changes, and anywhere either one is winning, the loser is pushed down to
+         what is genuinely left. */
+      if (i !== leadStop) vis = Math.min(vis, 1 - leadVis);
       // The opening statement does not fade IN. At scrollY = 0 the reader is a full band
       // above the first stop, so the curve above put the page's own headline on screen at
       // 0.175 opacity - 1.44:1 against the ground, and a ghost-grey first impression. It
@@ -4635,6 +5060,18 @@ function mountFlight(root, config) {
          cover 155px of overflow, so the last card ended a third of a screen above the fold
          with dead space under it. Once per stop change is not a hot path. */
       spills[nearI] = null;
+      /* WHERE A SHORT BAND PANEL SITS.
+         The copy column pads 96px off the top of the screen and the panel hangs from there,
+         which is right for a panel that overflows - it has to start at the top or its tail
+         never arrives. For one that FITS it is just a panel in the top half of the screen
+         with a third of the viewport empty underneath: measured on the samples page, every
+         stop left between 232 and 306 pixels of nothing below the content, at every scroll
+         position, on a 757px screen.
+         So a panel that fits is centred instead, and one that does not keeps the top pad it
+         needs. Written on the stop change rather than per frame, and as a custom property
+         rather than a style on the panel, because the panel's own transform is rewritten
+         every frame by the travel. */
+      syncBandPad(nearI);
     }
     liveStop = nearI;
     {
@@ -5093,11 +5530,15 @@ function mountFlight(root, config) {
 
   if (heroWanted && !heroImg.complete) heroImg.addEventListener('load', layout);
   layout();
+  /* The first stop never triggers the stop-CHANGE branch, because it is the stop the page
+     opens on. Without this the opening band kept the 96px top pad and sat high on the
+     screen while every other stop centred, which reads as the first stop being broken. */
+  syncBandPad(liveStop);
   stepSync();
 
   return {
     layout,
-    goto: (i) => window.scrollTo({ top: centrePx(i) - vh() / 2,
+    goto: (i) => window.scrollTo({ top: landingPx(i),
                                   behavior: reduce ? 'instant' : 'smooth' }),
     camera: () => ({ ...cur }),
     stops: N,

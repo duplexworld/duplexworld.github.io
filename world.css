@@ -2290,6 +2290,16 @@ body {
 [data-step="2"] .fw-map.is-ok[data-at="2"],
 [data-step="3"] .fw-map { pointer-events: auto; visibility: visible; }
 
+/* A maps grid marked `all` is not part of the staged reveal: every tile is up from the
+   first frame, at the final two-row size, whatever `data-step` happens to say. The reveal
+   builds the three PASSES one at a time on the stop before this one; replaying that build
+   before the three failures arrive would be telling the reader something they just read. */
+.fw-maps.is-all .fw-map { opacity: 1; pointer-events: auto; visibility: visible; }
+.fw-maps.is-all {
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+  grid-template-rows: repeat(2, var(--map-h));
+}
+
 .fw-map-head {
   display: flex;
   align-items: center;
@@ -2627,6 +2637,16 @@ body {
 .fw-shell-split[data-block="band"] .fw-panel:has(.fw-runs),
 .fw-shell-split[data-block="band"] .fw-panel:has(.fw-cards),
 .fw-shell-split[data-block="band"] .fw-panel:has(.fw-navcards),
+/* The three figure stops the first pass of this rule missed, all of them on the results
+   page and all of them measured at 1200px in a 1552px band: the small multiples (twelve
+   panels on one shared scale, which is only worth printing if the scale is wide enough to
+   separate them), the composition matrix, and the duration violins whose x axis runs to a
+   twenty minute cap. Plus the metric suite on its own page. */
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-sm),
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-mx),
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-vio),
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-work),
+.fw-shell-split[data-block="band"] .fw-panel:has(.fw-metrics),
 .fw-shell-split[data-block="band"] .fw-panel:has(.fw-pillars) {
   max-width: min(1560px, calc(100vw - 48px));
 }
@@ -3400,9 +3420,15 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
   --sys-nova-t:   #AE6500;
 }
 
+/* TWO COLUMNS, one passing call and one failing call of the same shape on the same row.
+   `auto-fit` gave three across on a wide band, which broke the pairing the whole figure
+   rests on: the reader could not tell which failure belonged to which success, because the
+   second column of one row was the pass of the next pair. The tapes are authored in
+   ok/bad order, so two fixed columns put the two halves of a pair side by side at every
+   width wide enough to hold them. */
 .fw-tapes {
   display: grid; gap: 18px;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 14px;
 }
 .fw-tp {
@@ -3812,3 +3838,58 @@ a.wordmark:focus-visible { outline: 2px solid var(--pillar-agentic); outline-off
   box-shadow: 0 6px 20px rgba(0, 0, 0, .09);
 }
 .fw-run[role="button"]:focus-visible { outline: 3px solid var(--accent, var(--ink)); outline-offset: 3px; }
+
+/* ------------------------------------------------- one real exchange, on the setup page
+   The harness diagram claims the caller and the agent hold the channel at once. This is
+   the evidence for it: the opening seconds of a scored call, both lanes on one clock, with
+   every moment they are both speaking marked. Every value is read from the payload at run
+   time - see the note beside the renderer in flight.js - so it cannot drift from the file
+   the samples page plays. */
+.fw-ex { margin: 14px 0 0; padding: 0; }
+.fw-ex-lede {
+  font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 9px;
+}
+.fw-ex-body {
+  border: 1px solid var(--line); border-radius: 12px; background: var(--paper);
+  padding: 13px 14px 12px;
+}
+.fw-ex-lanes { position: relative; display: flex; flex-direction: column; gap: 5px; }
+.fw-ex-lane { display: grid; grid-template-columns: 52px 1fr; gap: 9px; align-items: center; }
+.fw-ex-lane-k {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-3); text-align: right;
+}
+.fw-ex-track {
+  position: relative; height: 16px; border-radius: 4px;
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.fw-ex-bar { position: absolute; top: 3px; bottom: 3px; border-radius: 3px; }
+.fw-ex-bar.is-agent { background: var(--pillar-agentic); }
+.fw-ex-bar.is-user  { background: var(--pillar-dynamics); }
+/* The overlaps sit ACROSS both lanes rather than on either one, because that is what they
+   are: a property of the pair, not of a speaker. Drawn behind the bars so a bar is never
+   obscured by the marker that describes it. */
+.fw-ex-overs { position: absolute; left: 61px; right: 0; top: 0; bottom: 0; pointer-events: none; }
+.fw-ex-over {
+  position: absolute; top: -2px; bottom: -2px;
+  background: color-mix(in srgb, var(--mag) 26%, transparent);
+  border-left: 1px solid var(--mag); border-right: 1px solid var(--mag);
+}
+.fw-ex-axis {
+  display: flex; justify-content: space-between; margin: 6px 0 0 61px;
+  font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums;
+}
+.fw-ex-talk { margin-top: 11px; display: flex; flex-direction: column; gap: 7px; }
+.fw-ex-line {
+  margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-2);
+  padding-left: 10px; border-left: 2px solid var(--line);
+}
+.fw-ex-line.is-agent { border-left-color: var(--pillar-agentic); }
+.fw-ex-line.is-user  { border-left-color: var(--pillar-dynamics); }
+.fw-ex-who {
+  display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 1px;
+}
+.fw-ex-foot { margin: 11px 0 0; font-size: 12.5px; color: var(--ink-2); }
+.fw-ex-foot + .fw-hn-more { margin-top: 8px; }

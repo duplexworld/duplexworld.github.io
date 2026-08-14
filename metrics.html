@@ -68,11 +68,12 @@ mountFlight(document.getElementById('world'), {
   hint: 'scroll',
   nav: [
     { label: 'Experience', href: 'index.html' },
-    { label: 'Setup', href: 'setup.html' },
+    { label: 'Overview', href: 'index.html#overview' },
+    { label: 'Motivation', href: 'motivation.html' },
+    { label: 'How it works', href: 'setup.html' },
     { label: 'Voice samples', href: 'samples.html' },
     { label: 'Metrics', href: 'metrics.html' },
-    { label: 'Results', href: 'results.html' },
-    { label: 'Overview', href: 'index.html#overview' },
+    { label: 'Leaderboard', href: 'leaderboard.html' },
   ],
   // NO FILM ON THIS PAGE, deliberately.
   // ------------------------------------------------------------------------------------
@@ -91,7 +92,7 @@ mountFlight(document.getElementById('world'), {
       block: 'band',
       cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 5.3, linger: 0.4,
       accent: 'var(--pillar-dynamics)',
-      next: { kicker: 'Next', label: 'What the five systems scored', href: 'results.html' },
+      next: { kicker: 'Next', label: 'What the five systems scored', href: 'leaderboard.html' },
       // The definitions on their own were a glossary the paper already has. This is the
       // same five runs of one Pathfinding scenario that the numbers beside them come from,
       // so a reader watches GS, Pass@1 and Pass-cubed fall out of one set of runs and can

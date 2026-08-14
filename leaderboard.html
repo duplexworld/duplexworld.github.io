@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Leaderboard - DuplexWorld</title>
+<meta name="description" content="Five commercial speech-to-speech systems across eleven metrics and six worlds, filterable by world, by metric pillar and by system. Every figure is Table 3 of the DuplexWorld paper.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/icon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#17171f">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DuplexWorld">
+<meta property="og:title" content="Leaderboard - DuplexWorld">
+<meta property="og:description" content="Five speech-to-speech systems, eleven metrics, six worlds. Filter by world, pillar and system.">
+<meta property="og:image" content="img/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="img/og-card.png">
+<link rel="stylesheet" href="world.css">
+<link rel="stylesheet" href="alt-split.css">
+<style>
+/* THIS PAGE ONLY.
+   =====================================================================================
+   Every other page on this site is a scroll flight: it decides what you look at and in
+   what order, because it is making an argument. A leaderboard is the opposite job. The
+   reader arrives with a question - which system is best at the thing I care about, in the
+   world I care about - and the page's whole job is to let them ask it and get out.
+
+   So: no film, no pinned panels, no scroll-driven anything. An ordinary document, one
+   control strip, and four figures that all answer to it.
+
+   The visual language is a hairline-and-surface one rather than the flight pages' full
+   bleed: every figure sits in its own bordered card on the page ground, numbers are
+   tabular throughout, and rules are 1px at low alpha. Colours and type come from the
+   shared tokens, so it cannot drift from the rest of the site, and every number comes from
+   data.js, which is the file the results page reads. There is no second copy of Table 3. */
+
+body.fw-lb { margin: 0; background: var(--bg-base); color: var(--ink); }
+.lb {
+  --lb-hair: color-mix(in srgb, var(--line) 78%, transparent);
+  --lb-surf: var(--paper);
+  --lb-r: 14px;
+  max-width: min(1600px, calc(100vw - 40px));
+  margin: 0 auto;
+  padding: calc(var(--topbar-h, 64px) + clamp(18px, 3.4vh, 40px)) 0 clamp(40px, 8vh, 96px);
+  box-sizing: border-box;
+  font-variant-numeric: tabular-nums;
+}
+.lb-sec { margin-top: clamp(22px, 3.4vh, 40px); }
+
+/* ---------------------------------------------------------------- masthead */
+.lb-mast { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(20px, 3vw, 56px); align-items: end; }
+.lb-eyebrow {
+  font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 10px;
+}
+.lb h1 {
+  margin: 0 0 10px; font-size: clamp(28px, 3.2vw, 46px); line-height: 1.04;
+  letter-spacing: -0.022em; text-wrap: balance;
+}
+.lb-sub { margin: 0; max-width: 68ch; color: var(--ink-2); font-size: clamp(14.5px, 1vw, 16.5px); line-height: 1.5; }
+/* The corpus, stated once, in the shape a spec sheet states it. It is the first thing a
+   reader wants to know about a leaderboard and the last thing they should have to hunt for. */
+.lb-stats { display: flex; gap: 0; border: 1px solid var(--lb-hair); border-radius: var(--lb-r);
+  background: var(--lb-surf); overflow: hidden; }
+.lb-stat { padding: 12px clamp(14px, 1.4vw, 22px); min-width: 0; }
+.lb-stat + .lb-stat { border-left: 1px solid var(--lb-hair); }
+.lb-stat b { display: block; font-size: clamp(17px, 1.5vw, 22px); font-weight: 700; letter-spacing: -0.01em; }
+.lb-stat span { display: block; margin-top: 2px; font-size: 11px; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+
+/* ---------------------------------------------------------------- the control strip */
+.lb-bar {
+  position: sticky; top: var(--topbar-h, 64px); z-index: 20;
+  margin: clamp(18px, 3vh, 30px) 0 0;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--bg-base) 92%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  border: 1px solid var(--lb-hair); border-radius: var(--lb-r);
+  display: flex; flex-wrap: wrap; gap: 8px clamp(10px, 1.2vw, 20px); align-items: center;
+}
+.lb-grp { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.lb-k {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); white-space: nowrap; padding-right: 2px;
+}
+/* A SEGMENTED control, not loose pills. The options in a group are mutually exclusive, and
+   a row of separate rounded pills says the opposite - it says any number of them can be on
+   at once, which is exactly what the system group beside them does mean. One shared track
+   with hairline dividers keeps the two kinds of control visibly different. */
+.lb-seg { display: inline-flex; border: 1px solid var(--lb-hair); border-radius: 9px;
+  background: var(--lb-surf); overflow: hidden; }
+.lb-seg .lb-chip { border: 0; border-radius: 0; background: none; }
+.lb-seg .lb-chip + .lb-chip { border-left: 1px solid var(--lb-hair); }
+.lb-chip {
+  font: inherit; font-size: 12.5px; line-height: 1; letter-spacing: -0.005em;
+  padding: 7px 10px; cursor: pointer;
+  border: 1px solid var(--lb-hair); border-radius: 999px;
+  background: var(--lb-surf); color: var(--ink-2);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.lb-chip:hover { color: var(--ink); background: color-mix(in srgb, var(--accent) 7%, var(--lb-surf)); }
+.lb-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; z-index: 1; }
+.lb-chip.is-on { background: var(--ink); color: #fff; }
+.lb-seg .lb-chip.is-on { box-shadow: inset 0 0 0 1px var(--ink); }
+/* A system chip that is switched OFF is excluded from every figure on the page, so it says
+   so: struck through rather than merely pale. Pale alone read as disabled, and a reader
+   cannot tell a control they may not use from one they have already used. */
+.lb-chip.is-off { opacity: .45; text-decoration: line-through; }
+/* EVERY vendor mark on this page, wherever it appears. Written twice as a list of the
+   places a mark is used, and both times it missed one - a 110px OpenAI logo beside a 20px
+   bar, then the same logo over the scatter plot. The only images inside `.lb` are vendor
+   marks, so the rule matches them all and cannot fall behind the markup again. */
+.lb img { width: 14px; height: 14px; object-fit: contain; flex: 0 0 auto; }
+.lb-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.lb-sel {
+  font: inherit; font-size: 12.5px; padding: 6px 8px; border-radius: 9px;
+  border: 1px solid var(--lb-hair); background: var(--lb-surf); color: var(--ink);
+}
+.lb-sel:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ---------------------------------------------------------------- cards */
+.lb-card {
+  border: 1px solid var(--lb-hair); border-radius: var(--lb-r); background: var(--lb-surf);
+  padding: clamp(14px, 1.6vw, 22px);
+}
+.lb-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
+.lb h2 { margin: 0; font-size: clamp(16px, 1.35vw, 21px); letter-spacing: -0.014em; }
+.lb-tag { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.lb-note { margin: 0 0 12px; color: var(--ink-2); font-size: 13.5px; line-height: 1.5; max-width: 96ch; }
+
+/* ---------------------------------------------------------------- the three leaders */
+.lb-leads { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.lb-lead { border: 1px solid var(--lb-hair); border-radius: var(--lb-r); background: var(--lb-surf);
+  padding: 14px 16px; border-top: 3px solid var(--lb-tint, var(--accent)); }
+.lb-lead-k { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--lb-tint, var(--ink-3)); }
+.lb-lead-n { display: flex; align-items: center; gap: 7px; margin-top: 8px; font-size: 15.5px; font-weight: 700; letter-spacing: -0.012em; }
+.lb-lead-v { margin-top: 6px; font-size: 12.5px; color: var(--ink-2); }
+.lb-lead-v b { font-size: 17px; color: var(--ink); }
+.lb-lead-tie { margin-top: 6px; font-size: 11.5px; color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- the headline chart */
+.lb-bars { display: flex; flex-direction: column; margin-top: 12px; position: relative; }
+.lb-row { display: grid; grid-template-columns: 26px minmax(150px, 250px) 1fr minmax(104px, auto);
+  gap: 12px; align-items: center; padding: 5px 0; position: relative; }
+.lb-row + .lb-row { border-top: 1px solid color-mix(in srgb, var(--line) 40%, transparent); }
+.lb-rk { font-size: 12px; font-weight: 700; color: var(--ink-3); text-align: right; }
+.lb-row.is-first .lb-rk { color: var(--accent); }
+.lb-name { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; min-width: 0; }
+.lb-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-track { position: relative; height: 22px; border-radius: 4px;
+  background: color-mix(in srgb, var(--ink) 5%, transparent); overflow: visible; }
+/* Quarter gridlines behind the bars. A bar chart with no rule behind it is read by its
+   labels alone, and the axis under it is five viewport-widths from the shortest bar. */
+.lb-track::before, .lb-track::after {
+  content: ''; position: absolute; top: -2px; bottom: -2px; width: 1px;
+  background: color-mix(in srgb, var(--ink) 9%, transparent);
+}
+.lb-track::before { left: 25%; }
+.lb-track::after { left: 75%; }
+.lb-mid { position: absolute; top: -2px; bottom: -2px; left: 50%; width: 1px;
+  background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.lb-fill { position: absolute; inset: 0 auto 0 0; border-radius: 4px;
+  transition: width .32s cubic-bezier(.3,.7,.3,1); }
+/* The interval, drawn as a whisker over the end of the bar rather than printed beside it.
+   A number with a plus-or-minus after it is read as one number; a bar that visibly overlaps
+   its neighbour's whisker is read as the tie it is.
+   The whisker straddles the bar end, so half of it lands on the fill and half on the empty
+   track, and one flat colour cannot be seen against both: mid-grey vanished into the black
+   Grok bar at one end and into the pale track at the other. `difference` was the next
+   attempt and it works, but it inverts hue as well as value - pink over the green bar,
+   orange over the blue one, which reads as a fourth colour on a page where colour already
+   means which system. White with a hard dark edge instead. */
+.lb-ci { position: absolute; top: 50%; height: 11px; z-index: 2; transform: translateY(-50%);
+  border-left: 2px solid #fff; border-right: 2px solid #fff;
+  filter: drop-shadow(0 0 .8px rgba(0,0,0,.92)) drop-shadow(0 0 .8px rgba(0,0,0,.5)); }
+.lb-ci::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px;
+  background: #fff; transform: translateY(-50%); }
+.lb-val { font-size: 14px; font-weight: 700; text-align: right; letter-spacing: -0.01em; }
+.lb-val small { font-weight: 500; color: var(--ink-3); font-size: 11px; margin-left: 4px; letter-spacing: 0; }
+.lb-axis { display: grid; grid-template-columns: 26px minmax(150px, 250px) 1fr minmax(104px, auto);
+  gap: 12px; color: var(--ink-3); font-size: 11.5px; margin-top: 7px; }
+.lb-axis-t { grid-column: 3; display: flex; justify-content: space-between; }
+
+/* ---------------------------------------------------------------- the table */
+.lb-tblwrap { overflow-x: auto; margin-top: 12px; border-top: 1px solid var(--lb-hair); }
+table.lb-tbl { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; }
+.lb-tbl th, .lb-tbl td { padding: 8px 10px; text-align: right; white-space: nowrap; }
+/* The system column stays put while the eleven metrics scroll under it. Without this the
+   reader loses which row they are reading four columns in, which on an eleven-column table
+   is most of it. */
+.lb-tbl th:first-child, .lb-tbl td:first-child {
+  text-align: left; position: sticky; left: 0; background: var(--lb-surf); z-index: 2;
+  box-shadow: 1px 0 0 var(--lb-hair);
+}
+/* The head is NOT sticky. It would have to stick below the topbar and the filter strip,
+   and the filter strip's height changes with the window - two sticky things measured
+   against a third that moves. The table is five rows: the head is on screen for all of
+   them anyway, and the column that genuinely needs pinning is the system name, which is
+   pinned horizontally above. */
+.lb-tbl thead th { background: var(--lb-surf);
+  border-bottom: 1px solid var(--lb-hair); font-size: 11.5px; font-weight: 700; }
+.lb-grouphead th {
+  font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700;
+  padding: 4px 10px 2px; text-align: center; border-bottom: 0;
+}
+.lb-grouphead th span { display: block; height: 2px; border-radius: 2px; margin-top: 5px; }
+.lb-tbl tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--ink) 2.5%, transparent); }
+.lb-tbl tbody tr:nth-child(even) td:first-child { background: color-mix(in srgb, var(--ink) 2.5%, var(--lb-surf)); }
+.lb-tbl tbody tr:hover td { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.lb-tbl tbody tr:hover td:first-child { background: color-mix(in srgb, var(--accent) 7%, var(--lb-surf)); }
+/* A hairline where one pillar ends and the next begins. Eleven columns of numbers with no
+   break in them is one block, and the three pillars are the whole organising idea. */
+td.lb-edge, th.lb-edge { border-left: 1px solid var(--lb-hair); }
+.lb-sort {
+  font: inherit; font-size: 11.5px; font-weight: 700; background: none; border: 0; padding: 0;
+  cursor: pointer; color: var(--ink-2); display: inline-flex; align-items: center; gap: 3px;
+}
+.lb-sort:hover { color: var(--ink); }
+.lb-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lb-sort.is-sorted { color: var(--ink); }
+.lb-sort .lb-arr { font-size: 8px; opacity: .75; }
+.lb-cell b { font-weight: 600; }
+.lb-cell i { font-style: normal; color: var(--ink-3); font-size: 10.5px; margin-left: 3px; }
+/* Best in column. A tint, not a bold: eleven bolded cells scattered through a table read as
+   emphasis rather than as a ranking, and three of the five systems lead at least one column. */
+td.is-best { background: color-mix(in srgb, var(--accent) 13%, transparent) !important; }
+td.is-best b { font-weight: 700; }
+.lb-rk-cell { display: inline-flex; align-items: center; justify-content: center;
+  width: 19px; height: 19px; border-radius: 5px; margin-right: 9px; font-size: 11px; font-weight: 700;
+  background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink-2); }
+tr.is-first .lb-rk-cell { background: var(--accent); color: #fff; }
+.lb-scrollhint { font-size: 11.5px; color: var(--ink-3); margin-top: 8px; }
+
+/* ---------------------------------------------------------------- the trade-off plot */
+.lb-plotwrap { margin-top: 12px; }
+.lb-plot { position: relative; border: 1px solid var(--lb-hair); border-radius: 10px;
+  background: var(--lb-surf); height: clamp(330px, 46vh, 470px); overflow: hidden; }
+/* The corner both metrics agree is good. Named rather than merely tinted, because a tinted
+   corner with no label is decoration and a reader is entitled to know which way is up. */
+.lb-quad { position: absolute; background: color-mix(in srgb, var(--accent) 5%, transparent);
+  border-left: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent); }
+.lb-quad-l { position: absolute; font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: color-mix(in srgb, var(--accent) 80%, transparent); }
+.lb-pt { position: absolute; transform: translate(0, -50%); display: flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600; white-space: nowrap; padding: 2px 5px; border-radius: 6px;
+  background: color-mix(in srgb, var(--lb-surf) 82%, transparent); }
+.lb-pt .lb-dot { width: 10px; height: 10px; box-shadow: 0 0 0 2px var(--lb-surf); }
+.lb-gridline { position: absolute; border-color: color-mix(in srgb, var(--ink) 8%, transparent); }
+.lb-axlab { position: absolute; color: var(--ink-3); font-size: 11px; }
+.lb-axname { position: absolute; color: var(--ink-2); font-size: 11px; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase; }
+
+/* ---------------------------------------------------------------- by conversation type */
+.lb-heat { overflow-x: auto; margin-top: 12px; }
+table.lb-ht { border-collapse: separate; border-spacing: 3px; font-size: 12.5px; width: 100%; }
+.lb-ht th, .lb-ht td { padding: 7px 8px; text-align: center; white-space: nowrap; }
+.lb-ht th:first-child, .lb-ht td:first-child { text-align: left; font-weight: 600; padding-left: 0; }
+.lb-ht thead th { font-size: 11.5px; color: var(--ink-2); font-weight: 700; padding-bottom: 9px; }
+.lb-ht td { border-radius: 5px; }
+.lb-ht td.is-rowbest { box-shadow: inset 0 0 0 1.5px var(--ink); }
+.lb-ht tr.lb-ht-split td { border-top: 0; }
+.lb-ht tr.lb-ht-split { box-shadow: 0 -1px 0 var(--line); }
+.lb-cap { color: var(--ink-3); font-size: 11.5px; margin-top: 12px; max-width: 100ch; line-height: 1.5; }
+
+
+/* ---------------------------------------------------------------- composition */
+table.lb-mx { border-collapse: separate; border-spacing: 3px; font-size: 12.5px; width: 100%; }
+.lb-mx th, .lb-mx td { padding: 7px 8px; text-align: center; white-space: nowrap; }
+.lb-mx th:first-child, .lb-mx td:first-child { text-align: left; font-weight: 600; padding-left: 0; }
+.lb-mx thead th { font-size: 11px; color: var(--ink-2); font-weight: 700; vertical-align: bottom;
+  padding-bottom: 9px; }
+.lb-mx td { border-radius: 5px; background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.lb-mx td.is-zero { background: none; color: var(--ink-3); opacity: .5; }
+.lb-mx th.lb-mx-split, .lb-mx td.lb-mx-split { border-left: 2px solid var(--lb-hair); }
+.lb-mx tfoot td { background: none; font-weight: 700; padding-top: 10px; }
+
+/* ---------------------------------------------------------------- durations */
+.lb-vio { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+.lb-vio-row { display: grid; grid-template-columns: minmax(96px, 132px) 1fr minmax(150px, auto);
+  gap: 12px; align-items: center; padding: 5px 0; }
+.lb-vio-row + .lb-vio-row { border-top: 1px solid color-mix(in srgb, var(--line) 40%, transparent); }
+.lb-vio-row.is-on { background: color-mix(in srgb, var(--accent) 6%, transparent); border-radius: 8px; }
+.lb-vio-k { font-size: 13px; font-weight: 600; }
+.lb-vio-track { position: relative; height: 26px; overflow: hidden; }
+/* The density itself, drawn as an area rather than a box: a box says "these are the
+   quartiles" and a distribution that piles up against a cap does not look like a box.
+   WIDTH AND HEIGHT EXPLICITLY. An <svg> carrying a viewBox is a replaced element with an
+   intrinsic aspect ratio, and a ratio beats a bottom offset: `position:absolute; inset:0`
+   alone left it 121px tall inside a 26px track, so six densities were drawn on top of each
+   other across the whole card. */
+.lb-vio-dens { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.lb-vio-iqr { position: absolute; top: 50%; height: 9px; transform: translateY(-50%);
+  border-radius: 2px; background: color-mix(in srgb, var(--ink) 62%, transparent); }
+.lb-vio-w { position: absolute; top: 50%; height: 1px; transform: translateY(-50%);
+  background: color-mix(in srgb, var(--ink) 32%, transparent); }
+.lb-vio-med { position: absolute; top: 50%; width: 2px; height: 15px; transform: translate(-50%, -50%);
+  background: #fff; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 65%, transparent); }
+.lb-vio-cap { position: absolute; top: -3px; bottom: -3px; width: 1px;
+  background: color-mix(in srgb, var(--mag) 70%, transparent); }
+.lb-vio-caplab { position: absolute; top: -15px; font-size: 10px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--mag); transform: translateX(-50%); white-space: nowrap; }
+.lb-vio-v { font-size: 12.5px; color: var(--ink-2); text-align: right; }
+.lb-vio-v b { color: var(--ink); }
+.lb-vio-axis { display: grid; grid-template-columns: minmax(96px, 132px) 1fr minmax(150px, auto);
+  gap: 12px; margin-top: 6px; font-size: 11.5px; color: var(--ink-3); }
+.lb-vio-axis-t { grid-column: 2; display: flex; justify-content: space-between; }
+@media (max-width: 860px) {
+  .lb-vio-row, .lb-vio-axis { grid-template-columns: minmax(74px, 1fr) 2fr minmax(110px, auto); }
+}
+
+.lb-foot { margin-top: clamp(26px, 4.5vh, 48px); padding-top: 18px; border-top: 1px solid var(--lb-hair);
+  color: var(--ink-3); font-size: 12.5px; max-width: 96ch; line-height: 1.55; }
+.lb-foot a { color: var(--accent); }
+.lb-empty { padding: 26px 4px; color: var(--ink-3); font-size: 14px; }
+
+@media (max-width: 1040px) {
+  .lb-mast { grid-template-columns: minmax(0, 1fr); }
+  .lb-stats { overflow-x: auto; }
+}
+@media (max-width: 860px) {
+  .lb-row, .lb-axis { grid-template-columns: 20px minmax(96px, 1fr) 2fr minmax(84px, auto); }
+  .lb-axis-t { grid-column: 3; }
+  .lb-bar { position: static; backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+@media (prefers-reduced-motion: reduce) { .lb-fill { transition: none; } }
+</style>
+</head>
+<body class="fw-lb">
+
+<a class="fw-skip" href="#lb">Skip to the leaderboard</a>
+
+<header class="topbar" data-nav-host>
+  <a class="wordmark" href="index.html"><img class="wordmark-logo" src="img/hero.webp" alt="">Duplex&nbsp;World <span class="sub">benchmark</span></a>
+<nav class="fw-nav" aria-label="Sections">
+  <a class="fw-nav-item" href="index.html">Experience</a>
+  <a class="fw-nav-item" href="index.html#overview">Overview</a>
+  <a class="fw-nav-item" href="motivation.html">Motivation</a>
+  <a class="fw-nav-item" href="setup.html">How it works</a>
+  <a class="fw-nav-item" href="samples.html">Voice samples</a>
+  <a class="fw-nav-item" href="metrics.html">Metrics</a>
+  <a class="fw-nav-item" href="leaderboard.html" aria-current="page">Leaderboard</a>
+</nav>
+</header>
+
+<main id="lb" class="lb">
+
+  <div class="lb-mast">
+    <div>
+      <p class="lb-eyebrow">Leaderboard</p>
+      <h1>Five speech-to-speech systems, eleven metrics, six worlds.</h1>
+      <p class="lb-sub">Pick a world, a pillar and the systems you care about; every figure
+        below answers to it. Intervals are the 95% intervals the paper publishes, and they
+        are drawn rather than only printed, because most of the gaps on this page are
+        smaller than they look.</p>
+    </div>
+    <div class="lb-stats">
+      <div class="lb-stat"><b>3,825</b><span>Conversations</span></div>
+      <div class="lb-stat"><b>387 h</b><span>Of speech</span></div>
+      <div class="lb-stat"><b>5</b><span>Systems</span></div>
+      <div class="lb-stat"><b>11</b><span>Metrics</span></div>
+      <div class="lb-stat"><b>6</b><span>Worlds</span></div>
+    </div>
+  </div>
+
+  <div class="lb-bar" id="lb-bar" role="group" aria-label="Filters"></div>
+
+  <section class="lb-sec">
+    <div class="lb-leads" id="lb-leads"></div>
+  </section>
+
+  <section class="lb-sec lb-card">
+    <div class="lb-head">
+      <h2 id="lb-chart-h">One metric, five systems</h2>
+      <span class="lb-tag" id="lb-chart-tag"></span>
+    </div>
+    <p class="lb-note" id="lb-chart-note"></p>
+    <div class="lb-grp" id="lb-metrics" role="group" aria-label="Metric"></div>
+    <div class="lb-bars" id="lb-bars"></div>
+    <div class="lb-axis" id="lb-axis"></div>
+  </section>
+
+  <section class="lb-sec lb-card">
+    <div class="lb-head">
+      <h2>The whole table</h2>
+      <span class="lb-tag" id="lb-tbl-tag"></span>
+    </div>
+    <p class="lb-note">Table 3 of the paper, for the world selected above. Click any column
+      to sort by it and to put it in the chart. The tinted cell in each column is the best
+      value in that column; every metric here is higher-is-better.</p>
+    <div class="lb-tblwrap" id="lb-tbl"></div>
+    <p class="lb-scrollhint">Eleven metric columns. The table scrolls sideways; the system
+      column stays put.</p>
+  </section>
+
+  <section class="lb-sec lb-card">
+    <div class="lb-head">
+      <h2>Two metrics at once</h2>
+      <span class="lb-tag">No combined score</span>
+    </div>
+    <p class="lb-note">The reason this page has no single index: a system that does the job
+      and a system that sounds good are not the same system, and averaging the two hides
+      exactly that. Put any metric on either axis and see.</p>
+    <div class="lb-grp" style="gap:6px 18px">
+      <span class="lb-k">X axis</span><span id="lb-xsel"></span>
+      <span class="lb-k">Y axis</span><span id="lb-ysel"></span>
+    </div>
+    <div class="lb-plotwrap"><div class="lb-plot" id="lb-plot"></div></div>
+  </section>
+
+  <section class="lb-sec lb-card">
+    <div class="lb-head">
+      <h2>Pass@1 by conversation type</h2>
+      <span class="lb-tag">Table 14 · realistic channel</span>
+    </div>
+    <p class="lb-note">Eleven interaction shapes. The nine enterprise types are shared by all
+      five enterprise worlds; rerouting and all-day assistance arise only in Pathfinding, and
+      their reward is a different definition, so they sit below the rule rather than being
+      averaged in with the nine. The outlined cell in each row is that type's best system.</p>
+    <div class="lb-heat" id="lb-heat"></div>
+    <p class="lb-cap" id="lb-heat-cap"></p>
+  </section>
+
+  <section class="lb-sec lb-card">
+    <div class="lb-head">
+      <h2>What was run</h2>
+      <span class="lb-tag" id="lb-mx-tag"></span>
+    </div>
+    <p class="lb-note">Every enterprise world instantiates the same nine interaction shapes,
+      three scenarios each. Pathfinding shares one of them and adds two that only navigation
+      elicits. Hover a cell for what it is worth in conversations.</p>
+    <div class="lb-heat" id="lb-mx"></div>
+    <p class="lb-cap">Plus twelve authored Pathfinding variants that are released but not
+      run: 156 scenarios authored, 144 campaigned.</p>
+  </section>
+
+  <section class="lb-sec lb-card">
+    <div class="lb-head">
+      <h2>How long a conversation runs</h2>
+      <span class="lb-tag">3,825 conversations</span>
+    </div>
+    <p class="lb-note" id="lb-vio-note">Every conversation in the corpus, by world. The bar is
+      the interquartile range, the notch the median, and the whisker the 5th to 95th
+      percentile.</p>
+    <div id="lb-vio"></div>
+    <p class="lb-cap" id="lb-vio-cap"></p>
+  </section>
+
+  <p class="lb-foot">Every figure on this page is read from data.js, the file the whole site
+    reads, so nothing here can disagree with anything else. Table 3 for the per-world blocks
+    and the pooled block, Table 14 for the per-type figures, which the paper publishes as
+    point estimates with no interval, and the duration densities are computed by gen_violins.py
+    from the 3,825 conversation records rather than transcribed. What the metrics mean is on the
+    <a href="metrics.html">metrics page</a>. There is deliberately no combined index: the paper
+    does not compute one, and a weighted average of a pass rate and a mean opinion score is a
+    number with no unit. Filter state is kept in the address bar, so any view on this page is
+    a link.</p>
+</main>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------------------------------------------------------------- the data
+     Column order is Table 3's, and PILLARS names it. Nothing here re-types a number: the
+     eleven metrics are described once, against the index of the column they read. */
+  var COLS = [
+    { i: 0,  sym: 'GS',     full: 'Goal state',              pillar: 0, lo: 0, hi: 1,
+      says: 'Did the world end up the way the task asked, whatever was said on the way.' },
+    { i: 1,  sym: 'Pass@1', full: 'Single-run pass rate',    pillar: 0, lo: 0, hi: 1,
+      says: 'How often one attempt succeeds. This is the headline number.' },
+    { i: 2,  sym: 'Pass@3', full: 'Any of three',            pillar: 0, lo: 0, hi: 1,
+      says: 'At least one success in three independent attempts.' },
+    { i: 3,  sym: 'Pass³', full: 'All of three',            pillar: 0, lo: 0, hi: 1,
+      says: 'All three attempts succeed. The reliability question, and where systems separate.' },
+    { i: 4,  sym: 'TT',     full: 'Turn-taking',             pillar: 1, lo: 0, hi: 1,
+      says: 'Who held the channel, who yielded, and how often the two talked over each other.' },
+    { i: 5,  sym: 'CP',     full: 'Conversation progression', pillar: 1, lo: 1, hi: 3,
+      says: 'Whether each turn moved the task forward rather than circling.' },
+    { i: 6,  sym: 'SEL',    full: 'Selectivity',             pillar: 1, lo: 0, hi: 1,
+      says: 'Whether the agent ignored what was not addressed to it.' },
+    { i: 7,  sym: 'FAI',    full: 'Faithfulness',            pillar: 2, lo: 1, hi: 3,
+      says: 'Whether what the agent said was true of the world it was acting in.' },
+    { i: 8,  sym: 'DNSMOS', full: 'Speech quality (DNSMOS)', pillar: 2, lo: 1, hi: 5,
+      says: 'A predicted mean opinion score for the audio.' },
+    { i: 9,  sym: 'UTMOS',  full: 'Speech quality (UTMOS)',  pillar: 2, lo: 1, hi: 5,
+      says: 'A second, independently trained MOS predictor.' },
+    { i: 10, sym: 'NISQA',  full: 'Speech quality (NISQA)',  pillar: 2, lo: 1, hi: 5,
+      says: 'A third MOS predictor, on a different training set again.' },
+  ];
+  // One headline metric per pillar, for the three leader cards. Pass@1 because the paper
+  // calls it the headline number, turn-taking because it is the thing a duplex benchmark
+  // exists to measure, and faithfulness because the MOS predictors disagree with each other.
+  var PILL = [
+    { name: 'Agentic capability',      tint: 'var(--pillar-agentic)',  head: 1 },
+    { name: 'Conversational dynamics', tint: 'var(--pillar-dynamics)', head: 4 },
+    { name: 'Naturalness',             tint: 'var(--pillar-natural)',  head: 7 },
+  ];
+  var WORLDS = [
+    { slug: 'pooled',      label: 'All six',     rows: window.T3_POOLED },
+    { slug: 'pathfinding', label: 'Pathfinding', rows: window.T3_PATHFINDING },
+    { slug: 'banking',     label: 'Banking',     rows: window.T3_BANKING },
+    { slug: 'healthcare',  label: 'Healthcare',  rows: window.T3_HEALTHCARE },
+    { slug: 'travel',      label: 'Travel',      rows: window.T3_TRAVEL },
+    { slug: 'insurance',   label: 'Insurance',   rows: window.T3_INSURANCE },
+    { slug: 'logistics',   label: 'Logistics',   rows: window.T3_LOGISTICS },
+  ];
+  // Cell counts, so a figure can say what it is over instead of leaving the reader to
+  // assume. Five systems by three runs, and Pathfinding is run in two acoustic channels.
+  var CELLS = { pooled: '3,825 conversations', pathfinding: '450 conversations',
+                banking: '675 conversations', healthcare: '675 conversations',
+                travel: '675 conversations', insurance: '675 conversations',
+                logistics: '675 conversations' };
+
+  var ICONS = { openai: 'img/icons/openai.webp', gemini: 'img/icons/gemini.webp',
+                grok: 'img/icons/grok.webp', nova: 'img/icons/nova.webp' };
+  function vendorOf(name) {
+    var n = String(name).toLowerCase();
+    if (/nova|sonic/.test(n)) return 'nova';
+    if (/gemini|flash-live/.test(n)) return 'gemini';
+    if (/grok|think fast/.test(n)) return 'grok';
+    return 'openai';
+  }
+  function tintOf(name) {
+    var n = String(name).toLowerCase();
+    if (/nova|sonic/.test(n)) return 'var(--sys-nova)';
+    if (/gemini|flash-live/.test(n)) return 'var(--sys-gemini)';
+    if (/grok|think fast/.test(n)) return 'var(--sys-grok)';
+    if (/mini/.test(n)) return 'var(--sys-mini)';
+    return 'var(--sys-gpt)';
+  }
+
+  /* ---------------------------------------------------------------- state
+     Read from and written to the address bar, so a filtered view is a link. Somebody who
+     finds that Nova leads selectivity in Logistics should be able to send that, and a
+     leaderboard whose state lives only in memory cannot be cited. */
+  var state = { world: 'pooled', pillar: -1, off: {}, metric: 1, sort: 1, dir: -1, x: 1, y: 4 };
+
+  function readURL() {
+    var q = new URLSearchParams(location.search);
+    if (q.get('world') && WORLDS.some(function (w) { return w.slug === q.get('world'); })) {
+      state.world = q.get('world');
+    }
+    var p = parseInt(q.get('pillar'), 10);
+    if (p >= 0 && p < PILL.length) state.pillar = p;
+    var m = parseInt(q.get('metric'), 10);
+    if (m >= 0 && m < COLS.length) { state.metric = m; state.sort = m; }
+    var xx = parseInt(q.get('x'), 10); if (xx >= 0 && xx < COLS.length) state.x = xx;
+    var yy = parseInt(q.get('y'), 10); if (yy >= 0 && yy < COLS.length) state.y = yy;
+    (q.get('off') || '').split(',').filter(Boolean).forEach(function (s) { state.off[s] = true; });
+  }
+  var urlT = 0;
+  function writeURL() {
+    // Debounced, and replaceState rather than pushState: clicking through five metrics
+    // should not put five entries in the reader's back button.
+    clearTimeout(urlT);
+    urlT = setTimeout(function () {
+      var q = new URLSearchParams();
+      if (state.world !== 'pooled') q.set('world', state.world);
+      if (state.pillar >= 0) q.set('pillar', String(state.pillar));
+      if (state.metric !== 1) q.set('metric', String(state.metric));
+      if (state.x !== 1) q.set('x', String(state.x));
+      if (state.y !== 4) q.set('y', String(state.y));
+      var off = Object.keys(state.off).filter(function (k) { return state.off[k]; });
+      if (off.length) q.set('off', off.join(','));
+      var s = q.toString();
+      history.replaceState(null, '', s ? '?' + s : location.pathname);
+    }, 200);
+  }
+
+  function world() {
+    return WORLDS.filter(function (x) { return x.slug === state.world; })[0] || WORLDS[0];
+  }
+  function worldRows() {
+    return (world().rows || []).filter(function (r) { return !state.off[r.system]; });
+  }
+  function cols() {
+    return state.pillar < 0 ? COLS : COLS.filter(function (c) { return c.pillar === state.pillar; });
+  }
+  function num(r, ci) { return parseFloat(r.vals[ci][0]); }
+  function pm(r, ci) { return parseFloat(r.vals[ci][1]); }
+
+  function el(tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  }
+  function mark(system) {
+    var im = document.createElement('img');
+    im.src = ICONS[vendorOf(system)];
+    im.alt = '';
+    return im;
+  }
+  function nameBlock(system) {
+    var w = el('span', 'lb-name');
+    var d = el('span', 'lb-dot');
+    d.style.background = tintOf(system);
+    w.append(d, mark(system), el('span', null, system));
+    return w;
+  }
+
+  /* ---------------------------------------------------------------- the control strip */
+  function seg(items, isOn, onPick) {
+    var s = el('div', 'lb-seg');
+    items.forEach(function (it) {
+      var b = el('button', 'lb-chip' + (isOn(it) ? ' is-on' : ''));
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(isOn(it)));
+      if (it.tint) {
+        var d = el('span', 'lb-dot');
+        d.style.background = it.tint;
+        b.appendChild(d);
+      }
+      b.appendChild(document.createTextNode(it.label));
+      b.addEventListener('click', function () { onPick(it); });
+      s.appendChild(b);
+    });
+    return s;
+  }
+
+  function buildBar() {
+    var bar = document.getElementById('lb-bar');
+    bar.textContent = '';
+
+    var g1 = el('div', 'lb-grp');
+    g1.appendChild(el('span', 'lb-k', 'World'));
+    g1.appendChild(seg(WORLDS,
+      function (w) { return state.world === w.slug; },
+      function (w) { state.world = w.slug; render(); }));
+    bar.appendChild(g1);
+
+    var g2 = el('div', 'lb-grp');
+    g2.appendChild(el('span', 'lb-k', 'Pillar'));
+    var items = [{ label: 'All eleven', p: -1 }].concat(PILL.map(function (p, i) {
+      return { label: p.name, p: i, tint: p.tint };
+    }));
+    g2.appendChild(seg(items,
+      function (it) { return state.pillar === it.p; },
+      function (it) {
+        state.pillar = it.p;
+        // Sorting by, and charting, a column the pillar filter has just hidden is a chart
+        // whose source the reader cannot see. Move both to the first column that survives.
+        var keep = cols();
+        if (!keep.some(function (c) { return c.i === state.metric; })) {
+          state.metric = keep[0].i;
+          state.sort = keep[0].i;
+        }
+        render();
+      }));
+    bar.appendChild(g2);
+
+    var g3 = el('div', 'lb-grp');
+    g3.appendChild(el('span', 'lb-k', 'Systems'));
+    window.SYS5.forEach(function (s) {
+      var on = !state.off[s];
+      var b = el('button', 'lb-chip' + (on ? '' : ' is-off'));
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(on));
+      var d = el('span', 'lb-dot');
+      d.style.background = tintOf(s);
+      b.append(d, mark(s), document.createTextNode(s));
+      b.addEventListener('click', function () {
+        // Never all five off. An empty leaderboard is not a state a reader chose to be in,
+        // it is one they fell into, and there is nothing on screen to get out of it with.
+        var rest = window.SYS5.filter(function (o) { return o !== s && !state.off[o]; });
+        if (!state.off[s] && !rest.length) return;
+        state.off[s] = !state.off[s];
+        render();
+      });
+      g3.appendChild(b);
+    });
+    bar.appendChild(g3);
+  }
+
+  /* ---------------------------------------------------------------- the three leaders */
+  function buildLeads() {
+    var host = document.getElementById('lb-leads');
+    host.textContent = '';
+    var rows = worldRows();
+    if (!rows.length) return;
+    PILL.forEach(function (p, pi) {
+      // Hidden when its pillar is filtered out, rather than shown greyed: a card for a
+      // pillar the reader has just excluded is a claim about data that is not on screen.
+      if (state.pillar >= 0 && state.pillar !== pi) return;
+      var c = COLS[p.head];
+      var sorted = rows.slice().sort(function (a, b) { return num(b, c.i) - num(a, c.i); });
+      var top = sorted[0], second = sorted[1];
+      var card = el('div', 'lb-lead');
+      card.style.setProperty('--lb-tint', p.tint);
+      card.appendChild(el('div', 'lb-lead-k', p.name + ' · ' + c.sym));
+      var n = el('div', 'lb-lead-n');
+      n.append(mark(top.system), el('span', null, top.system));
+      card.appendChild(n);
+      var v = el('div', 'lb-lead-v');
+      var b = el('b', null, num(top, c.i).toFixed(3));
+      v.append(b, document.createTextNode(' ± ' + pm(top, c.i).toFixed(3) + ' · ' + c.full));
+      card.appendChild(v);
+      /* WHETHER THE LEAD IS A LEAD. Two 95% intervals that overlap do not establish an
+         ordering, and a leaderboard that prints a winner without saying so is the single
+         most misleading thing this page could do. The card says which of the two it is. */
+      if (second) {
+        var a1 = num(top, c.i) - pm(top, c.i);
+        var b2 = num(second, c.i) + pm(second, c.i);
+        var tie = a1 <= b2;
+        card.appendChild(el('div', 'lb-lead-tie', tie
+          ? 'Interval overlaps ' + second.system + '. Not a separated lead.'
+          : 'Clear of ' + second.system + ' by more than both intervals.'));
+      }
+      host.appendChild(card);
+    });
+  }
+
+  /* ---------------------------------------------------------------- headline chart */
+  function buildMetricChips() {
+    var host = document.getElementById('lb-metrics');
+    host.textContent = '';
+    host.appendChild(el('span', 'lb-k', 'Metric'));
+    host.appendChild(seg(cols().map(function (c) { return { label: c.sym, c: c }; }),
+      function (it) { return state.metric === it.c.i; },
+      function (it) { state.metric = it.c.i; state.sort = it.c.i; state.dir = -1; render(); }));
+    // The tooltip belongs on the button, and `seg` does not carry one, so it is written
+    // back onto the buttons it just made rather than complicating the shared helper.
+    var btns = host.querySelectorAll('.lb-chip');
+    cols().forEach(function (c, k) { if (btns[k]) btns[k].title = c.full + '. ' + c.says; });
+  }
+
+  function buildBars() {
+    var host = document.getElementById('lb-bars');
+    var axis = document.getElementById('lb-axis');
+    host.textContent = '';
+    axis.textContent = '';
+    var c = COLS[state.metric];
+    var rows = worldRows().slice().sort(function (a, b) { return num(b, c.i) - num(a, c.i); });
+    document.getElementById('lb-chart-h').textContent = c.full + ', ' + world().label;
+    document.getElementById('lb-chart-tag').textContent =
+      c.sym + ' · [' + c.lo + ',' + c.hi + '] · higher is better';
+    document.getElementById('lb-chart-note').textContent =
+      c.says + ' ' + CELLS[state.world] + ' behind this panel; whiskers are the 95% interval '
+      + 'the paper publishes beside each figure.';
+
+    if (!rows.length) {
+      host.appendChild(el('p', 'lb-empty', 'Every system is switched off.'));
+      return;
+    }
+    /* The axis is the METRIC's own range, not the data's. Scaling to the tallest bar makes
+       every chart a photo finish: on a 0-to-1 metric where nothing exceeds 0.5, a fitted
+       axis puts the leader against the right-hand edge and implies it is at the top of the
+       scale, which on this benchmark is the opposite of the finding. */
+    var lo = c.lo, hi = c.hi, span = hi - lo;
+    rows.forEach(function (r, ri) {
+      var v = num(r, c.i), e = pm(r, c.i);
+      var row = el('div', 'lb-row' + (ri === 0 ? ' is-first' : ''));
+      row.appendChild(el('div', 'lb-rk', String(ri + 1)));
+      row.appendChild(nameBlock(r.system));
+      var tr = el('div', 'lb-track');
+      tr.appendChild(el('div', 'lb-mid'));
+      var fl = el('div', 'lb-fill');
+      fl.style.width = (100 * Math.max(0, Math.min(1, (v - lo) / span))).toFixed(2) + '%';
+      fl.style.background = tintOf(r.system);
+      tr.appendChild(fl);
+      if (e > 0) {
+        var a = Math.max(lo, v - e), b = Math.min(hi, v + e);
+        var ci = el('div', 'lb-ci');
+        ci.style.left = (100 * (a - lo) / span).toFixed(2) + '%';
+        ci.style.width = (100 * (b - a) / span).toFixed(2) + '%';
+        tr.appendChild(ci);
+      }
+      row.appendChild(tr);
+      var val = el('div', 'lb-val', v.toFixed(3));
+      if (e > 0) val.appendChild(el('small', null, '± ' + e.toFixed(3)));
+      row.appendChild(val);
+      row.setAttribute('aria-label', r.system + ', ' + c.sym + ' ' + v.toFixed(3)
+        + (e > 0 ? ' plus or minus ' + e.toFixed(3) : ''));
+      host.appendChild(row);
+    });
+    var t = el('div', 'lb-axis-t');
+    [lo, lo + span / 4, lo + span / 2, lo + 3 * span / 4, hi].forEach(function (x) {
+      t.appendChild(el('span', null, span > 2 ? x.toFixed(1) : x.toFixed(2)));
+    });
+    axis.appendChild(el('span'));
+    axis.appendChild(el('span'));
+    axis.appendChild(t);
+  }
+
+  /* ---------------------------------------------------------------- the table */
+  function buildTable() {
+    var host = document.getElementById('lb-tbl');
+    host.textContent = '';
+    document.getElementById('lb-tbl-tag').textContent =
+      world().label + ' · ' + CELLS[state.world];
+    var cs = cols();
+    var rows = worldRows().slice();
+    if (!rows.length) {
+      host.appendChild(el('p', 'lb-empty', 'Every system is switched off.'));
+      return;
+    }
+    if (state.sort >= 0) {
+      rows.sort(function (a, b) { return (num(a, state.sort) - num(b, state.sort)) * state.dir; });
+    }
+    var best = {};
+    cs.forEach(function (c) {
+      best[c.i] = Math.max.apply(null, rows.map(function (r) { return num(r, c.i); }));
+    });
+    // Where one pillar ends and the next begins, so the hairline lands in the right gutter
+    // whichever subset of columns is on screen.
+    var edge = {};
+    cs.forEach(function (c, k) { if (k > 0 && cs[k - 1].pillar !== c.pillar) edge[c.i] = true; });
+
+    var t = el('table', 'lb-tbl');
+    var thead = el('thead');
+
+    // Pillar spans, only when more than one pillar is on screen. With a single pillar
+    // selected the group row would be one cell repeating what the filter above already says.
+    if (state.pillar < 0) {
+      var gh = el('tr', 'lb-grouphead');
+      gh.appendChild(el('th'));
+      PILL.forEach(function (p, pi) {
+        var group = cs.filter(function (c) { return c.pillar === pi; });
+        if (!group.length) return;
+        var th = el('th', edge[group[0].i] ? 'lb-edge' : null, p.name);
+        th.colSpan = group.length;
+        th.style.color = p.tint;
+        var rule = el('span');
+        rule.style.background = p.tint;
+        rule.style.opacity = '.45';
+        th.appendChild(rule);
+        gh.appendChild(th);
+      });
+      thead.appendChild(gh);
+    }
+
+    var hr = el('tr');
+    hr.appendChild(el('th', null, 'System'));
+    cs.forEach(function (c) {
+      var th = el('th', edge[c.i] ? 'lb-edge' : null);
+      var b = el('button', 'lb-sort' + (state.sort === c.i ? ' is-sorted' : ''));
+      b.type = 'button';
+      b.title = c.full + '. ' + c.says;
+      b.append(document.createTextNode(c.sym));
+      if (state.sort === c.i) b.appendChild(el('span', 'lb-arr', state.dir < 0 ? '▼' : '▲'));
+      b.setAttribute('aria-label', 'Sort by ' + c.full);
+      b.addEventListener('click', function () {
+        if (state.sort === c.i) state.dir = -state.dir;
+        else { state.sort = c.i; state.dir = -1; }
+        // Sorting by a column is asking about it, so the chart follows. Two figures on one
+        // screen that disagree about the subject is how a reader compares the wrong pair.
+        state.metric = c.i;
+        render();
+      });
+      th.appendChild(b);
+      hr.appendChild(th);
+    });
+    thead.appendChild(hr);
+    t.appendChild(thead);
+
+    var tb = el('tbody');
+    rows.forEach(function (r, ri) {
+      var tr = el('tr', ri === 0 ? 'is-first' : null);
+      var td0 = el('td');
+      td0.appendChild(el('span', 'lb-rk-cell', String(ri + 1)));
+      td0.appendChild(nameBlock(r.system));
+      tr.appendChild(td0);
+      cs.forEach(function (c) {
+        var v = num(r, c.i), e = pm(r, c.i);
+        var td = el('td', 'lb-cell' + (v === best[c.i] ? ' is-best' : '') + (edge[c.i] ? ' lb-edge' : ''));
+        td.appendChild(el('b', null, v.toFixed(3)));
+        if (e > 0) td.appendChild(el('i', null, '±' + e.toFixed(3).replace(/^0/, '')));
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    host.appendChild(t);
+  }
+
+  /* ---------------------------------------------------------------- the trade-off plot */
+  function buildAxisSel(hostId, which) {
+    var host = document.getElementById(hostId);
+    host.textContent = '';
+    var sel = el('select', 'lb-sel');
+    COLS.forEach(function (c) {
+      var o = el('option', null, c.sym + ' - ' + c.full);
+      o.value = String(c.i);
+      if (state[which] === c.i) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.setAttribute('aria-label', which === 'x' ? 'X axis metric' : 'Y axis metric');
+    sel.addEventListener('change', function () { state[which] = parseInt(sel.value, 10); render(); });
+    host.appendChild(sel);
+  }
+
+  function buildPlot() {
+    var host = document.getElementById('lb-plot');
+    host.textContent = '';
+    var cx = COLS[state.x], cy = COLS[state.y];
+    var rows = worldRows();
+    if (!rows.length) {
+      host.appendChild(el('p', 'lb-empty', 'Every system is switched off.'));
+      return;
+    }
+    var PAD = { l: 54, r: 22, t: 26, b: 42 };
+    var box = host.getBoundingClientRect();
+    var W = Math.max(1, box.width - PAD.l - PAD.r);
+    var Hh = Math.max(1, box.height - PAD.t - PAD.b);
+
+    // The corner where both metrics are in their top half. Both are higher-is-better, so it
+    // is the corner a reader is looking for, and naming it is cheaper than making them work
+    // out which way each axis runs.
+    var q = el('div', 'lb-quad');
+    q.style.cssText += 'left:' + (PAD.l + W / 2) + 'px;top:' + PAD.t + 'px;'
+      + 'width:' + (W / 2) + 'px;height:' + (Hh / 2) + 'px;';
+    host.appendChild(q);
+    var ql = el('div', 'lb-quad-l', 'Strong on both');
+    ql.style.cssText += 'right:' + (PAD.r + 8) + 'px;top:' + (PAD.t + 8) + 'px;';
+    host.appendChild(ql);
+
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (f) {
+      var y = PAD.t + (1 - f) * Hh;
+      var yline = el('div', 'lb-gridline');
+      yline.style.cssText += 'left:' + PAD.l + 'px;width:' + W + 'px;top:' + y + 'px;border-top:1px solid;';
+      host.appendChild(yline);
+      var xline = el('div', 'lb-gridline');
+      xline.style.cssText += 'top:' + PAD.t + 'px;height:' + Hh + 'px;left:' + (PAD.l + f * W) + 'px;border-left:1px solid;';
+      host.appendChild(xline);
+      if (f === 0 || f === 0.5 || f === 1) {
+        var yl = el('div', 'lb-axlab', (cy.lo + f * (cy.hi - cy.lo)).toFixed(cy.hi - cy.lo > 2 ? 1 : 2));
+        yl.style.cssText += 'left:8px;top:' + (y - 7) + 'px;';
+        host.appendChild(yl);
+        var xl = el('div', 'lb-axlab', (cx.lo + f * (cx.hi - cx.lo)).toFixed(cx.hi - cx.lo > 2 ? 1 : 2));
+        xl.style.cssText += 'top:' + (PAD.t + Hh + 8) + 'px;left:' + (PAD.l + f * W) + 'px;transform:translateX(-50%);';
+        host.appendChild(xl);
+      }
+    });
+    var xt = el('div', 'lb-axname', cx.sym + ' · ' + cx.full);
+    xt.style.cssText += 'left:' + PAD.l + 'px;bottom:6px;';
+    host.appendChild(xt);
+    var yt = el('div', 'lb-axname', cy.sym + ' · ' + cy.full);
+    yt.style.cssText += 'left:8px;top:7px;';
+    host.appendChild(yt);
+
+    var placed = [];
+    rows.map(function (r) {
+      var fx = Math.max(0, Math.min(1, (num(r, cx.i) - cx.lo) / (cx.hi - cx.lo)));
+      var fy = Math.max(0, Math.min(1, (num(r, cy.i) - cy.lo) / (cy.hi - cy.lo)));
+      return { r: r, fx: fx, fy: fy, x: PAD.l + fx * W, y: PAD.t + (1 - fy) * Hh };
+    }).sort(function (a, b) { return a.y - b.y; }).forEach(function (p) {
+      /* Push a label off the one above it rather than printing them on top of each other.
+         Two of the five systems sit within a couple of hundredths of each other on most
+         pairs of metrics - GPT-Realtime-2.1 and Grok on Pass@1 against turn-taking, for one
+         - and the label is the only thing on this plot that names the point, so an overlap
+         is not cosmetic. Nudged DOWN, never sideways: the x position is data. */
+      var dy = 0;
+      for (var i = 0; i < 40; i++) {
+        var clash = placed.some(function (o) {
+          return Math.abs(o.x - p.x) < 215 && Math.abs(o.y - (p.y + dy)) < 20;
+        });
+        if (!clash) break;
+        dy += 21;
+      }
+      placed.push({ x: p.x, y: p.y + dy });
+
+      if (dy > 4) {
+        var lead = el('div');
+        lead.style.cssText = 'position:absolute;width:1px;background:var(--ink-3);opacity:.45;left:'
+          + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px;height:' + dy.toFixed(1) + 'px;';
+        host.appendChild(lead);
+      }
+      var d0 = el('div');
+      d0.style.cssText = 'position:absolute;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);'
+        + 'background:' + tintOf(p.r.system) + ';box-shadow:0 0 0 2px var(--lb-surf);left:'
+        + p.x.toFixed(1) + 'px;top:' + p.y.toFixed(1) + 'px;';
+      host.appendChild(d0);
+
+      var lab = el('div', 'lb-pt');
+      lab.style.left = p.x.toFixed(1) + 'px';
+      lab.style.top = (p.y + dy).toFixed(1) + 'px';
+      var d = el('span', 'lb-dot');
+      d.style.background = tintOf(p.r.system);
+      lab.append(d, mark(p.r.system), el('span', null, p.r.system));
+      // The label sits to the RIGHT of its point, which runs off the plot past about two
+      // thirds of the way across. Past that the whole marker flips to the other side.
+      if (p.fx > 0.62) { lab.style.flexDirection = 'row-reverse'; lab.style.transform = 'translate(-100%, -50%)'; }
+      lab.title = p.r.system + ' · ' + cx.sym + ' ' + num(p.r, cx.i).toFixed(3)
+                + ' · ' + cy.sym + ' ' + num(p.r, cy.i).toFixed(3);
+      host.appendChild(lab);
+    });
+  }
+
+  /* ---------------------------------------------------------------- by conversation type */
+  function buildHeat() {
+    var host = document.getElementById('lb-heat');
+    host.textContent = '';
+    var live = window.SYS5.filter(function (s) { return !state.off[s]; });
+    if (!live.length) {
+      host.appendChild(el('p', 'lb-empty', 'Every system is switched off.'));
+      return;
+    }
+    var idx = live.map(function (s) { return window.SYS5.indexOf(s); });
+    var t = el('table', 'lb-ht');
+    var thead = el('thead');
+    var hr = el('tr');
+    hr.appendChild(el('th', null, 'Conversation type'));
+    live.forEach(function (s) {
+      var th = el('th');
+      var w = el('span', 'lb-name');
+      w.style.justifyContent = 'center';
+      w.append(mark(s), el('span', null, s));
+      th.appendChild(w);
+      hr.appendChild(th);
+    });
+    thead.appendChild(hr);
+    t.appendChild(thead);
+
+    var tb = el('tbody');
+    function addRows(list, splitFirst) {
+      list.forEach(function (pair, ri) {
+        var vals = idx.map(function (k) { return pair[1][k]; });
+        var top = Math.max.apply(null, vals);
+        var tr = el('tr', splitFirst && ri === 0 ? 'lb-ht-split' : null);
+        tr.appendChild(el('td', null, pair[0]));
+        vals.forEach(function (v) {
+          // The row's own best is OUTLINED rather than given a stronger tint. The tint is
+          // already carrying the value, and a second thing carried by the same channel is
+          // not readable as a second thing.
+          var td = el('td', v === top && top > 0 ? 'is-rowbest' : null, v.toFixed(3));
+          /* Dark ink on every cell, at every value. The ramp tops out at 55% of the accent
+             over paper, which is a mid tone - white on it measured under 3:1 at the values
+             where the switch used to fire, so the strongest cells in the table were the
+             hardest ones to read. One text colour, and the ramp carries the value alone. */
+          td.style.background = 'color-mix(in srgb, var(--accent) '
+            + Math.round(Math.max(0, Math.min(1, v)) * 55) + '%, transparent)';
+          tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      });
+    }
+    addRows(window.BY_TYPE_9, false);
+    addRows(window.BY_TYPE_3, true);
+    t.appendChild(tb);
+    host.appendChild(t);
+    document.getElementById('lb-heat-cap').textContent =
+      'Table 14, realistic channel. The paper publishes a point estimate per conversation '
+      + 'type and no interval, so these cells carry none and small differences between them '
+      + 'should not be read as an ordering. The three below the rule are Pathfinding, whose '
+      + 'reward also requires route efficiency at or above 0.75.';
+  }
+
+  /* ---------------------------------------------------------------- composition
+     WHAT WAS RUN, by world and conversation type. Ported from the results page, which this
+     page replaces. The cell value is the number of SCENARIOS; what a scenario is worth in
+     conversations depends on how many systems are switched on, so the tooltip does the
+     arithmetic against the current filter rather than quoting a fixed number that would be
+     wrong the moment a system is excluded. */
+  var MX_RUNS = 5;              // runs per pairing
+  var MX_CHAN = { Pathfinding: 2 };   // Pathfinding is run in two acoustic channels
+  function buildMatrix() {
+    var host = document.getElementById('lb-mx');
+    host.textContent = '';
+    var types = window.MATRIX_TYPES || [];
+    var rows = window.MATRIX_ROWS || [];
+    var live = window.SYS5.filter(function (s) { return !state.off[s]; }).length;
+    var split = 9;              // the nine shared enterprise types, then the Pathfinding two
+
+    var t = el('table', 'lb-mx');
+    var thead = el('thead');
+    var hr = el('tr');
+    hr.appendChild(el('th', null, 'World'));
+    types.forEach(function (ty, k) {
+      hr.appendChild(el('th', k === split ? 'lb-mx-split' : null, ty));
+    });
+    thead.appendChild(hr);
+    t.appendChild(thead);
+
+    var tb = el('tbody');
+    var totalScen = 0, totalConv = 0;
+    rows.forEach(function (r) {
+      var tr = el('tr');
+      tr.appendChild(el('td', null, r.world));
+      (r.cells || []).forEach(function (v, k) {
+        var ch = MX_CHAN[r.world] || 1;
+        var conv = v * live * MX_RUNS * ch;
+        totalScen += v;
+        totalConv += conv;
+        var td = el('td', (v ? '' : 'is-zero ') + (k === split ? 'lb-mx-split' : ''),
+                    v ? String(v) : '·');
+        if (v) {
+          td.title = r.world + ' · ' + types[k] + ': ' + v + ' scenarios × ' + live
+            + ' systems × ' + MX_RUNS + ' runs' + (ch > 1 ? ' × ' + ch + ' channels' : '')
+            + ' = ' + conv + ' conversations';
+        }
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    host.appendChild(t);
+    document.getElementById('lb-mx-tag').textContent =
+      totalScen + ' scenarios · ' + totalConv.toLocaleString('en') + ' conversations'
+      + (live < window.SYS5.length ? ' from ' + live + ' of 5 systems' : '');
+  }
+
+  /* ---------------------------------------------------------------- durations
+     The distribution of conversation length, per world, from the densities gen_violins.py
+     computes over the 3,825 records. Drawn as an area with the quartiles over it rather
+     than as a box alone: Pathfinding's median IS its twenty minute cap, and a box plot of a
+     distribution piled against a ceiling looks like a box plot of a normal one. */
+  var VIO = null;
+  function buildViolins() {
+    var host = document.getElementById('lb-vio');
+    if (!VIO) { host.textContent = ''; return; }
+    host.textContent = '';
+    var M = VIO.meta || {}, xmax = M.xmax || 21;
+    var wrap = el('div', 'lb-vio');
+    var here = world().label;
+
+    (VIO.worlds || []).forEach(function (w) {
+      var row = el('div', 'lb-vio-row' + (w.world === here ? ' is-on' : ''));
+      row.appendChild(el('div', 'lb-vio-k', w.world));
+      var tr = el('div', 'lb-vio-track');
+
+      // The density, as an SVG area on the shared x axis.
+      var d = w.dens || [];
+      if (d.length) {
+        var peak = M.peak || Math.max.apply(null, d);
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'lb-vio-dens');
+        svg.setAttribute('viewBox', '0 0 1000 100');
+        svg.setAttribute('preserveAspectRatio', 'none');
+        var pts = d.map(function (y, k) {
+          var x = 1000 * (w.lo + k * w.step) / xmax;
+          var h = 46 * Math.min(1, y / peak);
+          return x.toFixed(1) + ',' + (50 - h).toFixed(1);
+        });
+        var back = d.map(function (y, k) {
+          var x = 1000 * (w.lo + (d.length - 1 - k) * w.step) / xmax;
+          var h = 46 * Math.min(1, d[d.length - 1 - k] / peak);
+          return x.toFixed(1) + ',' + (50 + h).toFixed(1);
+        });
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M' + pts.concat(back).join('L') + 'Z');
+        path.setAttribute('fill', 'color-mix(in srgb, var(--accent) 26%, transparent)');
+        svg.appendChild(path);
+        tr.appendChild(svg);
+      }
+
+      var pc = function (v) { return (100 * v / xmax).toFixed(2) + '%'; };
+      var wk = el('div', 'lb-vio-w');
+      wk.style.left = pc(w.p5); wk.style.width = pc(w.p95 - w.p5);
+      tr.appendChild(wk);
+      var iqr = el('div', 'lb-vio-iqr');
+      iqr.style.left = pc(w.q1); iqr.style.width = pc(Math.max(0.05, w.q3 - w.q1));
+      tr.appendChild(iqr);
+      var med = el('div', 'lb-vio-med');
+      med.style.left = pc(w.med);
+      tr.appendChild(med);
+      if (M.cap) {
+        var cp = el('div', 'lb-vio-cap');
+        cp.style.left = pc(M.cap);
+        tr.appendChild(cp);
+      }
+      row.appendChild(tr);
+
+      var v = el('div', 'lb-vio-v');
+      var b = el('b');
+      b.textContent = w.med.toFixed(1) + ' min';
+      v.append(b, document.createTextNode(' median · n = ' + w.n));
+      row.appendChild(v);
+      row.title = w.world + ': median ' + w.med.toFixed(1) + ' min, quartiles '
+        + w.q1.toFixed(1) + ' to ' + w.q3.toFixed(1) + ', mean ' + w.mean.toFixed(1)
+        + ', ' + w.atCap + ' at the cap, ' + (w.censored - w.atCap) + ' on the wall clock';
+      wrap.appendChild(row);
+    });
+    host.appendChild(wrap);
+
+    var ax = el('div', 'lb-vio-axis');
+    ax.appendChild(el('span'));
+    var t2 = el('div', 'lb-vio-axis-t');
+    [0, xmax / 4, xmax / 2, 3 * xmax / 4, xmax].forEach(function (x) {
+      var sp = el('span');
+      sp.textContent = x.toFixed(0) + ' min';
+      t2.appendChild(sp);
+    });
+    ax.appendChild(t2);
+    host.appendChild(ax);
+
+    var atCap = (VIO.worlds || []).reduce(function (a, w) { return a + w.atCap; }, 0);
+    var clock = (VIO.worlds || []).reduce(function (a, w) { return a + (w.censored - w.atCap); }, 0);
+    document.getElementById('lb-vio-cap').textContent =
+      'The magenta rule is the twenty minute cap. ' + atCap + ' conversations end there, '
+      + (VIO.worlds || []).filter(function (w) { return w.atCap > 0; }).length
+      + ' worlds reach it at all, and Pathfinding\u2019s median IS the cap. A further '
+      + clock + ' end on the wall-clock timeout rather than at a result. Corpus mean '
+      + (M.meanAll || 0).toFixed(2) + ' minutes over ' + (M.nTotal || 0).toLocaleString('en')
+      + ' conversations.';
+  }
+
+  function render() {
+    buildBar();
+    buildLeads();
+    buildMetricChips();
+    buildBars();
+    buildTable();
+    buildAxisSel('lb-xsel', 'x');
+    buildAxisSel('lb-ysel', 'y');
+    buildPlot();
+    buildHeat();
+    buildMatrix();
+    buildViolins();
+    writeURL();
+  }
+
+  // The data file is the only hard dependency. Without it there is nothing to show, and a
+  // stack of empty sections is worse than one sentence saying so.
+  if (!window.T3_POOLED || !window.SYS5) {
+    document.getElementById('lb').appendChild(
+      el('p', 'lb-empty', 'The results data did not load, so this page has nothing to show.'));
+    return;
+  }
+  readURL();
+  render();
+  fetch('violins.json')
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)); })
+    .then(function (d) { VIO = d; buildViolins(); })
+    .catch(function (e) {
+      console.warn('leaderboard: violins.json did not load:', e.message);
+      document.getElementById('lb-vio').textContent = 'The duration data did not load.';
+    });
+  var rT = 0;
+  window.addEventListener('resize', function () {
+    clearTimeout(rT);
+    rT = setTimeout(buildPlot, 120);
+  });
+}());
+</script>
+</body>
+</html>

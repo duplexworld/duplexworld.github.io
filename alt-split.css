@@ -791,7 +791,35 @@
 /* A band has no film to align to, so it does not need the horizon the split layout hangs
    from - that was leaving a fifth of the screen empty above every world's own name. The
    copy column's own top padding is what sets it. */
-.fw-shell-split[data-block="band"] .fw-copy { padding-top: 96px; }
+/* `--band-pad` is written by the flight on every stop change: 96 for a panel that has to
+   travel, and whatever centres it for one that fits. See the note beside it in flight.js. */
+.fw-shell-split[data-block="band"] .fw-copy { padding-top: var(--band-pad, 96px); }
+/* SYMMETRY. The copy column is the FILM'S neighbour in the split layout, so it is pinned to
+   the film's right edge and to the page's right gutter - `left: var(--left); right: var(--gut)`.
+   On a band --left drops to 0 but the right gutter stayed, so the whole column was the width
+   of the page minus one gutter, hard against the left edge. Measured at 1600: 24px of margin
+   on the left and 94 on the right, and the reader reads that as the page being off centre
+   rather than as a gutter. The band spans the page and its own panel does the centring.
+
+   ONLY where the layout is actually two columns. Below 1041 the split has already become a
+   stack and the copy is centred the other way, with `left: 50%` and a translate of half its
+   own width. Setting left to 0 there and leaving the translate alone put the panel at
+   x = -488 on a 1024px screen - half the page off the left edge, with no sideways scroll to
+   reach it. Measured, after this rule was first written without the query. */
+@media (min-width: 1041px) {
+  .fw-shell-split[data-block="band"] .fw-copy {
+    left: 0;
+    right: 0;
+    max-width: none;
+  }
+}
+/* Below that the split is a stack: the film takes the top 44vh and the copy starts under it.
+   A band has no film - the stage is explicitly stood down - so those 44 vertical percent
+   were 338px of empty page above the maps on a 768px screen. The copy starts under the
+   header instead, and the band's own fitted length shortens to match. */
+@media (max-width: 1040px) {
+  .fw-shell-split[data-block="band"] .fw-copy { top: 72px; }
+}
 .fw-shell-split[data-block="band"] .fw-panel {
   will-change: transform;
   left: 0;
@@ -807,21 +835,104 @@
    wide enough to be read rather than skimmed. */
 .fw-shell-split[data-block="band"] .fw-maps {
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  --map-h: clamp(190px, 22vh, 260px);
+  /* 190px of ROW is 104px of map once the card's own heading and caption are taken out, and
+     a 487x104 window on a five-by-five street grid is where the walker's label and the
+     copilot's label print on top of each other. The row height was small because the band
+     was a fixed number of viewports and a taller grid fell off the bottom of it - now that
+     the band is fitted to its content, a taller grid simply gets more band to travel
+     through, so the maps can have the size the labels need. */
+  --map-h: clamp(300px, 40vh, 430px);
+  /* The ONE-row height, used by the stop that shows only the three solved walks. It gets
+     the whole band to itself, so it is not the two-row height and should not be derived
+     from it. */
+  --map-tall: clamp(320px, 56vh, 560px);
 }
+/* SIX TRACKS, so the two groups land on their own rows.
+   Two equal columns put the third Pathfinding walk beside the first banking call, which
+   reads as one undifferentiated list. On six tracks the sheet's own span rules apply -
+   the first three tiles take two tracks each and the rest take three - so the walks fill
+   the top row three across and the recorded calls run two across underneath, which is the
+   order the page claims: Pathfinding first, then the enterprise types.
+   The rows stay auto so the band's travel carries the reader down them; the tiles get
+   their height from the rule below rather than from the row. */
 .fw-shell-split[data-block="band"] .fw-runs {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  /* The half-width layout packed five tiles into a fixed set of rows. On the band there
-     are seven, each with a player and a transcript, so the rows size to their content and
-     the band's travel carries the reader down them. */
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
   grid-auto-rows: auto !important;
   height: auto !important;
   max-height: none !important;
 }
-.fw-shell-split[data-block="band"] .fw-run {
-  min-height: 320px;
-  grid-column: auto !important;
+.fw-shell-split[data-block="band"] .fw-run { min-height: 320px; }
+
+/* THE STAGED RUNS GRID. One sample, then two, then three.
+   Same idea as the walks on the setup page and the same reason: three recordings dropped
+   on screen at once is a contact sheet, and the reader has no way to know which one the
+   page is talking about. Revealed one at a time, each arrival is the subject.
+   Column count rather than opacity does the work - a tile that is not up yet has no track
+   to sit in - so the first sample uses the whole width instead of a third of it. Opacity
+   is carried alongside so the arrival is a fade rather than a snap, and visibility is
+   taken away too: a transparent tile is still in the hit-testing tree, and a click near
+   the left edge of the grid opened a recording nobody could see. */
+.fw-shell-split[data-block="band"] .fw-runs.is-staged {
+  /* NO width transition on the columns. The walk renderer re-frames itself 140ms after its
+     box stops changing, so an eased column is 550ms of the map being redrawn against a
+     width it is about to lose - photographed mid-reveal as a street grid with no route,
+     no closures and no walker on it. The columns snap and the tile fades in instead: the
+     renderer measures once, at the size it is going to keep. */
+  grid-template-columns: 1fr 0fr 0fr !important;
 }
+.fw-shell-split[data-block="band"][data-step="1"] .fw-runs.is-staged {
+  grid-template-columns: 1fr 1fr 0fr !important;
+}
+.fw-shell-split[data-block="band"][data-step="2"] .fw-runs.is-staged,
+.fw-shell-split[data-block="band"][data-step="3"] .fw-runs.is-staged {
+  grid-template-columns: 1fr 1fr 1fr !important;
+}
+.fw-runs.is-staged .fw-run {
+  /* The sheet spans the first three tiles across two tracks each and the rest across three,
+     which is the six-track layout the un-staged grid uses. A staged grid has three tracks
+     and one tile per track, so the spans have to go or the second tile lands off the end. */
+  grid-column: auto !important;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(10px);
+  /* Transform, not height or width: a tile that arrives by GROWING makes the walk renderer
+     inside it re-measure and re-frame the map for every frame of the arrival. A transform
+     is composited and changes no box, so the map is drawn once, at the size it keeps. */
+  transition: opacity .42s ease, transform .42s cubic-bezier(.2,.7,.3,1);
+}
+[data-step="0"] .fw-runs.is-staged .fw-run[data-at="0"],
+[data-step="1"] .fw-runs.is-staged .fw-run[data-at="0"],
+[data-step="1"] .fw-runs.is-staged .fw-run[data-at="1"],
+[data-step="2"] .fw-runs.is-staged .fw-run,
+[data-step="3"] .fw-runs.is-staged .fw-run {
+  opacity: 1; visibility: visible; pointer-events: auto; transform: none;
+}
+/* ONE height for every step, and a tall one.
+   Two reasons, and the second is the important one. A tile that is 52vh alone and 40vh in
+   company changes size on every step, and each change makes the walk renderer inside it
+   re-measure and redraw a map that did not need redrawing. And with the panel now centred
+   in its band, a 40vh tile left a third of the screen empty under it: at 58vh the three
+   walks fill two thirds of the viewport, which is what the stop is for. */
+.fw-shell-split[data-block="band"] .fw-runs.is-staged .fw-run {
+  /* 66vh, up from 58. With the panel centred in its band, the tiles are the only thing on
+     the screen and the rest is ground: at 58vh they used 63% of the viewport and left 146px
+     of nothing under them. At 66 the panel is 535 of 757 - a heading, three tiles, and a
+     margin either side that is a margin rather than a gap. Any taller and a three-across
+     map goes portrait, which the street grid inside it does not want. */
+  height: clamp(320px, 66vh, 620px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fw-runs.is-staged .fw-run { transition: none; transform: none; }
+}
+/* A DEFINITE height, not just a floor.
+   `grid-auto-rows: auto` lets a row be as tall as its content, and the content of a
+   Pathfinding tile is a renderer that measures its host and lays itself out to fill it -
+   so with an auto row there is nothing to fill and nothing to stop it. Measured on the
+   samples page: two walk tiles over 690px tall each, one street grid per screen, and the
+   five call tiles pushed a page and a half down. Same failure the `--map-h` comment
+   describes for the maps grid, and the same fix: state the height.
+   `min-height` still wins where it is larger, so a tile that has been played - which opens
+   the speech activity strip and the transcript rail under the map - still grows to 620. */
+.fw-shell-split[data-block="band"] .fw-run { height: clamp(300px, 40vh, 440px); }
 
 
 /* At 1366 the opening's three plot tiles are ~30px shorter than at 1560, which is exactly

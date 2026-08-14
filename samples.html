@@ -80,19 +80,17 @@ mountFlight(document.getElementById('world'), {
   hint: 'scroll',
   nav: [
     { label: 'Experience', href: 'index.html' },
-    { label: 'Setup', href: 'setup.html' },
+    { label: 'Overview', href: 'index.html#overview' },
+    { label: 'Motivation', href: 'motivation.html' },
+    { label: 'How it works', href: 'setup.html' },
     { label: 'Voice samples', href: 'samples.html' },
     { label: 'Metrics', href: 'metrics.html' },
-    { label: 'Results', href: 'results.html' },
-    { label: 'Overview', href: 'index.html#overview' },
+    { label: 'Leaderboard', href: 'leaderboard.html' },
   ],
-  video: { src: 'flight.mp4', srcSmall: 'flight-small.mp4', poster: 'img/poster.webp',
-    // One entry per section, in section order. A length mismatch is not a soft
-    // failure: the config is rejected and the film is dropped for the page.
-    // One per section, non-decreasing. The pass/fail pairs stop was added between the
-    // samples and the outro, so it needs its own keyframe: without it the array is one
-    // short, videoOK_config rejects the whole thing and the page loses its film silently.
-    stops: [5.20, 103.50] },
+  // NO FILM ON THIS PAGE. It is one full-width band now, and a band stands the stage down -
+  // the video box is 0x0 under [data-block="band"] - so the film was 39 MB fetched to be
+  // painted nowhere. It also cannot be configured any more: the chain needs at least two
+  // filmed sections to interpolate a camera between, and this page has one section.
   sections: [
     {
       id: 'runs', label: 'Voice samples', block: 'band', stage: 'art', still: null,
@@ -100,50 +98,53 @@ mountFlight(document.getElementById('world'), {
       // viewer, headphones on. Same globe, same render, so the stage keeps moving here
       // rather than freezing for one stop. Silent and looping.
       art: 'img/audio-turn.mp4',
-      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 4.0, linger: 0.4,
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 3.0, linger: 0.4,
       accent: 'var(--viod)',
-      eyebrow: 'Audio samples from Duplex World',
-      foot: 'Best experienced with headphones.',
-      // `model` is the system that actually produced each recording, read off the payload's
-      // own meta.agent. It is stated here rather than derived at paint time so the tile is
-      // labelled before the payload finishes loading, and verify_paper.py asserts each one
-      // back against meta.agent so the two can never drift.
-      // Grouped by world, and every tile states which system is speaking. Each row carries
-      // a PASSING and a FAILING run of the same shape wherever both were recorded: the
-      // failures are the more informative half of this benchmark and a page that plays only
-      // the successes is advertising, not evidence.
+      // ONE WORD. The eyebrow is a LABEL - it says which of three groups the reader is
+      // looking at - and all three were sentences competing with the heading under them.
+      // The page's own h1 is the title below, which is where the sentence belongs.
+      eyebrow: 'Pathfinding',
+      title: 'Audio samples from DuplexWorld.',
+      // Three walks, one at a time. The first has the whole width to itself, the second
+      // splits it, the third splits it again - so each recording is the subject when it
+      // arrives instead of one cell in a contact sheet.
+      steps: 3,
       runs: [
-        // Pathfinding. Pressing play on one of these does not just start audio: the walk
-        // renderer switches to the REAL call clock and opens its two-lane speech activity
-        // timeline - who held the channel, where the two talked over each other, every
-        // tool call and every audio effect the harness applied. That is the thing this
-        // benchmark exists to measure, so it is what the play button shows.
+        // Pathfinding, the solved half. Pressing play on one of these does not just start
+        // audio: the walk renderer switches to the REAL call clock and opens its two-lane
+        // speech activity timeline - who held the channel, where the two talked over each
+        // other, every tool call and every audio effect the harness applied. That is the
+        // thing this benchmark exists to measure, so it is what the play button shows.
+        // `model` is the system that actually produced each recording, read off the
+        // payload's own meta.agent, and verify_paper.py asserts each one back against it.
         { map: 'clean', outcome: 'ok', type: 'Single intent', world: 'Pathfinding',
           model: 'Gemini-3.1-Flash-Live', voice: 'voice_clean.json' },
-        // The failed single intent is the run that never arrives, not the one that
-        // arrives inefficiently: `wander` ends on the same corner as the success, so on a
-        // map it reads as a second success.
-        { map: 'base_lost', outcome: 'bad', type: 'Single intent, failed',
-          world: 'Pathfinding', model: 'GPT-Realtime-2.1-mini',
-          voice: 'voice_base_lost.json' },
-        { map: 'blocked_bad', outcome: 'bad', type: 'Rerouting, failed', world: 'Pathfinding',
-          model: 'Grok Voice Think Fast 1.0', voice: 'voice_blocked_bad.json' },
+        { map: 'blocked_ok', outcome: 'ok', type: 'Rerouting', world: 'Pathfinding',
+          model: 'Gemini-3.1-Flash-Live', voice: 'voice_blocked_ok.json' },
+        { map: 'errand_ok', outcome: 'ok', type: 'All-day assistance', world: 'Pathfinding',
+          model: 'GPT-Realtime-2.1', voice: 'voice_errand_ok.json' },
+      ],
+    },
+    {
+      // The three enterprise recordings, revealed the same way. Their own stop rather than
+      // more tiles under the walks: a walk and a phone call are read differently, and a
+      // grid that mixes them asks the reader to switch between the two mid-row.
+      id: 'calls', label: 'Enterprise calls', block: 'band', stage: 'art', still: null,
+      art: 'img/audio-turn.mp4',
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 3.0, linger: 0.4, steps: 3,
+      accent: 'var(--pillar-agentic)',
+      eyebrow: 'Enterprise',
+      runs: [
         // Turns 19-23: the charge surfaces inside the digression and the agent has to act
         // on it without over-reacting before the caller says it is not theirs.
         { call: 'bank_narr_ok', from: 19, to: 23, outcome: 'ok',
           type: 'Narrative intake', world: 'Banking', model: 'GPT-Realtime-2.1-mini',
           audio: 'audio/bank_narr_ok.opus' },
-        { call: 'bank_narr_bad', from: 8, to: 13, outcome: 'bad',
-          type: 'Narrative intake, failed', world: 'Banking', model: 'GPT-Realtime-2.1-mini',
-          audio: 'audio/bank_narr_bad.opus' },
         // Turns 8-14: the code never arrives, the caller offers to read one down the line,
         // the agent refuses and steps up through the authenticator already on the account.
         { call: 'bank_ident_ok', from: 8, to: 14, outcome: 'ok',
           type: 'Identity verification', world: 'Travel', model: 'Gemini-3.1-Flash-Live',
           audio: 'audio/bank_ident_ok.opus' },
-        { call: 'bank_ident_bad', from: 9, to: 14, outcome: 'bad',
-          type: 'Identity verification, failed', world: 'Travel',
-          model: 'Gemini-3.1-Flash-Live', audio: 'audio/bank_ident_bad.opus' },
         // Turns 17-21: she leaves mid-call and the agent has to hold every confirmed fact
         // across the gap, then read the code back before writing it.
         { call: 'bank_susp_ok', from: 17, to: 21, outcome: 'ok',
@@ -152,19 +153,21 @@ mountFlight(document.getElementById('world'), {
       ],
     },
     {
+      // The pairs. Two columns, a pass and the failure of the same shape beside it.
       id: 'pairs', label: 'Pass and fail', block: 'band', stage: 'art', still: null,
       art: 'img/audio-turn.mp4',
       cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 5.0, linger: 0.4,
       accent: 'var(--pillar-agentic)',
-      eyebrow: 'The same shape, done and not done',
+      eyebrow: 'Pairs',
       title: 'Nine conversation types, each one passed and failed.',
+      foot: 'Best experienced with headphones.',
       cardsLede: 'One passing and one failing call for every enterprise conversation '
                + 'type. Eight of the nine pairs hold the system fixed, so what separates '
                + 'the two tiles is the run and not the vendor. Open a tile for the whole '
                + 'call: its two-lane speech activity timeline, every tool call, every '
                + 'audio effect the harness applied, and the full transcript.',
       cardsFoot: 'Nine here, eleven in the corpus: rerouting and all-day assistance arise '
-               + 'only in Pathfinding, and both are above.',
+               + 'only in Pathfinding, and both are on the first slide.',
       next: { kicker: 'Next', label: 'How this was scored', href: 'metrics.html' },
       tapes: [
         { key: 'si_ok', type: 'Single intent', verdict: 'ok',
@@ -223,7 +226,6 @@ mountFlight(document.getElementById('world'), {
           line: 'Same model, same task. Twenty minutes in, still collecting, and the clock ends it.' },
       ],
     },
-    // ---------------------------------------------------------------- the three pillars
   ],
 });
 </script>

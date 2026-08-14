@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Setup - DuplexWorld</title>
+<title>How it works - DuplexWorld</title>
 <meta name="description" content="What DuplexWorld tests: a mapless walker guided by a copilot who cannot see the street, and the nine enterprise conversation types.">
 <!-- Inline so the browser never fires its automatic /favicon.ico request, which is a
      404 on a static server and the only broken asset the page would otherwise have. -->
@@ -68,11 +68,12 @@ mountFlight(document.getElementById('world'), {
   hint: 'scroll',
   nav: [
     { label: 'Experience', href: 'index.html' },
-    { label: 'Setup', href: 'setup.html' },
+    { label: 'Overview', href: 'index.html#overview' },
+    { label: 'Motivation', href: 'motivation.html' },
+    { label: 'How it works', href: 'setup.html' },
     { label: 'Voice samples', href: 'samples.html' },
     { label: 'Metrics', href: 'metrics.html' },
-    { label: 'Results', href: 'results.html' },
-    { label: 'Overview', href: 'index.html#overview' },
+    { label: 'Leaderboard', href: 'leaderboard.html' },
   ],
   video: { src: 'flight.mp4', srcSmall: 'flight-small.mp4', poster: 'img/poster.webp',
     // One entry per section, in section order. A length mismatch is not a soft
@@ -82,7 +83,11 @@ mountFlight(document.getElementById('world'), {
     // steps BACK from 3 to 2, so videoOK_config rejected the whole config and the page has
     // been running with no film at all - the stage fell back to the computed camera and
     // nobody noticed because that fallback looks deliberate.
-    stops: [2.00, 41.65, 80.24, 103.50] },
+    // Four sections now, not five: the two maps stops split the old one, and the film outro
+    // is gone. The chain no longer runs to the end of the clip because nothing on this page
+    // shows the last twenty seconds any more - the two maps stops sit either side of the
+    // dive into Pathfinding, which is the part of the film they belong to.
+    stops: [2.00, 20.00, 41.65, 60.00, 80.24] },
   sections: [
     {
       id: 'harness', label: 'The harness', stage: 'film', still: null,
@@ -119,6 +124,31 @@ mountFlight(document.getElementById('world'), {
       },
     },
     {
+      /* THE EXAMPLE. Its own stop, and a full-width one.
+         The claim it answers is on the diagram above - both sides hold the channel at once -
+         and it belongs next to it, but not IN it: the harness panel is already the tallest
+         thing on this page, and adding ninety seconds of call to it pushed the panel past
+         the height of its own column, so the column scrolled inside itself. On a
+         scroll-driven page that reads as the wheel having stopped working.
+         Full width because the thing being shown is a CLOCK, and a clock cut to half the
+         page is a clock at half the resolution. */
+      id: 'example', label: 'One real call', block: 'band', stage: 'film', still: null,
+      cam: { x: 0.500, y: 0.470, z: 1.00 }, scroll: 2.6, linger: 0.4,
+      accent: 'var(--pillar-dynamics)',
+      eyebrow: 'What that produces',
+      title: 'One real call, in the first ninety seconds.',
+      // Read out of a shipped recording at run time rather than typed here, so the lines,
+      // the times and the size of every overlap are the recording's and not an author's
+      // memory of it.
+      example: {
+        call: 'bank_narr_ok',
+        seconds: 90,
+        turns: 2,
+        lede: 'Banking · narrative intake · GPT-Realtime-2.1-mini · a passing run',
+        more: { label: 'Watch a whole call, tick by tick', href: 'system.html' },
+      },
+    },
+    {
       id: 'walks', label: 'Pathfinding types', block: 'band', stage: 'film', still: null,
       lede: 'The agent holds the map. The walker holds the street. Neither can see what '
           + 'the other sees.',
@@ -130,16 +160,41 @@ mountFlight(document.getElementById('world'), {
         { name: 'All-day assistance',
           line: 'A second destination, revealed only on arrival at the first.' },
       ],
-      cam: { x: 0.346, y: 0.601, z: 1.75 }, scroll: 4.7, linger: 0.5, steps: 4,
+      cam: { x: 0.346, y: 0.601, z: 1.75 }, scroll: 4.7, linger: 0.5, steps: 3,
       accent: 'var(--mag)',
-      mark: { name: 'Pathfinding', line: 'Three conversation types, each shown solved and unsolved.' },
+      mark: { name: 'Pathfinding', line: 'Three conversation types, each shown solved.' },
       // No paragraph. The tiles are the argument, the types are named on them, and the
       // paper already explains each one at length.
       maps: {
         cols: 3,
-        // Figures 3, 4 and 5. Each pair shares a start, a destination and a closure set, so
-        // the contrast between two tiles isolates the agent. The failures are marked as
-        // failures and nothing more: which cap they hit is a detail for the paper.
+        // Figures 3, 4 and 5, the solved half. Three tiles in ONE row, so each walk gets the
+        // full height of the band rather than half of it: at 200px of map the walker's label
+        // and the copilot's label printed on top of each other.
+        cells: [
+          { key: 'clean', at: 0, outcome: 'ok', cond: 'Single intent', verdict: 'Pass',
+            note: 'Five blocks of five, two turns, no closures.' },
+          { key: 'blocked_ok', at: 1, outcome: 'ok', cond: 'Rerouting', verdict: 'Pass',
+            note: 'Four unmapped closures; finds the one detour that survives.' },
+          { key: 'errand_ok', at: 2, outcome: 'ok', cond: 'All-day assistance', verdict: 'Pass',
+            note: 'The second destination is revealed only on arrival at the first.' },
+        ],
+      },
+    },
+    {
+      // THE SAME THREE, UNSOLVED, beside the runs that solved them. Its own stop rather than
+      // a fourth reveal step on the one above: six tiles at once is the comparison, and the
+      // comparison only lands if the reader has already read the three that worked.
+      id: 'walks-fail', label: 'Solved and unsolved', block: 'band', stage: 'film', still: null,
+      cam: { x: 0.346, y: 0.601, z: 1.75 }, scroll: 4.0, linger: 0.5,
+      accent: 'var(--mag)',
+      mark: { name: 'Pathfinding', line: 'Each type, shown solved and unsolved.' },
+      maps: {
+        cols: 3,
+        lede: 'Now the same three, unsolved. Each pair shares a start, a destination and a '
+            + 'closure set, so the only thing that differs between two tiles is the agent.',
+        // `all`, so every tile is up from the first frame. The staged reveal belongs to the
+        // stop above; replaying it here would build the three passes a second time.
+        all: true,
         cells: [
           { key: 'clean', at: 0, outcome: 'ok', cond: 'Single intent', verdict: 'Pass',
             note: 'Five blocks of five, two turns, no closures.' },
@@ -170,12 +225,10 @@ mountFlight(document.getElementById('world'), {
       cardsLede: 'Nine shapes, shared by all five enterprise worlds.',
       cards: TYPES9,
       cardsFoot: 'Plus two that only navigation elicits: rerouting, and all-day assistance.',
-    },
-    {
-      id: 'out', label: 'Duplex World', stage: 'film', still: null, layout: 'hero',
-      block: 'out',
-      cam: { x: 0.500, y: 0.480, z: 1.02 }, scroll: 1.8, linger: 0.3,
-      accent: 'var(--mag)',
+      // The hand-off used to be a stop of its own, a full-screen scrub of the dome with one
+      // link on it. It was the film for its own sake: this page's argument finishes with the
+      // nine cards, and a whole viewport of video after it is a pause, not an ending. The
+      // link moves onto the card grid and the stop goes.
       next: { kicker: 'Next', label: 'Hear the calls', href: 'samples.html' },
     },
   ],

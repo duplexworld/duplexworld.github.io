@@ -68,11 +68,12 @@ mountFlight(document.getElementById('world'), {
   hint: 'scroll',
   nav: [
     { label: 'Experience', href: 'index.html' },
-    { label: 'Setup', href: 'setup.html' },
+    { label: 'Overview', href: 'index.html#overview' },
+    { label: 'Motivation', href: 'motivation.html' },
+    { label: 'How it works', href: 'setup.html' },
     { label: 'Voice samples', href: 'samples.html' },
     { label: 'Metrics', href: 'metrics.html' },
-    { label: 'Results', href: 'results.html' },
-    { label: 'Overview', href: 'index.html#overview' },
+    { label: 'Leaderboard', href: 'leaderboard.html' },
   ],
   video: { src: 'flight.mp4', srcSmall: 'flight-small.mp4', poster: 'img/poster.webp',
     // One entry per section, in section order. A length mismatch is not a soft
@@ -125,9 +126,14 @@ mountFlight(document.getElementById('world'), {
       id: 'scale', label: 'The scale', stage: 'film', still: null,
       eyebrow: 'What was run',
       title: '3,825 scored conversations. 387 hours of speech.',
-      body: 'Eleven conversation types, 156 scenarios, five speech-to-speech systems, one '
-          + 'twelve-metric suite in three pillars. Every pairing is run five times, and '
-          + 'for the walking world in two acoustic channels - a quiet one and a street.',
+      // 144 CAMPAIGNED, not 156 authored. The sentence is about what was run, and it was
+      // reading as though all 156 authored scenarios had been: the other twelve are
+      // Pathfinding variants that are released and not run, which the composition matrix on
+      // the results page states and this line did not.
+      body: 'Eleven conversation types, 144 scenarios campaigned out of 156 authored, five '
+          + 'speech-to-speech systems, one metric suite in three pillars. Every pairing is '
+          + 'run five times, and for the walking world in two acoustic channels - a quiet '
+          + 'one and a street.',
       // The corpus ring from the overview page. The two totals in the title are the two
       // numbers this shape divides up, so it belongs beside them rather than four pages
       // later. Same slices, same builder, so the two pages cannot disagree.
