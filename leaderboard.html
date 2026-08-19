@@ -321,6 +321,20 @@ table.lb-mx { border-collapse: separate; border-spacing: 3px; font-size: 12.5px;
 @media (max-width: 1040px) {
   .lb-mast { grid-template-columns: minmax(0, 1fr); }
   .lb-stats { overflow-x: auto; }
+  /* The strip already scrolls, but the cells were still flex items with nothing stopping
+     them shrinking, so at 390px they compressed under each other instead: "Conversations"
+     printed through "387" and "of speech" wrapped onto its own line. They keep their own
+     width and the strip scrolls, which is what the overflow rule above was for. */
+  .lb-stat { flex: none; }
+
+  /* The segmented controls carry `overflow: hidden` so their options clip to the rounded
+     track. At 390px the track is wider than the screen, and hidden overflow with nothing
+     to scroll it is a hard cut: Travel, Insurance and Logistics could not be reached at
+     all, and neither could two of the three pillars. A filter with unreachable options is
+     worse than no filter, so on a narrow screen the track wraps to as many rows as it
+     needs. Every option stays on screen and nothing has to be discovered by swiping. */
+  .lb-seg { flex-wrap: wrap; }
+  .lb-seg .lb-chip { flex: none; }
 }
 @media (max-width: 860px) {
   .lb-row, .lb-axis { grid-template-columns: 20px minmax(96px, 1fr) 2fr minmax(84px, auto); }
@@ -335,7 +349,7 @@ table.lb-mx { border-collapse: separate; border-spacing: 3px; font-size: 12.5px;
 <a class="fw-skip" href="#lb">Skip to the leaderboard</a>
 
 <header class="topbar" data-nav-host>
-  <a class="wordmark" href="index.html"><img class="wordmark-logo" src="img/hero.webp" alt="">Duplex&nbsp;World <span class="sub">benchmark</span></a>
+  <a class="wordmark" href="index.html"><img class="wordmark-logo" src="img/mark-64.webp" width="22" height="22" fetchpriority="high" decoding="async" alt="">Duplex&nbsp;World <span class="sub">benchmark</span></a>
 <nav class="fw-nav" aria-label="Sections">
   <a class="fw-nav-item" href="index.html">Experience</a>
   <a class="fw-nav-item" href="index.html#overview">Overview</a>

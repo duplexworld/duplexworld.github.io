@@ -219,14 +219,65 @@ function mountFlight(root, config) {
        so on anything short of a fast line it is the better picture - the one that is
        actually moving.
        `downlink` is Chrome's own estimate in Mbps and `effectiveType` its bucket; both are
-       absent in Safari and Firefox, where this falls through to the old behaviour. */
-    const slowType = /(^|-)(2g|3g)$/.test(String(c.effectiveType || ''));
-    const slowLink = typeof c.downlink === 'number' && c.downlink > 0 && c.downlink < 12;
-    const thin = c.saveData === true
-      || slowType
-      || slowLink
-      || window.matchMedia('(max-width: 900px)').matches;
-    return thin ? small : VID.src;
+       absent in Safari and Firefox.
+
+       MEASURED, and as first written the test was inverted in BOTH directions:
+
+         - Chrome CAPS `downlink` at 10 Mbps. It is a fingerprinting surface, so the spec
+           has it round to the nearest 25 kbps and clamp there. `downlink < 12` is
+           therefore true on every Chrome that has ever run this page, however fast the
+           line, so Chrome always took the small encode and the test never did anything;
+         - Safari and Firefox do not implement navigator.connection at all, so `c` is
+           empty, every slow test reads false, and a desktop there took the 38.9 MB
+           encode WHOLE before the flight could begin. Measured against this tree in
+           WebKit at 1440px: flight.mp4, all 38.9 MB of it. That is 13s of a static page
+           on a 25 Mbps line and 31s on a 10 Mbps one, and it is the likeliest thing
+           behind a reader saying the page did not load.
+
+       So the test now asks for POSITIVE evidence of a fast wide client before spending
+       38.9 MB, rather than for evidence of a slow one before saving it. No evidence means
+       the small encode, which is the safe direction: 960x540 against a stage that
+       measures 557px on a 1440 desktop is already oversampled. */
+    const fast = c.effectiveType === '4g'
+      && typeof c.downlink === 'number' && c.downlink >= 9
+      && c.saveData !== true;
+    /* And only where 1080p is a picture anyone can SEE. The stage is about 49% of the
+       viewport in the two-column shell, so its width in device pixels is what decides
+       whether the 960px encode is being upscaled. Measured: 485px at 1280, 557 at 1440,
+       941 at 1920, 1299 at 2560. So a 1440 laptop at DPR 1 is asking 557 device pixels of
+       a 960px source and cannot possibly resolve 1920; the same laptop at DPR 2 is asking
+       1114 and can. `min-width: 901px` alone was sending 38.9 MB to the first case. */
+    const stagePx = Math.round(window.innerWidth * (window.devicePixelRatio || 1) * 0.49);
+    return (fast && stagePx > 1000) ? VID.src : small;
+  }
+  /* Swapping a media element's src empties it, so for the two or three frames before the
+     new source decodes the poster prints through - a flash of the opening shot in the
+     middle of the flight. The frame that is up is copied to a canvas laid over the film
+     first, and only taken away once the new source has decoded AND seeked back to where
+     the reader was. From the outside nothing happens at all. */
+  function upgradeToBlob(b) {
+    if (!videoEl) return;
+    const at = videoEl.currentTime;
+    let shot = null;
+    try {
+      shot = document.createElement('canvas');
+      shot.width = videoEl.videoWidth || 960;
+      shot.height = videoEl.videoHeight || 540;
+      shot.className = 'fw-video fw-video-shot';
+      shot.setAttribute('aria-hidden', 'true');
+      shot.getContext('2d').drawImage(videoEl, 0, 0, shot.width, shot.height);
+      videoEl.parentNode.insertBefore(shot, videoEl.nextSibling);
+    } catch (e) { shot = null; }
+    const drop = () => { if (shot && shot.parentNode) shot.parentNode.removeChild(shot); shot = null; };
+    blobURL = URL.createObjectURL(b);
+    videoEl.addEventListener('loadeddata', function once() {
+      videoEl.removeEventListener('loadeddata', once);
+      try { videoEl.currentTime = at; } catch (e) {}
+      requestAnimationFrame(() => requestAnimationFrame(drop));
+    });
+    // Whatever happens to the upgrade, the still does not outlive it.
+    setTimeout(drop, 4000);
+    videoEl.src = blobURL;
   }
   const videoEl = (VID && !reduce) ? document.createElement('video') : null;
   if (VID && reduce) {
@@ -248,10 +299,27 @@ function mountFlight(root, config) {
     //
     // The wait costs nothing visible: the computed camera flies the page until `loadeddata`
     // lands, which is the arrangement the page already had.
-    fetch(VSRC)
-      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error('HTTP ' + r.status))))
-      .then((b) => { blobURL = URL.createObjectURL(b); videoEl.src = blobURL; })
-      .catch(() => { videoEl.src = VSRC; });   // streamed is worse than absent, but not by much
+    // ...but NOT before the page works. Fetching it whole first made the film the last
+    // thing to arrive instead of the first: `loadeddata` waited on all 7.4 MB, so the
+    // largest-contentful-paint element on this page WAS the video and it landed at 7.6s on
+    // ordinary 4G and 42s on a slow one. For that whole window the reader has a header and
+    // a blank page, which is precisely the "it does not load" report.
+    //
+    // Streamed, the first frames decode in about a second, so the opening stops are live
+    // almost at once. The Blob is then fetched in the background and swapped in when it
+    // arrives, which restores backward scrubbing without anyone waiting for it.
+    videoEl.src = VSRC;
+    /* Only the small encode is pulled down whole. The Blob buys reliable BACKWARD seeking,
+       and it costs the file's size in memory for the life of the document; at 7.4 MB that
+       is a fair trade and at 38.9 MB it is not. The 38.9 MB encode also only ever goes to a
+       client the test above found to be both wide and fast, which is exactly the client
+       whose range requests come back quickly enough that a backward seek does not stall. */
+    if (VID.srcSmall && VSRC === VID.srcSmall) {
+      fetch(VSRC)
+        .then((r) => (r.ok ? r.blob() : Promise.reject(new Error('HTTP ' + r.status))))
+        .then(upgradeToBlob)
+        .catch(() => {});   // the streamed source is already playing; nothing to fall back to
+    }
     videoEl.muted = true;
     videoEl.defaultMuted = true;
     videoEl.playsInline = true;

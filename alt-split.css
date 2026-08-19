@@ -392,7 +392,7 @@
   .fw-shell-split .fw-video {
     top: 0; left: 50%;
     transform: translateX(-50%);
-    width: min(var(--vw), calc(44vh * 16 / 9));
+    width: min(var(--vw), calc(calc(var(--svh) * 44) * 16 / 9));
   }
   .fw-shell-split .fw-copy {
     /* max-width was copy-pasted in from the two-column rule and evaluated to 48vw - gut
@@ -401,7 +401,7 @@
     max-width: none;
     left: 50%; right: auto;
     transform: translateX(-50%);
-    top: 44vh; bottom: 0;
+    top: calc(var(--svh) * 44); bottom: 0;
     width: calc(var(--vw) - 28px);
     align-items: start;
     padding: 16px 0 24px;
@@ -414,7 +414,7 @@
      the index sits at z-index 8 over copy at z-index 6. Both index and rail become
      horizontal strips in the gap between the film and the copy instead. */
   .fw-shell-split .fw-globes {
-    left: 50%; right: auto; top: calc(44vh - 52px);
+    left: 50%; right: auto; top: calc(calc(var(--svh) * 44) - 52px);
     transform: translateX(-50%);
     flex-direction: row;
     align-items: flex-end;
@@ -426,7 +426,7 @@
   /* On the same strip as the index, not below it: at 44vh + 6px the dots landed inside the
      copy column, which starts at 44vh. */
   .fw-shell-split .fw-rail {
-    left: auto; right: 10px; top: calc(44vh - 46px);
+    left: auto; right: 10px; top: calc(calc(var(--svh) * 44) - 46px);
     transform: none;
     flex-direction: row;
     gap: 8px;
@@ -451,11 +451,11 @@
   .fw-shell-split .fw-work-row { grid-template-columns: 4.5ch 1fr 10ch; gap: 8px; }
   .fw-shell-split .fw-grp-name { font-size: 14px; }
   .fw-shell-split[data-block="summary"] .fw-copy,
-  .fw-shell-split[data-block="runs"] .fw-copy { top: 26vh; }
+  .fw-shell-split[data-block="runs"] .fw-copy { top: calc(var(--svh) * 26); }
   .fw-shell-split[data-block="summary"] .fw-video,
   .fw-shell-split[data-block="summary"] .fw-hero,
   .fw-shell-split[data-block="runs"] .fw-art {
-    width: min(var(--vw), calc(25vh * 16 / 9));
+    width: min(var(--vw), calc(calc(var(--svh) * 25) * 16 / 9));
   }
   .fw-shell-split[data-block="runs"] .fw-art { left: 50%; top: 0; }
   /* The section bar is the page's navigation on a phone, so it stays - wrapped, scrolling
@@ -477,14 +477,14 @@
      the front matter and the world stops are text, and giving nearly half the screen to a
      decorative mark left the abstract 304px past the bottom of its column. So the picture
      yields to the reading on exactly the stops where the reading is the point. */
-  .fw-shell-split[data-stage="logo"] .fw-copy { top: clamp(132px, 19vh, 190px); }
-  .fw-shell-split[data-stage="mark"] .fw-copy { top: clamp(150px, 22vh, 220px); }
+  .fw-shell-split[data-stage="logo"] .fw-copy { top: clamp(132px, calc(var(--svh) * 19), 190px); }
+  .fw-shell-split[data-stage="mark"] .fw-copy { top: clamp(150px, calc(var(--svh) * 22), 220px); }
   .fw-shell-split[data-stage="logo"] .fw-logo,
   .fw-shell-split[data-stage="mark"] .fw-mark { --logo-lg: 30vw; }
   .fw-shell-split[data-stage="mark"] .fw-mark {
     inset: 0 0 auto 0;
     width: auto;
-    height: clamp(140px, 21vh, 210px);
+    height: clamp(140px, calc(var(--svh) * 21), 210px);
     flex-direction: row;
     gap: 12px;
     text-align: left;
@@ -502,17 +502,17 @@
   /* The walks stop is the one place on a phone where the picture on the left is the LEAST
      valuable thing on screen: the maps are also pictures, they are the evidence, and there
      are six of them. So the film gives up most of its band here and nowhere else. */
-  .fw-shell-split[data-block="maps"] .fw-video { width: min(var(--vw), calc(26vh * 16 / 9)); }
-  .fw-shell-split[data-block="maps"] .fw-copy { top: 27vh; }
-  .fw-shell-split[data-block="maps"] .fw-globes { top: calc(26vh - 44px); }
-  .fw-shell-split[data-block="maps"] .fw-rail { top: calc(26vh - 40px); }
+  .fw-shell-split[data-block="maps"] .fw-video { width: min(var(--vw), calc(calc(var(--svh) * 26) * 16 / 9)); }
+  .fw-shell-split[data-block="maps"] .fw-copy { top: calc(var(--svh) * 27); }
+  .fw-shell-split[data-block="maps"] .fw-globes { top: calc(calc(var(--svh) * 26) - 44px); }
+  .fw-shell-split[data-block="maps"] .fw-rail { top: calc(calc(var(--svh) * 26) - 40px); }
   .fw-shell-split[data-block="maps"] .fw-body { font-size: 14px; line-height: 1.5; }
   /* A five-row chart plus its caption is taller than a paragraph, by about the height of
      the chart. Same trade, smaller. */
-  .fw-shell-split[data-block="bars"] .fw-video { width: min(var(--vw), calc(36vh * 16 / 9)); }
-  .fw-shell-split[data-block="bars"] .fw-copy { top: 37vh; }
-  .fw-shell-split[data-block="bars"] .fw-globes { top: calc(36vh - 44px); }
-  .fw-shell-split[data-block="bars"] .fw-rail { top: calc(36vh - 40px); }
+  .fw-shell-split[data-block="bars"] .fw-video { width: min(var(--vw), calc(calc(var(--svh) * 36) * 16 / 9)); }
+  .fw-shell-split[data-block="bars"] .fw-copy { top: calc(var(--svh) * 37); }
+  .fw-shell-split[data-block="bars"] .fw-globes { top: calc(calc(var(--svh) * 36) - 44px); }
+  .fw-shell-split[data-block="bars"] .fw-rail { top: calc(calc(var(--svh) * 36) - 40px); }
   /* Nineteen characters of label is four of the twenty-six available at 430. */
   .fw-shell-split .fw-bar-row { grid-template-columns: minmax(0, 11ch) 1fr auto; gap: 8px; }
   .fw-shell-split .fw-bars-axis { margin-left: calc(11ch + 8px); }
@@ -522,7 +522,7 @@
 
   /* Two across rather than three: at 430 a third of the width is 130px of map. */
   .fw-shell-split .fw-maps {
-    --map-tall: clamp(200px, 34vh, 300px);
+    --map-tall: clamp(200px, calc(var(--svh) * 34), 300px);
     --map-h: calc((var(--map-tall) - 9px) / 2);
   }
   .fw-shell-split[data-step="2"] .fw-maps,
@@ -636,7 +636,7 @@
   /* The mark is the middle cell of a three by three that no longer exists. Stacked, it
      is just the biggest tile, so it keeps its own aspect rather than a grid row. */
   .fw-open-cell.is-mark { padding: 0; }
-  .fw-open-mark { max-height: 46vh; width: auto; margin: 0 auto; }
+  .fw-open-mark { max-height: calc(var(--svh) * 46); width: auto; margin: 0 auto; }
   .fw-open-worlds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   /* The three plots. Rotated names need vertical room a stacked tile does not have to
@@ -694,12 +694,25 @@
     text-align: left;
     max-width: calc(100vw - 28px);
   }
-  /* The panel clears the stage and the plate rather than starting at the fold. */
-  /* Measured, not guessed: at 390x844 the stage runs 74-280, the plate 305-453 and the
-     panel box begins at 387, so 80px of padding starts the evidence at 467 - just clear
-     of the plate. The old expression assumed the panel began at the top of the screen and
-     opened a 249px hole between the world's name and its numbers. */
-  .fw-shell-split .fw-panel { padding-top: calc(86px + min(94vw, 520px) * 0.60); }
+  /* The panel starts just under the FILM, because on these stops the film is the only
+     thing above it.
+
+     The rule here used to reserve calc(86px + min(94vw,520px) * 0.60), which is 306px at
+     390 wide, to clear the world NAME PLATE. Two things were wrong with that. The plate is
+     only drawn on a world stop, and swept across every stop of every shipped page at 390
+     the plate is never drawn at all - so the clearance was reserving a screen of space for
+     something that is not there. And the constant was calibrated at 390x844, the height
+     with the URL bar hidden, while a phone actually opens at 390x664.
+
+     Measured at 390x664 before this change: the film ends at y298, the panel box already
+     begins at y308, and 306px of padding put the first line of type at y614 in a 664px
+     screen. Half the screen was empty white between the picture and the words, and the
+     headline then fell off the bottom edge. That is the "graphics and text do not line up
+     one below the other" report exactly. */
+  .fw-shell-split .fw-panel { padding-top: 12px; }
+  /* A world stop is the one that DOES draw the plate, between the film and the evidence,
+     so it keeps the full clearance it was written for. */
+  .fw-shell-split[data-block="table"] .fw-panel { padding-top: calc(86px + min(94vw, 520px) * 0.60); }
   .fw-shell-split[data-block="out"] .fw-panel { padding-top: 24px; }
   /* A BAND has no stage to clear, so it starts under the header. It was still reserving
      306px for a film that is not there - a screen of empty page above every world. */
@@ -764,7 +777,7 @@
   .fw-runs, .fw-maps { grid-template-columns: 1fr !important; }
   .fw-shell-split[data-block="band"] .fw-cards,
   .fw-cards { grid-template-columns: 1fr !important; }
-  .fw-shell-split[data-block="band"] .fw-maps { --map-h: clamp(210px, 34vh, 300px); }
+  .fw-shell-split[data-block="band"] .fw-maps { --map-h: clamp(210px, calc(var(--svh) * 34), 300px); }
   /* The copy column's top padding is set twice at the same specificity, 71 lines apart,
      and the later one wins - which put back the 96px gap the phone rule exists to close. */
   .fw-shell-split[data-block="band"] .fw-copy { padding-top: 0 !important; }

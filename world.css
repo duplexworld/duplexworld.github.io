@@ -79,10 +79,33 @@
      15px - at 430px that put the film at x = -7 with both edges clipped by the stage. */
   --sbw:    0px;
   --vw:     calc(100vw - var(--sbw));
+
+  /* A viewport height that does NOT move when a phone's URL bar collapses.
+     -----------------------------------------------------------------------------------
+     `vh` is the LARGE viewport: it is measured with the toolbar hidden and it re-evaluates
+     the instant the browser changes the visible height. flight.js already refuses to relay
+     out on a height-only resize ("that is just the URL bar, and relaying out on it makes
+     the page jump under the reader's thumb") - but the stylesheet had no such guard, so the
+     two disagreed. Measured mid-scroll on a 390px phone, at one scroll position and one
+     film time: the copy column jumped 79px down and the stage grew 180px while the film
+     did not move at all. That tear is the jitter.
+
+     `svh` is the SMALL viewport, the height with the toolbar showing, and it is defined not
+     to change while the toolbar animates. On any browser without a collapsing toolbar - so
+     every desktop - 1svh is exactly 1vh, which is why nothing on a PC can shift. */
+  --svh: 1vh;
+
   --film:   min(60vh, calc(100vh - 320px));
   --film-w: min(var(--vw), calc(var(--film) * 16 / 9));
   --film-h: min(var(--film), calc(var(--vw) * 9 / 16));
   color-scheme: light;
+}
+
+/* The upgrade, kept OUTSIDE :root so it cannot truncate the block. Anything older than
+   Safari 15.4 or Chrome 108 skips this and keeps the 1vh fallback above, which is the
+   behaviour those browsers already had. */
+@supports (height: 1svh) {
+  :root { --svh: 1svh; }
 }
 
 * { box-sizing: border-box; }
@@ -94,6 +117,20 @@
 html { scroll-behavior: smooth; }
 
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* The bar is FIXED, and nothing reserved its height. So an anchor jump, a find-in-page
+   match, a tab landing and the browser's own scroll restoration all put their target
+   underneath it: 64px lost on a laptop, 79px on a phone, where the nav takes a second
+   row. Measured, it cut a world heading in half on results.html and put the first table
+   row behind the nav on leaderboard.html, which alone has 21 in-page anchors.
+
+   One reservation, tracked to the two heights the bar actually has, so a jump can never
+   land behind it. This is a keyboard fix as much as a phone one: focus scrolling obeys
+   the same property. */
+:root { --topbar-h: 64px; }
+html { scroll-padding-top: calc(var(--topbar-h) + 12px); }
+/* Below 1041 the bar wraps to two rows: wordmark, then the section nav. */
+@media (max-width: 1040px) { :root { --topbar-h: 80px; } }
 
 body {
   margin: 0;
@@ -279,6 +316,10 @@ body {
 
 /* The decoder gave up. Retire the element outright rather than leave a dead poster sitting
    over the computed-camera fallback that has just taken its place. */
+/* The freeze frame held over the film while the streamed source is swapped for the Blob.
+   It carries .fw-video so it lands in exactly the film's box, and it must NOT inherit the
+   film's size transition: it lives for two frames and would animate in from nothing. */
+.fw-video-shot { transition: none !important; }
 .fw-video-dead .fw-video { display: none; }
 .fw-has-video .fw-hero,
 .fw-has-video .fw-sky { display: none; }
@@ -939,7 +980,7 @@ body {
 /* ------------------------------------------------------------------ mobile */
 
 @media (max-width: 900px) {
-  :root { --film: min(46vh, calc(100vh - 300px)); }
+  :root { --film: min(calc(var(--svh) * 46), calc(calc(var(--svh) * 100) - 300px)); }
   /* On a phone the copy is the full width of the window, so the index cannot stay in a side
      margin that no longer exists - at 430px it sat at z-index 8 directly over the copy's
      right-hand words. Index and rail share one strip between the film and the copy instead,
@@ -1381,6 +1422,31 @@ body {
 .fw-nav-item:hover { color: var(--ink); }
 .fw-nav-item.is-on { color: var(--ink); background: rgba(14, 16, 41, .07); }
 .fw-nav-item:focus-visible { outline: 2px solid var(--magenta); outline-offset: 1px; }
+
+/* On a 390px phone this bar is 699px of links inside a 390px box. It scrolls sideways,
+   and it has to: hiding the tail behind a menu was tried and it costs a tap to reach any
+   page at all. But the scrollbar is deliberately hidden, so three of seven destinations
+   simply looked absent, and a reader who never swipes the bar never learns they exist.
+
+   A fade at the live edge is the whole cue: it says the row continues without spending a
+   row on a control. The trailing padding is what makes it honest - scrolled to the end,
+   the faded strip sits over empty space rather than over the last word, so the bar reads
+   as finished rather than as cut off. Snapping stops items from parking half visible. */
+@media (max-width: 1040px) {
+  /* Scoped to the bar so it outranks the phone rule in alt-split.css, which loads after
+     this file and sets the nav's padding shorthand: at equal specificity that shorthand
+     was resetting the trailing strip back to 12px and the fade landed on the last word. */
+  .topbar .fw-nav {
+    scroll-snap-type: x proximity;
+    /* Without this a sideways flick that runs out of nav carries on into the page
+       behind it, and on iOS it can trigger the back gesture. */
+    overscroll-behavior-x: contain;
+    padding-right: 40px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+  }
+  .fw-nav-item { scroll-snap-align: start; }
+}
 
 /* ===========================================================================
    The opening summary
